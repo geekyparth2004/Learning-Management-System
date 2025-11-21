@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Assignment {
+  id        String    @id @default(cuid())
+  title     String
+  createdAt DateTime  @default(now())
+  problems  Problem[]
+  progress  AssignmentProgress[]
+}
+
+model Problem {
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  defaultCode  String       // Stored as JSON string: { "cpp": "...", "python": "..." }
+  hints        String       @default("[]") // Stored as JSON string: ["hint1", "hint2", "hint3", "hint4/video"]
+  videoSolution String?     // Path to uploaded video file (optional)
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId String
+  testCases    TestCase[]
+  submissions  Submission[]
+}
+
+model TestCase {
+  id             String  @id @default(cuid())
+  input          String
+  expectedOutput String
+  isHidden       Boolean @default(false)
+  problem        Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  problemId      String
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("STUDENT") // "TEACHER" or "STUDENT"
+  submissions Submission[]
+  progress    AssignmentProgress[]
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  code      String
+  language  String
+  status    String   // "PASSED" | "FAILED"
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  problemId String
+}
+
+model AssignmentProgress {
+  id           String     @id @default(cuid())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId String
+  startedAt    DateTime   @default(now())
+
+  @@unique([userId, assignmentId])
+}
