@@ -27,7 +27,7 @@ export async function GET(
         let startedAt = new Date();
         let isTeacher = false;
 
-        if (session?.user) {
+        if (session?.user?.id) {
             // Check if user is teacher
             const user = await db.user.findUnique({ where: { id: session.user.id } });
             isTeacher = user?.role === "TEACHER";
