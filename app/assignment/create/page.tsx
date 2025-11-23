@@ -209,7 +209,7 @@ export default function CreateAssignmentPage() {
                         <Link href="/" className="text-gray-400 hover:text-white">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
-                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v2.1)</span></h1>
+                        <h1 className="text-xl font-bold">Create Assignment</h1>
                     </div>
                     <div className="flex items-center gap-4">
                         {uploadProgress > 0 && uploadProgress < 100 && (
