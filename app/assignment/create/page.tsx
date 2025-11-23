@@ -105,15 +105,13 @@ export default function CreateAssignmentPage() {
         try {
             const uploadResponse = await fetch(uploadUrl, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": file.type || "application/octet-stream",
-                },
                 body: file,
             });
 
             if (!uploadResponse.ok) {
-                console.error("Upload Failed:", uploadResponse.status, uploadResponse.statusText);
-                throw new Error(`Google Drive rejected the upload (${uploadResponse.status})`);
+                const errorText = await uploadResponse.text();
+                console.error("Upload Failed:", uploadResponse.status, uploadResponse.statusText, errorText);
+                throw new Error(`Google Drive rejected the upload (${uploadResponse.status}): ${errorText}`);
             }
         } catch (err: any) {
             console.error("Step 2 Failed (Network/CORS):", err);
@@ -204,7 +202,7 @@ export default function CreateAssignmentPage() {
                         <Link href="/" className="text-gray-400 hover:text-white">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
-                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v1.3)</span></h1>
+                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v1.4)</span></h1>
                     </div>
                     <button
                         onClick={handleSave}
