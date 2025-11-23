@@ -63,6 +63,8 @@ export default function CreateAssignmentPage() {
         }
     };
 
+    const [uploadProgress, setUploadProgress] = useState(0);
+
     const uploadToCloudinary = async (file: File) => {
         console.log("Step 1: Getting upload signature from backend...");
         let sigData;
@@ -91,25 +93,44 @@ export default function CreateAssignmentPage() {
         formData.append("signature", signature);
         formData.append("folder", folder);
 
-        try {
-            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
-                method: "POST",
-                body: formData
-            });
+        return new Promise<string>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
 
-            if (!uploadRes.ok) {
-                const err = await uploadRes.json();
-                console.error("Cloudinary Upload Error:", err);
-                throw new Error(`Cloudinary rejected upload: ${err.error?.message || "Unknown error"}`);
-            }
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percent = Math.round((event.loaded / event.total) * 100);
+                    setUploadProgress(percent);
+                    console.log(`Upload progress: ${percent}%`);
+                }
+            };
 
-            const data = await uploadRes.json();
-            console.log("Upload Success:", data);
-            return data.secure_url;
-        } catch (err: any) {
-            console.error("Upload Network Error:", err);
-            throw new Error(`Upload failed: ${err.message}`);
-        }
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        console.log("Upload Success:", data);
+                        resolve(data.secure_url);
+                    } catch (e) {
+                        reject(new Error("Failed to parse Cloudinary response"));
+                    }
+                } else {
+                    console.error("Cloudinary Upload Error:", xhr.responseText);
+                    try {
+                        const err = JSON.parse(xhr.responseText);
+                        reject(new Error(`Cloudinary rejected upload: ${err.error?.message || "Unknown error"}`));
+                    } catch (e) {
+                        reject(new Error(`Upload failed with status ${xhr.status}`));
+                    }
+                }
+            };
+
+            xhr.onerror = () => {
+                reject(new Error("Network error during upload. Check your connection."));
+            };
+
+            xhr.send(formData);
+        });
     };
 
     const handleSave = async () => {
@@ -188,16 +209,29 @@ export default function CreateAssignmentPage() {
                         <Link href="/" className="text-gray-400 hover:text-white">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
-                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v2.0 - Cloudinary)</span></h1>
+                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v2.1)</span></h1>
                     </div>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-                    >
-                        <Save className="h-4 w-4" />
-                        {isSaving ? "Saving..." : "Save Assignment"}
-                    </button>
+                    <div className="flex items-center gap-4">
+                        {uploadProgress > 0 && uploadProgress < 100 && (
+                            <div className="flex items-center gap-2">
+                                <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-800">
+                                    <div
+                                        className="h-full bg-blue-500 transition-all duration-300"
+                                        style={{ width: `${uploadProgress}%` }}
+                                    />
+                                </div>
+                                <span className="text-xs text-gray-400">{uploadProgress}%</span>
+                            </div>
+                        )}
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                        >
+                            <Save className="h-4 w-4" />
+                            {isSaving ? "Saving..." : "Save Assignment"}
+                        </button>
+                    </div>
                 </div>
             </header>
 
