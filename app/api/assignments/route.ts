@@ -24,16 +24,12 @@ export async function POST(request: Request) {
             const p = problems[i];
             let videoPath = null;
 
-            // Check for video file in formData
-            const videoFile = formData.get(`video_${i}`) as File | null;
-
-            if (videoFile) {
-                const buffer = Buffer.from(await videoFile.arrayBuffer());
-                const fileName = `${Date.now()}-${videoFile.name.replace(/[^a-zA-Z0-9.-]/g, "")}`;
-                const filePath = path.join(uploadDir, fileName);
-
-                await writeFile(filePath, buffer);
-                videoPath = `/uploads/solutions/${fileName}`;
+            // Check if hints contain a video URL (usually the last hint)
+            if (p.hints && Array.isArray(p.hints)) {
+                const lastHint = p.hints[p.hints.length - 1];
+                if (typeof lastHint === "string" && (lastHint.startsWith("http") || lastHint.startsWith("https"))) {
+                    videoPath = lastHint;
+                }
             }
 
             processedProblems.push({

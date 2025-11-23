@@ -63,6 +63,37 @@ export default function CreateAssignmentPage() {
         }
     };
 
+    const uploadToDrive = async (file: File): Promise<string> => {
+        // 1. Get the resumable upload URL from our API
+        const initRes = await fetch("/api/upload/video", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                filename: file.name,
+                contentType: file.type,
+            }),
+        });
+
+        if (!initRes.ok) throw new Error("Failed to initiate upload");
+        const { uploadUrl } = await initRes.json();
+
+        // 2. Upload the file directly to Google Drive
+        const uploadRes = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+                "Content-Type": file.type,
+            },
+            body: file,
+        });
+
+        if (!uploadRes.ok) throw new Error("Failed to upload file to Drive");
+        const driveFile = await uploadRes.json();
+
+        // 3. Return the preview link (we'll use the alternateLink or build a preview link)
+        // The Drive API returns 'id' field. We can construct a preview URL.
+        return `https://drive.google.com/file/d/${driveFile.id}/preview`;
+    };
+
     const handleSave = async () => {
         if (!title || !description) {
             alert("Please fill in all fields");
@@ -71,6 +102,19 @@ export default function CreateAssignmentPage() {
 
         setIsSaving(true);
         try {
+            let videoUrl = "";
+            if (hint4Type === "video" && hint4Video) {
+                // Upload video first
+                try {
+                    videoUrl = await uploadToDrive(hint4Video);
+                } catch (e) {
+                    console.error("Video upload failed:", e);
+                    alert("Failed to upload video. Please try again.");
+                    setIsSaving(false);
+                    return;
+                }
+            }
+
             const formData = new FormData();
             formData.append("title", title);
 
@@ -79,7 +123,7 @@ export default function CreateAssignmentPage() {
             if (hint4Type === "text") {
                 finalHints.push(hint4Text);
             } else {
-                finalHints.push("video"); // Placeholder, logic handles file
+                finalHints.push(videoUrl); // Send the Google Drive URL
             }
 
             // Prepare problems array (currently single problem)
@@ -101,11 +145,7 @@ export default function CreateAssignmentPage() {
             ];
 
             formData.append("problems", JSON.stringify(problems));
-
-            // Append video file if exists
-            if (hint4Type === "video" && hint4Video) {
-                formData.append("video_0", hint4Video); // 0 is the problem index
-            }
+            // No need to append video file anymore
 
             const res = await fetch("/api/assignments", {
                 method: "POST",
@@ -116,6 +156,7 @@ export default function CreateAssignmentPage() {
 
             router.push("/");
         } catch (error) {
+            console.error(error);
             alert("Failed to save assignment");
         } finally {
             setIsSaving(false);
