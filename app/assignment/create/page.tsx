@@ -63,66 +63,53 @@ export default function CreateAssignmentPage() {
         }
     };
 
-    const uploadToDrive = async (file: File) => {
-        console.log("Step 1: Requesting upload URL from backend...");
-        let response;
+    const uploadToCloudinary = async (file: File) => {
+        console.log("Step 1: Getting upload signature from backend...");
+        let sigData;
         try {
-            response = await fetch("/api/upload/video", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    filename: file.name,
-                    contentType: file.type || "application/octet-stream",
-                }),
-            });
-        } catch (err) {
-            console.error("Network error calling API:", err);
-            throw new Error("Could not reach the server. Check your internet connection.");
-        }
-
-        if (!response.ok) {
-            console.error("API Error:", response.status, response.statusText);
-            let errorMsg = "Unknown server error";
-            try {
-                const data = await response.json();
-                errorMsg = data.error || JSON.stringify(data);
-            } catch (e) {
-                const text = await response.text();
-                errorMsg = `Server returned ${response.status}: ${text.substring(0, 50)}...`;
+            const sigRes = await fetch("/api/upload/video", { method: "POST" });
+            if (!sigRes.ok) {
+                const text = await sigRes.text();
+                throw new Error(`Server error getting signature: ${text}`);
             }
-            throw new Error(`Setup failed: ${errorMsg}`);
-        }
-
-        const data = await response.json();
-        const { uploadUrl } = data;
-        console.log("Step 1 Success. Got Upload URL.");
-
-        if (!uploadUrl) {
-            throw new Error("Server did not return an upload URL.");
-        }
-
-        console.log("Step 2: Uploading file to Google Drive...");
-        try {
-            const uploadResponse = await fetch(uploadUrl, {
-                method: "PUT",
-                body: file,
-            });
-
-            if (!uploadResponse.ok) {
-                const errorText = await uploadResponse.text();
-                console.error("Upload Failed:", uploadResponse.status, uploadResponse.statusText, errorText);
-                throw new Error(`Google Drive rejected the upload (${uploadResponse.status}): ${errorText}`);
-            }
+            sigData = await sigRes.json();
         } catch (err: any) {
-            console.error("Step 2 Failed (Network/CORS):", err);
-            if (err.message.includes("Failed to fetch")) {
-                throw new Error("Network error uploading to Drive. (Possible CORS or Firewall issue)");
-            }
-            throw err;
+            console.error("Signature Error:", err);
+            throw new Error(`Failed to setup upload: ${err.message}`);
         }
 
-        console.log("Step 2 Success. File uploaded.");
-        return uploadUrl;
+        const { signature, timestamp, cloudName, apiKey, folder } = sigData;
+        if (!signature || !cloudName || !apiKey) {
+            throw new Error("Server returned incomplete Cloudinary configuration.");
+        }
+
+        console.log("Step 2: Uploading to Cloudinary...");
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("api_key", apiKey);
+        formData.append("timestamp", timestamp.toString());
+        formData.append("signature", signature);
+        formData.append("folder", folder);
+
+        try {
+            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!uploadRes.ok) {
+                const err = await uploadRes.json();
+                console.error("Cloudinary Upload Error:", err);
+                throw new Error(`Cloudinary rejected upload: ${err.error?.message || "Unknown error"}`);
+            }
+
+            const data = await uploadRes.json();
+            console.log("Upload Success:", data);
+            return data.secure_url;
+        } catch (err: any) {
+            console.error("Upload Network Error:", err);
+            throw new Error(`Upload failed: ${err.message}`);
+        }
     };
 
     const handleSave = async () => {
@@ -137,7 +124,7 @@ export default function CreateAssignmentPage() {
             if (hint4Type === "video" && hint4Video) {
                 // Upload video first
                 try {
-                    videoUrl = await uploadToDrive(hint4Video);
+                    videoUrl = await uploadToCloudinary(hint4Video);
                 } catch (e: any) {
                     console.error("Video upload failed:", e);
                     alert(`Failed to upload video: ${e.message}`);
@@ -154,7 +141,7 @@ export default function CreateAssignmentPage() {
             if (hint4Type === "text") {
                 finalHints.push(hint4Text);
             } else {
-                finalHints.push(videoUrl); // Send the Google Drive URL
+                finalHints.push(videoUrl); // Send the Cloudinary URL
             }
 
             // Prepare problems array (currently single problem)
@@ -176,7 +163,6 @@ export default function CreateAssignmentPage() {
             ];
 
             formData.append("problems", JSON.stringify(problems));
-            // No need to append video file anymore
 
             const res = await fetch("/api/assignments", {
                 method: "POST",
@@ -202,7 +188,7 @@ export default function CreateAssignmentPage() {
                         <Link href="/" className="text-gray-400 hover:text-white">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
-                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v1.4)</span></h1>
+                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v2.0 - Cloudinary)</span></h1>
                     </div>
                     <button
                         onClick={handleSave}
