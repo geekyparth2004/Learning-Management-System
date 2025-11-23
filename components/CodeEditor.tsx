@@ -9,6 +9,7 @@ interface CodeEditorProps {
     code: string;
     onChange: (value: string | undefined) => void;
     errorLine?: number | null;
+    errorMessage?: string | null;
 }
 
 export default function CodeEditor({
@@ -16,6 +17,7 @@ export default function CodeEditor({
     code,
     onChange,
     errorLine,
+    errorMessage,
 }: CodeEditorProps) {
     const editorRef = React.useRef<any>(null);
     const monacoRef = React.useRef<any>(null);
@@ -36,7 +38,7 @@ export default function CodeEditor({
                             startColumn: 1,
                             endLineNumber: errorLine,
                             endColumn: 1000,
-                            message: "Error here",
+                            message: errorMessage || "Error here",
                             severity: monacoRef.current.MarkerSeverity.Error,
                         },
                     ]);
@@ -45,7 +47,7 @@ export default function CodeEditor({
                 }
             }
         }
-    }, [errorLine]);
+    }, [errorLine, errorMessage]);
 
     return (
         <div className="h-full w-full overflow-hidden rounded-md border border-gray-700 bg-[#1e1e1e]">

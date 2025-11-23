@@ -192,10 +192,16 @@ export default function AssignmentPage() {
 
     const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
         if (lang === "python") {
-            const match = errorMessage.match(/line (\d+)/i);
-            return match ? parseInt(match[1], 10) : null;
+            // Find all matches for "line <number>"
+            const matches = [...errorMessage.matchAll(/line (\d+)/gi)];
+            if (matches.length > 0) {
+                // Return the last match as it's usually the most relevant in a traceback
+                return parseInt(matches[matches.length - 1][1], 10);
+            }
+            return null;
         } else if (lang === "cpp") {
-            const match = errorMessage.match(/error.*:(\d+):/i);
+            // Matches :line:col: error:
+            const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
             return match ? parseInt(match[1], 10) : null;
         }
         return null;
@@ -217,7 +223,8 @@ export default function AssignmentPage() {
             if (data.error) {
                 setStatus("error");
                 setOutput(data.error);
-                if (data.line) setErrorLine(data.line);
+                const line = data.line || parseErrorLine(data.error, language);
+                if (line) setErrorLine(line);
             } else {
                 setStatus("success");
                 setOutput(data.output || "No output");
@@ -576,7 +583,7 @@ export default function AssignmentPage() {
                     {/* Tab Content */}
                     <div className="flex-1 overflow-hidden relative">
                         <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
-                            <CodeEditor language={language} code={code} onChange={(value) => setCode(value || "")} errorLine={errorLine} />
+                            <CodeEditor language={language} code={code} onChange={(value) => setCode(value || "")} errorLine={errorLine} errorMessage={status === "error" ? output : null} />
                         </div>
 
                         {activeTab === "console" && (
