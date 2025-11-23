@@ -63,35 +63,68 @@ export default function CreateAssignmentPage() {
         }
     };
 
-    const uploadToDrive = async (file: File): Promise<string> => {
-        // 1. Get the resumable upload URL from our API
-        const initRes = await fetch("/api/upload/video", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                filename: file.name,
-                contentType: file.type,
-            }),
-        });
+    const uploadToDrive = async (file: File) => {
+        console.log("Step 1: Requesting upload URL from backend...");
+        let response;
+        try {
+            response = await fetch("/api/upload/video", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type || "application/octet-stream",
+                }),
+            });
+        } catch (err) {
+            console.error("Network error calling API:", err);
+            throw new Error("Could not reach the server. Check your internet connection.");
+        }
 
-        if (!initRes.ok) throw new Error("Failed to initiate upload");
-        const { uploadUrl } = await initRes.json();
+        if (!response.ok) {
+            console.error("API Error:", response.status, response.statusText);
+            let errorMsg = "Unknown server error";
+            try {
+                const data = await response.json();
+                errorMsg = data.error || JSON.stringify(data);
+            } catch (e) {
+                const text = await response.text();
+                errorMsg = `Server returned ${response.status}: ${text.substring(0, 50)}...`;
+            }
+            throw new Error(`Setup failed: ${errorMsg}`);
+        }
 
-        // 2. Upload the file directly to Google Drive
-        const uploadRes = await fetch(uploadUrl, {
-            method: "PUT",
-            headers: {
-                "Content-Type": file.type,
-            },
-            body: file,
-        });
+        const data = await response.json();
+        const { uploadUrl } = data;
+        console.log("Step 1 Success. Got Upload URL.");
 
-        if (!uploadRes.ok) throw new Error("Failed to upload file to Drive");
-        const driveFile = await uploadRes.json();
+        if (!uploadUrl) {
+            throw new Error("Server did not return an upload URL.");
+        }
 
-        // 3. Return the preview link (we'll use the alternateLink or build a preview link)
-        // The Drive API returns 'id' field. We can construct a preview URL.
-        return `https://drive.google.com/file/d/${driveFile.id}/preview`;
+        console.log("Step 2: Uploading file to Google Drive...");
+        try {
+            const uploadResponse = await fetch(uploadUrl, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": file.type || "application/octet-stream",
+                },
+                body: file,
+            });
+
+            if (!uploadResponse.ok) {
+                console.error("Upload Failed:", uploadResponse.status, uploadResponse.statusText);
+                throw new Error(`Google Drive rejected the upload (${uploadResponse.status})`);
+            }
+        } catch (err: any) {
+            console.error("Step 2 Failed (Network/CORS):", err);
+            if (err.message.includes("Failed to fetch")) {
+                throw new Error("Network error uploading to Drive. (Possible CORS or Firewall issue)");
+            }
+            throw err;
+        }
+
+        console.log("Step 2 Success. File uploaded.");
+        return uploadUrl;
     };
 
     const handleSave = async () => {
