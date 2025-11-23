@@ -107,9 +107,9 @@ export default function CreateAssignmentPage() {
                 // Upload video first
                 try {
                     videoUrl = await uploadToDrive(hint4Video);
-                } catch (e) {
+                } catch (e: any) {
                     console.error("Video upload failed:", e);
-                    alert("Failed to upload video. Please try again.");
+                    alert(`Failed to upload video: ${e.message}`);
                     setIsSaving(false);
                     return;
                 }

@@ -5,32 +5,26 @@ export async function POST(request: Request) {
     try {
         const { filename, contentType } = await request.json();
 
+        if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY || !process.env.GOOGLE_DRIVE_FOLDER_ID) {
+            console.error("Missing Google Drive environment variables");
+            return NextResponse.json({ error: "Server misconfiguration: Missing Google Drive credentials" }, { status: 500 });
+        }
+
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
             },
             scopes: ["https://www.googleapis.com/auth/drive.file"],
         });
-
-        const drive = google.drive({ version: "v3", auth });
 
         const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
         // Create a file metadata
         const fileMetadata = {
             name: filename,
-            parents: [folderId!],
+            parents: [folderId],
         };
-
-        // Request a resumable upload URL
-        // We use 'create' with 'uploadType=resumable'
-        // But the googleapis library handles this slightly differently.
-        // We can get the generated upload URL by manually making the request or using the library's media upload.
-        // However, for client-side direct upload, we need the session URI.
-
-        // A cleaner way is to use the drive.files.create method but intercept the request to get the location header?
-        // Or simpler: just use the access token to make the initial POST request manually to get the location.
 
         const token = await auth.getAccessToken();
 
