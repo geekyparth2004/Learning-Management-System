@@ -105,6 +105,9 @@ export default function CreateAssignmentPage() {
         try {
             const uploadResponse = await fetch(uploadUrl, {
                 method: "PUT",
+                headers: {
+                    "Content-Type": file.type || "application/octet-stream",
+                },
                 body: file,
             });
 
@@ -201,7 +204,7 @@ export default function CreateAssignmentPage() {
                         <Link href="/" className="text-gray-400 hover:text-white">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
-                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v1.2)</span></h1>
+                        <h1 className="text-xl font-bold">Create Assignment <span className="text-xs font-normal text-gray-500">(v1.3)</span></h1>
                     </div>
                     <button
                         onClick={handleSave}

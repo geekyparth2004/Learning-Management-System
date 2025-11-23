@@ -28,6 +28,8 @@ export async function POST(request: Request) {
 
         const token = await auth.getAccessToken();
 
+        const origin = request.headers.get("origin") || "http://localhost:3000";
+
         const initiateResponse = await fetch(
             "https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable",
             {
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
                     "Content-Type": "application/json",
                     "X-Upload-Content-Type": contentType,
                     "X-Upload-Content-Length": "", // Optional if unknown
+                    "Origin": origin, // Forward the origin to allow CORS on the upload URL
                 },
                 body: JSON.stringify(fileMetadata),
             }
