@@ -236,6 +236,14 @@ export default function AssignmentPage() {
         }
     };
 
+    // Normalize output for comparison (ignore trailing whitespace, normalize newlines, ignore commas)
+    const normalizeOutput = (str: string) => {
+        return str
+            .replace(/,/g, " ")       // Replace commas with spaces
+            .replace(/\s+/g, " ")     // Collapse multiple whitespace to single space
+            .trim();                  // Trim leading/trailing whitespace
+    };
+
     // Run test cases
     const handleRunTestCases = async () => {
         if (!problem) return;
@@ -256,7 +264,9 @@ export default function AssignmentPage() {
                     // setErrorLine(parseErrorLine(data.error, language)); // Error line is for editor, not test results
                     results.push({ id: tc.id, passed: false, actualOutput: data.error, expectedOutput: tc.expectedOutput });
                 } else {
-                    const passed = data.output?.trim() === tc.expectedOutput.trim();
+                    const actual = normalizeOutput(data.output || "");
+                    const expected = normalizeOutput(tc.expectedOutput);
+                    const passed = actual === expected;
                     results.push({ id: tc.id, passed, actualOutput: data.output || "", expectedOutput: tc.expectedOutput });
                 }
             } catch (e) {
