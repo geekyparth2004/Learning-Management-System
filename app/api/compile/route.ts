@@ -9,6 +9,18 @@ export async function POST(request: Request) {
         const pistonLanguage = language === "cpp" ? "c++" : language;
         const version = language === "cpp" ? "10.2.0" : "3.10.0";
 
+        let normalizedInput = input || "";
+
+        // Normalize input for Python to mimic cin behavior (token-based input)
+        // This allows "3 2" to be read by two calls to input()
+        if (language === "python") {
+            normalizedInput = normalizedInput
+                .replace(/,/g, " ")       // Replace commas with spaces
+                .trim()
+                .split(/\s+/)             // Split by any whitespace
+                .join("\n");              // Join with newlines
+        }
+
         const response = await fetch(PISTON_API_URL, {
             method: "POST",
             headers: {
@@ -18,7 +30,7 @@ export async function POST(request: Request) {
                 language: pistonLanguage,
                 version: "*",
                 files: [{ content: code }],
-                stdin: input || "",
+                stdin: normalizedInput,
             }),
         });
 
