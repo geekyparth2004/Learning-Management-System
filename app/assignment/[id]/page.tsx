@@ -2,8 +2,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, Lock, Video } from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut } from "lucide-react";
+
 import CodeEditor from "@/components/CodeEditor";
 import Console from "@/components/Console";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
@@ -47,6 +48,8 @@ interface TestCaseResult {
 export default function AssignmentPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isFocusMode = searchParams.get("mode") === "focus";
     const assignmentId = params.id as string;
 
     const [problem, setProblem] = useState<Problem | null>(null);
@@ -207,6 +210,20 @@ export default function AssignmentPage() {
         return null;
     };
 
+    // Focus Mode: Auto-enter full screen
+    useEffect(() => {
+        if (isFocusMode && !hasStarted) {
+            enterFullScreen();
+        }
+    }, [isFocusMode, hasStarted]);
+
+    const handleExitFocus = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(err => console.error(err));
+        }
+        router.push("/");
+    };
+
     // Run user code
     const handleRun = async () => {
         setStatus("running");
@@ -289,20 +306,42 @@ export default function AssignmentPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code, language, passed: allPassed }),
             });
-            alert(allPassed ? "Submission successful! ✅\nTimers have been reset." : "Some test cases failed ❌\nTimers have been reset.");
 
-            // Reload assignment data to refresh timers
-            const res = await fetch(`/api/assignments/${assignmentId}`);
-            if (res.ok) {
-                const data = await res.json();
-                const problemData: Problem = data.problems[0];
-                const fullProblemData = { ...problemData, startedAt: data.startedAt };
-                setProblem(fullProblemData);
-
-                // Reset AI state
-                setAiMessage(null);
-                setShowGiveAnswer(false);
-                setCanAskAi(false);
+            if (allPassed) {
+                if (isFocusMode) {
+                    alert("Correct! Loading next question...");
+                    const res = await fetch("/api/focus/next");
+                    const data = await res.json();
+                    if (data.assignmentId) {
+                        router.push(`/assignment/${data.assignmentId}?mode=focus`);
+                    } else {
+                        alert("You have solved all available questions!");
+                        handleExitFocus();
+                    }
+                } else {
+                    alert("Submission successful! ✅\nTimers have been reset.");
+                    // Reload assignment data to refresh timers
+                    const res = await fetch(`/api/assignments/${assignmentId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const problemData: Problem = data.problems[0];
+                        const fullProblemData = { ...problemData, startedAt: data.startedAt };
+                        setProblem(fullProblemData);
+                        setAiMessage(null);
+                        setShowGiveAnswer(false);
+                        setCanAskAi(false);
+                    }
+                }
+            } else {
+                alert("Some test cases failed ❌\nTimers have been reset.");
+                // Reload assignment data to refresh timers even on failure
+                const res = await fetch(`/api/assignments/${assignmentId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const problemData: Problem = data.problems[0];
+                    const fullProblemData = { ...problemData, startedAt: data.startedAt };
+                    setProblem(fullProblemData);
+                }
             }
         } catch (e) {
             console.error("Submission failed:", e);
@@ -417,6 +456,15 @@ export default function AssignmentPage() {
                     <button onClick={handleRun} disabled={status === "running"} className="rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Run</button>
                     <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
                     <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                    {isFocusMode && (
+                        <button
+                            onClick={handleExitFocus}
+                            className="flex items-center gap-2 rounded bg-red-900/20 border border-red-900 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-900/40"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            Exit Focus
+                        </button>
+                    )}
                 </div>
             </div>
 

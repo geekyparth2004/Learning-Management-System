@@ -4,6 +4,7 @@ import { Code2, GraduationCap, LogIn, LogOut, User } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import DeleteAssignmentButton from "@/components/DeleteAssignmentButton";
+import FocusModeButton from "@/components/FocusModeButton";
 
 async function getAssignments() {
   try {
@@ -33,6 +34,7 @@ export default async function Home() {
           <div className="flex items-center gap-4">
             {session ? (
               <div className="flex items-center gap-4">
+                {!isTeacher && <FocusModeButton />}
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <User className="h-4 w-4" />
                   <span>{session.user?.name} ({session.user?.role})</span>
