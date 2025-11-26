@@ -78,6 +78,13 @@ export default function AssignmentPage() {
 
     // Full Screen State
     const [hasStarted, setHasStarted] = useState(false);
+    const [showFocusOverlay, setShowFocusOverlay] = useState(false);
+
+    useEffect(() => {
+        if (isFocusMode && !hasStarted) {
+            setShowFocusOverlay(true);
+        }
+    }, [isFocusMode, hasStarted]);
 
     const enterFullScreen = () => {
         const elem = document.documentElement;
@@ -210,12 +217,10 @@ export default function AssignmentPage() {
         return null;
     };
 
-    // Focus Mode: Auto-enter full screen
-    useEffect(() => {
-        if (isFocusMode && !hasStarted) {
-            enterFullScreen();
-        }
-    }, [isFocusMode, hasStarted]);
+    const handleStartFocus = () => {
+        enterFullScreen();
+        setShowFocusOverlay(false);
+    };
 
     const handleExitFocus = () => {
         if (document.fullscreenElement) {
@@ -417,16 +422,46 @@ export default function AssignmentPage() {
         );
     }
 
-    if (!hasStarted) {
+    if (showFocusOverlay) {
+        return (
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0e0e0e] text-white">
+                <div className="max-w-md text-center">
+                    <div className="mb-6 flex justify-center">
+                        <div className="rounded-full bg-blue-900/20 p-6">
+                            <Zap className="h-12 w-12 text-blue-400" />
+                        </div>
+                    </div>
+                    <h1 className="mb-4 text-3xl font-bold">Focus Mode</h1>
+                    <p className="mb-8 text-gray-400">
+                        Enter full-screen mode to minimize distractions and focus on your code.
+                    </p>
+                    <button
+                        onClick={handleStartFocus}
+                        className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700"
+                    >
+                        Start Focus Session
+                    </button>
+                    <button
+                        onClick={() => router.push("/")}
+                        className="mt-4 block w-full text-sm text-gray-500 hover:text-gray-300"
+                    >
+                        Exit
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasStarted && !isFocusMode) {
         return (
             <div className="flex h-screen flex-col items-center justify-center bg-[#0e0e0e] text-white">
                 <div className="max-w-md text-center">
                     <h1 className="mb-6 text-3xl font-bold">{problem.title}</h1>
                     <p className="mb-8 text-gray-400">
-                        You are about to start the assignment. This will open in full-screen mode.
+                        You are about to start the assignment.
                     </p>
                     <button
-                        onClick={enterFullScreen}
+                        onClick={() => setHasStarted(true)}
                         className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700"
                     >
                         Start Assignment
