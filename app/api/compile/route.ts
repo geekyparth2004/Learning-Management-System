@@ -51,11 +51,8 @@ export async function POST(request: Request) {
         } else if (data.run) {
             output = data.run.output;
             if (data.run.code !== 0) {
-                // Runtime error (or non-zero exit code)
-                // Sometimes stderr is useful, but Piston puts everything in output usually.
-                // We can treat it as error if we want to highlight it, or just output.
-                // For now, let's treat non-zero exit as potential error if output looks like an error.
-                // But usually we just want to show the output.
+                // Runtime error
+                error = data.run.output;
             }
         } else {
             error = "No output from execution environment";

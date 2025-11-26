@@ -78,7 +78,8 @@ export default function AssignmentPage() {
 
     // Full Screen State
     const [hasStarted, setHasStarted] = useState(false);
-    const [showFocusOverlay, setShowFocusOverlay] = useState(false);
+    // Initialize based on URL to avoid flash
+    const [showFocusOverlay, setShowFocusOverlay] = useState(isFocusMode);
 
     useEffect(() => {
         if (isFocusMode && !hasStarted) {
@@ -86,14 +87,21 @@ export default function AssignmentPage() {
         }
     }, [isFocusMode, hasStarted]);
 
-    const enterFullScreen = () => {
+    const enterFullScreen = async () => {
         const elem = document.documentElement;
         if (elem.requestFullscreen) {
-            elem.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
+            try {
+                await elem.requestFullscreen();
+                setHasStarted(true);
+                if (isFocusMode) setShowFocusOverlay(false);
+            } catch (err) {
+                console.error("Error entering fullscreen:", err);
+                alert("Failed to enter full screen. Please try again.");
+            }
+        } else {
+            setHasStarted(true);
+            if (isFocusMode) setShowFocusOverlay(false);
         }
-        setHasStarted(true);
     };
 
     const startResizing = () => setIsDragging(true);
@@ -219,7 +227,6 @@ export default function AssignmentPage() {
 
     const handleStartFocus = () => {
         enterFullScreen();
-        setShowFocusOverlay(false);
     };
 
     const handleExitFocus = () => {
@@ -461,7 +468,7 @@ export default function AssignmentPage() {
                         You are about to start the assignment.
                     </p>
                     <button
-                        onClick={() => setHasStarted(true)}
+                        onClick={enterFullScreen}
                         className="rounded-lg bg-blue-600 px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700"
                     >
                         Start Assignment
