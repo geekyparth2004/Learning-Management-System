@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Send, ArrowRight, Star, Loader2, ArrowLeft, Briefcase, User, Code2, BrainCircuit, Trophy } from "lucide-react";
+import { Mic, MicOff, ArrowRight, Star, Loader2, ArrowLeft, Trophy, Volume2, StopCircle } from "lucide-react";
 import Link from "next/link";
 
 interface Feedback {
@@ -11,11 +11,6 @@ interface Feedback {
     nextQuestion: string;
 }
 
-interface Message {
-    role: "assistant" | "user";
-    content: string;
-}
-
 export default function MockInterviewPage() {
     // Setup State
     const [hasStarted, setHasStarted] = useState(false);
@@ -23,28 +18,33 @@ export default function MockInterviewPage() {
     const [projectDescription, setProjectDescription] = useState("");
 
     // Interview State
-    const [messages, setMessages] = useState<Message[]>([]);
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
     const [isRecording, setIsRecording] = useState(false);
     const [transcribedText, setTranscribedText] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [feedback, setFeedback] = useState<Feedback | null>(null);
-    const [recognition, setRecognition] = useState<any>(null);
     const [questionCount, setQuestionCount] = useState(0);
     const [isCompleted, setIsCompleted] = useState(false);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    // UI State
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [messages, setMessages] = useState<{ role: string, content: string }[]>([]); // Keep track for API context
 
-    // Initialize Speech Recognition
+    // Speech Recognition & Synthesis Refs
+    const recognitionRef = useRef<any>(null);
+    const synthesisRef = useRef<SpeechSynthesis | null>(null);
+
+    // Initialize Speech APIs
     useEffect(() => {
         if (typeof window !== "undefined") {
+            // Speech Recognition
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
-                const recognitionInstance = new SpeechRecognition();
-                recognitionInstance.continuous = true;
-                recognitionInstance.interimResults = true;
+                const recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
 
-                recognitionInstance.onresult = (event: any) => {
+                recognition.onresult = (event: any) => {
                     let finalTranscript = "";
                     for (let i = event.resultIndex; i < event.results.length; ++i) {
                         if (event.results[i].isFinal) {
@@ -56,20 +56,46 @@ export default function MockInterviewPage() {
                     }
                 };
 
-                recognitionInstance.onerror = (event: any) => {
+                recognition.onerror = (event: any) => {
                     console.error("Speech recognition error", event.error);
                     setIsRecording(false);
                 };
 
-                setRecognition(recognitionInstance);
+                recognitionRef.current = recognition;
+            }
+
+            // Speech Synthesis
+            if (window.speechSynthesis) {
+                synthesisRef.current = window.speechSynthesis;
             }
         }
     }, []);
 
-    // Scroll to bottom
+    // Speak Question when it changes
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, feedback]);
+        if (currentQuestion && hasStarted && !feedback) {
+            speakText(currentQuestion);
+        }
+    }, [currentQuestion, hasStarted, feedback]);
+
+    const speakText = (text: string) => {
+        if (synthesisRef.current) {
+            // Cancel any ongoing speech
+            synthesisRef.current.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.onstart = () => setIsSpeaking(true);
+            utterance.onend = () => setIsSpeaking(false);
+            utterance.onerror = () => setIsSpeaking(false);
+
+            // Optional: Select a better voice if available
+            const voices = synthesisRef.current.getVoices();
+            const preferredVoice = voices.find(voice => voice.name.includes("Google US English") || voice.name.includes("Samantha"));
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            synthesisRef.current.speak(utterance);
+        }
+    };
 
     const startInterview = async () => {
         if (!projectTitle.trim() || !projectDescription.trim()) {
@@ -104,16 +130,22 @@ export default function MockInterviewPage() {
     };
 
     const toggleRecording = () => {
-        if (!recognition) {
+        if (!recognitionRef.current) {
             alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
             return;
         }
 
         if (isRecording) {
-            recognition.stop();
+            recognitionRef.current.stop();
             setIsRecording(false);
         } else {
-            recognition.start();
+            // Stop speaking if user wants to talk
+            if (isSpeaking && synthesisRef.current) {
+                synthesisRef.current.cancel();
+                setIsSpeaking(false);
+            }
+            setTranscribedText(""); // Clear previous text
+            recognitionRef.current.start();
             setIsRecording(true);
         }
     };
@@ -121,17 +153,24 @@ export default function MockInterviewPage() {
     const handleSubmitAnswer = async () => {
         if (!transcribedText.trim()) return;
 
-        const userMsg: Message = { role: "user", content: transcribedText };
-        setMessages(prev => [...prev, userMsg]);
+        // Stop recording if active
+        if (isRecording && recognitionRef.current) {
+            recognitionRef.current.stop();
+            setIsRecording(false);
+        }
+
+        const userMsg = { role: "user", content: transcribedText };
+        const updatedMessages = [...messages, userMsg];
+        setMessages(updatedMessages);
+
         setIsLoading(true);
-        setFeedback(null); // Clear previous feedback
 
         try {
             const res = await fetch("/api/interview", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    messages: messages.map(m => ({ role: m.role, content: m.content })),
+                    messages: updatedMessages,
                     userResponse: transcribedText,
                     questionCount: questionCount,
                     type: "mock",
@@ -140,7 +179,6 @@ export default function MockInterviewPage() {
             });
             const data = await res.json();
             setFeedback(data);
-            setTranscribedText(""); // Clear input
         } catch (error) {
             console.error("Failed to submit answer", error);
         } finally {
@@ -159,6 +197,7 @@ export default function MockInterviewPage() {
             setCurrentQuestion(nextQ);
             setMessages(prev => [...prev, { role: "assistant", content: nextQ }]);
             setFeedback(null);
+            setTranscribedText("");
             setQuestionCount(prev => prev + 1);
         }
     };
@@ -170,6 +209,7 @@ export default function MockInterviewPage() {
         return "Behavioural Round";
     };
 
+    // Setup Screen
     if (!hasStarted) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-[#0e0e0e] p-6 text-white">
@@ -218,6 +258,7 @@ export default function MockInterviewPage() {
         );
     }
 
+    // Completion Screen
     if (isCompleted) {
         return (
             <div className="flex h-screen flex-col items-center justify-center bg-[#0e0e0e] text-white">
@@ -229,7 +270,7 @@ export default function MockInterviewPage() {
                     </div>
                     <h1 className="mb-4 text-3xl font-bold">Mock Interview Completed!</h1>
                     <p className="mb-8 text-gray-400">
-                        Congratulations on completing the full mock interview. Review your feedback to improve.
+                        Congratulations on completing the full mock interview.
                     </p>
                     <Link
                         href="/interview"
@@ -242,137 +283,148 @@ export default function MockInterviewPage() {
         );
     }
 
+    // Main Interview Interface
     return (
-        <div className="flex h-screen flex-col bg-[#0e0e0e] text-white">
+        <div className="flex min-h-screen flex-col bg-[#0e0e0e] text-white">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-4">
-                <div className="flex items-center gap-4">
-                    <Link href="/interview" className="text-gray-400 hover:text-white">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Link>
-                    <div>
-                        <h1 className="text-xl font-bold">Mock Interview</h1>
-                        <span className="text-sm text-yellow-500 font-medium">{getStageName()}</span>
+                <Link href="/interview" className="flex items-center gap-2 text-gray-400 hover:text-white">
+                    <ArrowLeft className="h-5 w-5" />
+                    <span className="hidden sm:inline">Exit</span>
+                </Link>
+                <div className="flex flex-col items-center">
+                    <span className="text-sm font-medium text-yellow-500">{getStageName()}</span>
+                    <div className="flex gap-1">
+                        {Array.from({ length: 25 }).map((_, i) => (
+                            <div
+                                key={i}
+                                className={`h-1 w-3 rounded-full ${i < questionCount ? "bg-yellow-500" : "bg-gray-800"
+                                    }`}
+                            />
+                        ))}
                     </div>
                 </div>
-                <div className="rounded-full bg-yellow-900/20 px-4 py-1 text-sm font-medium text-yellow-500">
-                    Question {questionCount}/25
+                <div className="text-sm font-medium text-gray-400">
+                    Q{questionCount}/25
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Chat Area */}
-                <div className="flex flex-1 flex-col overflow-hidden">
-                    <div className="flex-1 overflow-y-auto p-6">
-                        <div className="mx-auto max-w-3xl space-y-6">
-                            {messages.map((msg, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            {/* Content Area */}
+            <div className="flex flex-1 flex-col items-center justify-center p-6">
+                <div className="w-full max-w-3xl">
+
+                    {/* Question Card */}
+                    {!feedback && (
+                        <div className="animate-in fade-in zoom-in-95 duration-500">
+                            <div className="mb-8 text-center">
+                                <span className="mb-4 inline-block rounded-full bg-gray-800 px-4 py-1 text-sm font-medium text-gray-300">
+                                    Question {questionCount}
+                                </span>
+                                <h2 className="text-3xl font-bold leading-tight md:text-4xl">
+                                    {currentQuestion}
+                                </h2>
+                            </div>
+
+                            {/* Interaction Area */}
+                            <div className="flex flex-col items-center justify-center gap-8">
+                                {isSpeaking ? (
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-blue-500/20">
+                                            <Volume2 className="h-10 w-10 animate-pulse text-blue-400" />
+                                            <div className="absolute inset-0 animate-ping rounded-full bg-blue-500/20"></div>
+                                        </div>
+                                        <p className="text-blue-400">Speaking question...</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-6 w-full">
+                                        <button
+                                            onClick={toggleRecording}
+                                            className={`group relative flex h-32 w-32 items-center justify-center rounded-full transition-all ${isRecording
+                                                    ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
+                                                    : "bg-blue-600 hover:bg-blue-500 hover:scale-105 shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+                                                }`}
+                                        >
+                                            {isRecording ? (
+                                                <div className="h-12 w-12 rounded bg-white" /> // Stop icon look
+                                            ) : (
+                                                <Mic className="h-14 w-14 text-white" />
+                                            )}
+                                        </button>
+
+                                        <p className="text-lg text-gray-400">
+                                            {isRecording
+                                                ? "Listening... Click to stop"
+                                                : "Click the microphone to record your answer"
+                                            }
+                                        </p>
+
+                                        {/* Live Transcript Preview */}
+                                        {transcribedText && (
+                                            <div className="w-full rounded-xl border border-gray-800 bg-[#161616] p-4 text-center">
+                                                <p className="text-gray-300">"{transcribedText}"</p>
+                                            </div>
+                                        )}
+
+                                        {/* Manual Submit Button (if text exists but not recording) */}
+                                        {!isRecording && transcribedText && (
+                                            <button
+                                                onClick={handleSubmitAnswer}
+                                                disabled={isLoading}
+                                                className="flex items-center gap-2 rounded-full bg-white px-8 py-3 font-bold text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                                            >
+                                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Submit Answer"}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Feedback Card */}
+                    {feedback && (
+                        <div className="animate-in slide-in-from-bottom-8 duration-500">
+                            <div className="rounded-2xl border border-gray-800 bg-[#161616] p-8 shadow-2xl">
+                                <div className="mb-6 flex items-center justify-between">
+                                    <h3 className="text-xl font-bold text-white">AI Feedback</h3>
+                                    <div className="flex items-center gap-2 rounded-full bg-yellow-900/20 px-4 py-2 text-yellow-400">
+                                        <Star className="h-5 w-5 fill-current" />
+                                        <span className="text-lg font-bold">{feedback.rating}/10</span>
+                                    </div>
+                                </div>
+
+                                <div className="mb-8 space-y-6">
+                                    <div>
+                                        <h4 className="mb-2 text-sm font-medium text-gray-400 uppercase tracking-wider">Analysis</h4>
+                                        <p className="text-lg leading-relaxed text-gray-200">{feedback.feedback}</p>
+                                    </div>
+
+                                    <div className="rounded-xl bg-green-900/10 p-6 border border-green-900/30">
+                                        <h4 className="mb-3 text-sm font-medium text-green-400 uppercase tracking-wider">Suggested Answer</h4>
+                                        <p className="text-base leading-relaxed text-green-100/90 italic">"{feedback.suggestedAnswer}"</p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleNextQuestion}
+                                    className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 py-4 text-lg font-bold text-white transition-all hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-900/20"
                                 >
-                                    <div
-                                        className={`max-w-[80%] rounded-2xl px-6 py-4 ${msg.role === "user"
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-[#1e1e1e] text-gray-200"
-                                            }`}
-                                    >
-                                        <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Feedback Card */}
-                            {feedback && (
-                                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                    <div className="rounded-xl border border-gray-800 bg-[#161616] p-6 shadow-xl">
-                                        <div className="mb-4 flex items-center justify-between">
-                                            <h3 className="text-lg font-semibold text-purple-400">AI Feedback</h3>
-                                            <div className="flex items-center gap-1 rounded-full bg-yellow-900/20 px-3 py-1 text-yellow-400">
-                                                <Star className="h-4 w-4 fill-current" />
-                                                <span className="font-bold">{feedback.rating}/10</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="mb-6 space-y-4">
-                                            <div>
-                                                <h4 className="mb-2 text-sm font-medium text-gray-400">Analysis</h4>
-                                                <p className="text-sm leading-relaxed text-gray-300">{feedback.feedback}</p>
-                                            </div>
-
-                                            <div className="rounded-lg bg-green-900/10 p-4 border border-green-900/30">
-                                                <h4 className="mb-2 text-sm font-medium text-green-400">Suggested "Perfect" Answer</h4>
-                                                <p className="text-sm leading-relaxed text-green-100/80 italic">"{feedback.suggestedAnswer}"</p>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            onClick={handleNextQuestion}
-                                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-white py-3 font-semibold text-black transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                                        >
-                                            Next Question <ArrowRight className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {isLoading && (
-                                <div className="flex justify-start">
-                                    <div className="flex items-center gap-2 rounded-2xl bg-[#1e1e1e] px-6 py-4 text-gray-400">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <span>AI is thinking...</span>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
+                                    Next Question <ArrowRight className="h-5 w-5" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Input Area */}
-                    <div className="border-t border-gray-800 bg-[#161616] p-6">
-                        <div className="mx-auto max-w-3xl">
-                            {!feedback && (
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={toggleRecording}
-                                        className={`flex h-14 w-14 flex-none items-center justify-center rounded-full transition-all ${isRecording
-                                                ? "bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                                                : "bg-[#2a2a2a] text-gray-400 hover:bg-[#333] hover:text-white"
-                                            }`}
-                                    >
-                                        {isRecording ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-                                    </button>
-
-                                    <div className="relative flex-1">
-                                        <textarea
-                                            value={transcribedText}
-                                            onChange={(e) => setTranscribedText(e.target.value)}
-                                            placeholder={isRecording ? "Listening..." : "Type your answer or use microphone..."}
-                                            className="h-14 w-full resize-none rounded-xl border border-gray-700 bg-[#0e0e0e] px-4 py-3 pr-12 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    handleSubmitAnswer();
-                                                }
-                                            }}
-                                        />
-                                        <button
-                                            onClick={handleSubmitAnswer}
-                                            disabled={!transcribedText.trim() || isLoading}
-                                            className="absolute right-2 top-2 rounded-lg p-2 text-blue-500 transition-colors hover:bg-blue-900/20 disabled:opacity-50"
-                                        >
-                                            <Send className="h-5 w-5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                            {feedback && (
-                                <div className="text-center text-sm text-gray-500">
-                                    Review the feedback above and click "Next Question" to continue.
-                                </div>
-                            )}
+                    {/* Loading State */}
+                    {isLoading && !feedback && (
+                        <div className="mt-8 flex justify-center">
+                            <div className="flex items-center gap-3 rounded-full bg-[#1e1e1e] px-6 py-3 text-gray-400">
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <span>Analyzing your response...</span>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
                 </div>
             </div>
         </div>
