@@ -104,6 +104,10 @@ export default function BehaviouralInterviewPage() {
                 }),
             });
             const data = await res.json();
+            if (data.error) {
+                alert("Failed to generate question: " + data.error);
+                return;
+            }
             if (data.nextQuestion) {
                 setCurrentQuestion(data.nextQuestion);
                 setMessages([{ role: "assistant", content: data.nextQuestion }]);
@@ -162,6 +166,10 @@ export default function BehaviouralInterviewPage() {
                 }),
             });
             const data = await res.json();
+            if (data.error) {
+                alert("Failed to evaluate answer: " + data.error);
+                return;
+            }
             setFeedback(data);
         } catch (error) {
             console.error("Failed to submit answer", error);
@@ -290,8 +298,8 @@ export default function BehaviouralInterviewPage() {
                                         <button
                                             onClick={toggleRecording}
                                             className={`group relative flex h-32 w-32 items-center justify-center rounded-full transition-all ${isRecording
-                                                    ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
-                                                    : "bg-purple-600 hover:bg-purple-500 hover:scale-105 shadow-[0_0_20px_rgba(147,51,234,0.3)]"
+                                                ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
+                                                : "bg-purple-600 hover:bg-purple-500 hover:scale-105 shadow-[0_0_20px_rgba(147,51,234,0.3)]"
                                                 }`}
                                         >
                                             {isRecording ? (

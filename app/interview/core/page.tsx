@@ -118,6 +118,10 @@ export default function CoreInterviewPage() {
                 }),
             });
             const data = await res.json();
+            if (data.error) {
+                alert("Failed to generate question: " + data.error);
+                return;
+            }
             if (data.nextQuestion) {
                 setCurrentQuestion(data.nextQuestion);
                 setMessages([{ role: "assistant", content: data.nextQuestion }]);
@@ -177,6 +181,10 @@ export default function CoreInterviewPage() {
                 }),
             });
             const data = await res.json();
+            if (data.error) {
+                alert("Failed to evaluate answer: " + data.error);
+                return;
+            }
             setFeedback(data);
         } catch (error) {
             console.error("Failed to submit answer", error);
@@ -223,8 +231,8 @@ export default function CoreInterviewPage() {
                                 key={subject.id}
                                 onClick={() => setSelectedSubject(subject.name)}
                                 className={`group relative flex items-center gap-4 rounded-xl border p-6 transition-all hover:scale-[1.02] ${selectedSubject === subject.name
-                                        ? `bg-[#161616] ${subject.border} ring-2 ring-offset-2 ring-offset-[#0e0e0e] ring-${subject.color.split('-')[1]}-500`
-                                        : "border-gray-800 bg-[#161616] hover:border-gray-700"
+                                    ? `bg-[#161616] ${subject.border} ring-2 ring-offset-2 ring-offset-[#0e0e0e] ring-${subject.color.split('-')[1]}-500`
+                                    : "border-gray-800 bg-[#161616] hover:border-gray-700"
                                     }`}
                             >
                                 <div className={`rounded-lg p-3 ${subject.bg}`}>
@@ -337,8 +345,8 @@ export default function CoreInterviewPage() {
                                         <button
                                             onClick={toggleRecording}
                                             className={`group relative flex h-32 w-32 items-center justify-center rounded-full transition-all ${isRecording
-                                                    ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
-                                                    : "bg-indigo-600 hover:bg-indigo-500 hover:scale-105 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
+                                                ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
+                                                : "bg-indigo-600 hover:bg-indigo-500 hover:scale-105 shadow-[0_0_20px_rgba(79,70,229,0.3)]"
                                                 }`}
                                         >
                                             {isRecording ? (

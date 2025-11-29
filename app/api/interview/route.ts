@@ -233,7 +233,9 @@ export async function POST(req: Request) {
                 response_format: { type: "json_object" },
             });
 
-            const response = JSON.parse(completion.choices[0].message.content || "{}");
+            let content = completion.choices[0].message.content || "{}";
+            content = content.replace(/```json\n?|```/g, "").trim();
+            const response = JSON.parse(content);
             return NextResponse.json(response);
         }
 
@@ -242,13 +244,16 @@ export async function POST(req: Request) {
             model: "gpt-4o",
             messages: [
                 { role: "system", content: DYNAMIC_SYSTEM_PROMPT },
-                ...messages, // Previous context
-                { role: "user", content: userResponse }
+                ...messages
             ],
             response_format: { type: "json_object" },
         });
 
-        const response = JSON.parse(completion.choices[0].message.content || "{}");
+        let content = completion.choices[0].message.content || "{}";
+        // Sanitize content if it contains markdown code blocks
+        content = content.replace(/```json\n?|```/g, "").trim();
+
+        const response = JSON.parse(content);
         return NextResponse.json(response);
 
     } catch (error) {
