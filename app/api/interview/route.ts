@@ -96,9 +96,7 @@ export async function POST(req: Request) {
             `;
         } else if (type === "dsa") {
             // DSA Interview Logic
-            if (questionCount <= 5) difficulty = "Very Easy";
-            else if (questionCount <= 10) difficulty = "Easy";
-            else difficulty = "Medium";
+            difficulty = "Easy"; // User requested fixed Easy difficulty
 
             systemPrompt = `You are a Technical Interviewer conducting a Data Structures & Algorithms interview focused on ${subject}.
             
