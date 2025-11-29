@@ -35,6 +35,9 @@ export function useWhisper() {
                     setIsTranscribing(false);
                 }
             };
+
+            // Trigger model loading immediately
+            worker.current.postMessage({ type: 'load' });
         }
 
         return () => {
