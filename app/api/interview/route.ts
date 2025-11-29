@@ -5,14 +5,13 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are an expert HR interviewer conducting a behavioural interview. 
-Your goal is to ask relevant behavioural questions (e.g., STAR method based), evaluate the candidate's answer, and provide constructive feedback.
+const SYSTEM_PROMPT = `You are an expert Technical Interviewer. Your goal is to conduct an interview, evaluate the candidate's responses, and ask follow-up questions.
 
 When the user provides an answer:
 1. Rate the answer on a scale of 1-10.
-2. Provide specific feedback on strengths and areas for improvement.
+2. Provide specific feedback on technical accuracy and depth.
 3. Provide a "Perfect Answer" example that would get a 10/10.
-4. Ask the next relevant follow-up question or a new behavioural question.
+4. Ask the next relevant follow-up question or a new question.
 
 Return your response in this JSON format:
 {
@@ -224,7 +223,6 @@ export async function POST(req: Request) {
             if (type === "mock") firstUserMessage = "Start the interview. Ask me to introduce myself.";
             if (!type) firstUserMessage = "Start the interview. Introduce yourself briefly and ask the first behavioural question (Very Easy).";
 
-            console.log("Starting interview...");
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o",
                 messages: [
@@ -235,14 +233,12 @@ export async function POST(req: Request) {
             });
 
             let content = completion.choices[0].message.content || "{}";
-            console.log("Raw OpenAI Response (Start):", content);
             content = content.replace(/```json\n?|```/g, "").trim();
 
             try {
                 const response = JSON.parse(content);
                 return NextResponse.json(response);
             } catch (parseError) {
-                console.error("JSON Parse Error (Start):", parseError);
                 return NextResponse.json(
                     { error: "Failed to parse AI response" },
                     { status: 500 }
@@ -251,7 +247,6 @@ export async function POST(req: Request) {
         }
 
         // Evaluate user response
-        console.log("Evaluating user response...");
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
@@ -262,17 +257,12 @@ export async function POST(req: Request) {
         });
 
         let content = completion.choices[0].message.content || "{}";
-        console.log("Raw OpenAI Response:", content);
-
-        // Sanitize content if it contains markdown code blocks
         content = content.replace(/```json\n?|```/g, "").trim();
-        console.log("Sanitized Content:", content);
 
         try {
             const response = JSON.parse(content);
             return NextResponse.json(response);
         } catch (parseError) {
-            console.error("JSON Parse Error:", parseError);
             return NextResponse.json(
                 { error: "Failed to parse AI response" },
                 { status: 500 }
@@ -280,8 +270,6 @@ export async function POST(req: Request) {
         }
 
     } catch (error: any) {
-        console.error("Interview API Error:", error);
-
         let errorMessage = "Failed to process interview request";
         if (error.code === 'insufficient_quota') {
             errorMessage = "OpenAI API Quota Exceeded. Please check your billing details and credit balance.";
