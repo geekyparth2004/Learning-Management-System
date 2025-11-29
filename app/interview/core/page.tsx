@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, ArrowRight, Star, Loader2, ArrowLeft, BookOpen, Volume2, Database, Network, Cpu, Code2 } from "lucide-react";
 import Link from "next/link";
+import { useWhisper } from "@/hooks/use-whisper";
 
 interface Feedback {
     rating: number;
@@ -25,8 +26,8 @@ export default function CoreInterviewPage() {
 
     // Interview State
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
-    const [isRecording, setIsRecording] = useState(false);
-    const [transcribedText, setTranscribedText] = useState("");
+    // const [isRecording, setIsRecording] = useState(false); // Replaced by hook
+    // const [transcribedText, setTranscribedText] = useState(""); // Replaced by hook
     const [isLoading, setIsLoading] = useState(false);
     const [feedback, setFeedback] = useState<Feedback | null>(null);
     const [questionCount, setQuestionCount] = useState(0);
@@ -37,42 +38,23 @@ export default function CoreInterviewPage() {
     const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
 
     // Speech Refs
-    const recognitionRef = useRef<any>(null);
     const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
-    // Initialize Speech APIs
+    // Whisper Hook
+    const {
+        isRecording,
+        isModelLoading,
+        isTranscribing,
+        transcribedText,
+        setTranscribedText,
+        startRecording,
+        stopRecording
+    } = useWhisper();
+
+    // Initialize Speech Synthesis
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                const recognition = new SpeechRecognition();
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                recognition.lang = 'en-IN'; // Set language to Indian English
-
-                recognition.onresult = (event: any) => {
-                    let finalTranscript = "";
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            finalTranscript += event.results[i][0].transcript;
-                        }
-                    }
-                    if (finalTranscript) {
-                        setTranscribedText(prev => prev + " " + finalTranscript);
-                    }
-                };
-
-                recognition.onerror = (event: any) => {
-                    console.error("Speech recognition error", event.error);
-                    setIsRecording(false);
-                };
-
-                recognitionRef.current = recognition;
-            }
-
-            if (window.speechSynthesis) {
-                synthesisRef.current = window.speechSynthesis;
-            }
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+            synthesisRef.current = window.speechSynthesis;
         }
     }, []);
 
@@ -135,32 +117,24 @@ export default function CoreInterviewPage() {
         }
     };
 
-    const toggleRecording = () => {
-        if (!recognitionRef.current) {
-            alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
-            return;
-        }
-
+    const toggleRecording = async () => {
         if (isRecording) {
-            recognitionRef.current.stop();
-            setIsRecording(false);
+            stopRecording();
         } else {
             if (isSpeaking && synthesisRef.current) {
                 synthesisRef.current.cancel();
                 setIsSpeaking(false);
             }
             setTranscribedText("");
-            recognitionRef.current.start();
-            setIsRecording(true);
+            await startRecording();
         }
     };
 
     const handleSubmitAnswer = async () => {
         if (!transcribedText.trim()) return;
 
-        if (isRecording && recognitionRef.current) {
-            recognitionRef.current.stop();
-            setIsRecording(false);
+        if (isRecording) {
+            stopRecording();
         }
 
         const userMsg = { role: "user", content: transcribedText };
@@ -358,7 +332,15 @@ export default function CoreInterviewPage() {
                                         </button>
 
                                         <p className="text-lg text-gray-400">
-                                            {isRecording
+                                            {isModelLoading ? (
+                                                <span className="flex items-center gap-2 text-yellow-500">
+                                                    <Loader2 className="h-4 w-4 animate-spin" /> Loading AI Model...
+                                                </span>
+                                            ) : isTranscribing ? (
+                                                <span className="flex items-center gap-2 text-blue-400">
+                                                    <Loader2 className="h-4 w-4 animate-spin" /> Transcribing...
+                                                </span>
+                                            ) : isRecording
                                                 ? "Listening... Click to stop"
                                                 : "Click the microphone to record your answer"
                                             }
