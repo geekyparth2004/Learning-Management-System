@@ -222,7 +222,7 @@ export async function POST(req: Request) {
             if (!type) firstUserMessage = "Start the interview. Introduce yourself briefly and ask the first behavioural question (Very Easy).";
 
             const completion = await openai.chat.completions.create({
-                model: "gpt-4o",
+                model: "gpt-5-nano",
                 messages: [
                     { role: "system", content: DYNAMIC_SYSTEM_PROMPT },
                     { role: "user", content: firstUserMessage }
@@ -246,7 +246,7 @@ export async function POST(req: Request) {
 
         // Evaluate user response
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-5-nano",
             messages: [
                 { role: "system", content: DYNAMIC_SYSTEM_PROMPT },
                 ...messages
