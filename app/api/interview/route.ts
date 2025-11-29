@@ -224,6 +224,7 @@ export async function POST(req: Request) {
             if (type === "mock") firstUserMessage = "Start the interview. Ask me to introduce myself.";
             if (!type) firstUserMessage = "Start the interview. Introduce yourself briefly and ask the first behavioural question (Very Easy).";
 
+            console.log("Starting interview...");
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o",
                 messages: [
@@ -234,12 +235,23 @@ export async function POST(req: Request) {
             });
 
             let content = completion.choices[0].message.content || "{}";
+            console.log("Raw OpenAI Response (Start):", content);
             content = content.replace(/```json\n?|```/g, "").trim();
-            const response = JSON.parse(content);
-            return NextResponse.json(response);
+
+            try {
+                const response = JSON.parse(content);
+                return NextResponse.json(response);
+            } catch (parseError) {
+                console.error("JSON Parse Error (Start):", parseError);
+                return NextResponse.json(
+                    { error: "Failed to parse AI response" },
+                    { status: 500 }
+                );
+            }
         }
 
         // Evaluate user response
+        console.log("Evaluating user response...");
         const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [
@@ -250,17 +262,38 @@ export async function POST(req: Request) {
         });
 
         let content = completion.choices[0].message.content || "{}";
+        console.log("Raw OpenAI Response:", content);
+
         // Sanitize content if it contains markdown code blocks
         content = content.replace(/```json\n?|```/g, "").trim();
+        console.log("Sanitized Content:", content);
 
-        const response = JSON.parse(content);
-        return NextResponse.json(response);
+        try {
+            const response = JSON.parse(content);
+            return NextResponse.json(response);
+        } catch (parseError) {
+            console.error("JSON Parse Error:", parseError);
+            return NextResponse.json(
+                { error: "Failed to parse AI response" },
+                { status: 500 }
+            );
+        }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Interview API Error:", error);
+
+        let errorMessage = "Failed to process interview request";
+        if (error.code === 'insufficient_quota') {
+            errorMessage = "OpenAI API Quota Exceeded. Please check your billing details and credit balance.";
+        } else if (error.status === 429) {
+            errorMessage = "Too many requests. Please try again later.";
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
         return NextResponse.json(
-            { error: "Failed to process interview request" },
-            { status: 500 }
+            { error: errorMessage },
+            { status: error.status || 500 }
         );
     }
 }
