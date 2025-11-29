@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Code2, GraduationCap, LogIn, LogOut, User } from "lucide-react";
+import { Code2, GraduationCap, LogIn, LogOut, User, Briefcase } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import DeleteAssignmentButton from "@/components/DeleteAssignmentButton";
@@ -34,7 +34,18 @@ export default async function Home() {
           <div className="flex items-center gap-4">
             {session ? (
               <div className="flex items-center gap-4">
-                {!isTeacher && <FocusModeButton />}
+                {!isTeacher && (
+                  <>
+                    <Link
+                      href="/interview"
+                      className="flex items-center gap-2 rounded-full border border-gray-800 bg-[#161616] px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-[#1a1a1a] hover:text-white"
+                    >
+                      <Briefcase className="h-4 w-4" />
+                      AI Interview
+                    </Link>
+                    <FocusModeButton />
+                  </>
+                )}
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <User className="h-4 w-4" />
                   <span>{session.user?.name} ({session.user?.role})</span>
