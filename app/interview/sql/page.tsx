@@ -11,16 +11,11 @@ interface Feedback {
     nextQuestion: string;
 }
 
-const TOPICS = [
-    { id: "basic", name: "Basic Queries", icon: Search, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-    { id: "joins", name: "Joins & Subqueries", icon: Table, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20" },
-    { id: "advanced", name: "Advanced SQL", icon: FileCode, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/20" }
-];
+
 
 export default function SQLInterviewPage() {
     // Setup State
     const [hasStarted, setHasStarted] = useState(false);
-    const [selectedTopic, setSelectedTopic] = useState("");
 
     // Interview State
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
@@ -47,6 +42,7 @@ export default function SQLInterviewPage() {
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
+                recognition.lang = 'en-IN'; // Set language to Indian English
 
                 recognition.onresult = (event: any) => {
                     let finalTranscript = "";
@@ -98,11 +94,6 @@ export default function SQLInterviewPage() {
     };
 
     const startInterview = async () => {
-        if (!selectedTopic) {
-            alert("Please select a topic.");
-            return;
-        }
-
         setHasStarted(true);
         setIsLoading(true);
         try {
@@ -113,7 +104,7 @@ export default function SQLInterviewPage() {
                     messages: [],
                     questionCount: 0,
                     type: "sql",
-                    subject: selectedTopic // Using 'subject' field for topic to match API
+                    subject: "Basic SQL and Joins"
                 }),
             });
             const data = await res.json();
@@ -172,7 +163,7 @@ export default function SQLInterviewPage() {
                     userResponse: transcribedText,
                     questionCount: questionCount,
                     type: "sql",
-                    subject: selectedTopic
+                    subject: "Basic SQL and Joins"
                 }),
             });
             const data = await res.json();
@@ -203,53 +194,24 @@ export default function SQLInterviewPage() {
     if (!hasStarted) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-[#0e0e0e] p-6 text-white">
-                <div className="w-full max-w-4xl">
-                    <div className="mb-12 text-center">
-                        <div className="mb-6 flex justify-center">
-                            <div className="rounded-full bg-indigo-900/20 p-4">
-                                <Database className="h-10 w-10 text-indigo-500" />
-                            </div>
+                <div className="w-full max-w-4xl text-center">
+                    <div className="mb-8 flex justify-center">
+                        <div className="rounded-full bg-indigo-900/20 p-6">
+                            <Database className="h-16 w-16 text-indigo-500" />
                         </div>
-                        <h1 className="mb-4 text-4xl font-bold">SQL Interview</h1>
-                        <p className="text-xl text-gray-400">
-                            Select a topic to practice SQL queries and concepts.
-                        </p>
                     </div>
+                    <h1 className="mb-6 text-5xl font-bold">SQL Interview</h1>
+                    <p className="mb-12 text-xl text-gray-400 max-w-2xl mx-auto">
+                        Practice SQL queries and concepts with an AI interviewer.
+                        Topics covered: Basic Queries and Joins.
+                    </p>
 
-                    <div className="grid gap-6 md:grid-cols-3">
-                        {TOPICS.map((topic) => (
-                            <button
-                                key={topic.id}
-                                onClick={() => setSelectedTopic(topic.name)}
-                                className={`group relative flex items-center gap-4 rounded-xl border p-6 transition-all hover:scale-[1.02] ${selectedTopic === topic.name
-                                    ? `bg-[#161616] ${topic.border} ring-2 ring-offset-2 ring-offset-[#0e0e0e] ring-${topic.color.split('-')[1]}-500`
-                                    : "border-gray-800 bg-[#161616] hover:border-gray-700"
-                                    }`}
-                            >
-                                <div className={`rounded-lg p-3 ${topic.bg}`}>
-                                    <topic.icon className={`h-6 w-6 ${topic.color}`} />
-                                </div>
-                                <div className="text-left">
-                                    <h3 className="text-lg font-bold text-white">{topic.name}</h3>
-                                </div>
-                                {selectedTopic === topic.name && (
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                        <div className={`h-3 w-3 rounded-full bg-${topic.color.split('-')[1]}-500 shadow-[0_0_10px_currentColor]`} />
-                                    </div>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="mt-12 flex justify-center">
-                        <button
-                            onClick={startInterview}
-                            disabled={!selectedTopic}
-                            className="w-full max-w-md rounded-xl bg-indigo-600 py-4 text-lg font-bold text-white transition-all hover:scale-[1.02] hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            Start Interview
-                        </button>
-                    </div>
+                    <button
+                        onClick={startInterview}
+                        className="rounded-xl bg-indigo-600 px-12 py-6 text-xl font-bold text-white transition-all hover:scale-105 hover:bg-indigo-500 shadow-[0_0_30px_rgba(79,70,229,0.3)]"
+                    >
+                        Start Interview
+                    </button>
                 </div>
             </div>
         );
@@ -266,7 +228,7 @@ export default function SQLInterviewPage() {
                     </div>
                     <h1 className="mb-4 text-3xl font-bold">Interview Completed!</h1>
                     <p className="mb-8 text-gray-400">
-                        You have successfully completed the {selectedTopic} interview.
+                        You have successfully completed the SQL interview.
                     </p>
                     <Link
                         href="/interview"
@@ -288,7 +250,7 @@ export default function SQLInterviewPage() {
                     <span className="hidden sm:inline">Exit</span>
                 </Link>
                 <div className="flex flex-col items-center">
-                    <span className="text-sm font-medium text-indigo-500">{selectedTopic} Round</span>
+                    <span className="text-sm font-medium text-indigo-500">SQL Round</span>
                     <div className="flex gap-1">
                         {Array.from({ length: 15 }).map((_, i) => (
                             <div

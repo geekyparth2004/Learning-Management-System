@@ -45,6 +45,7 @@ export default function DSAInterviewPage() {
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
+                recognition.lang = 'en-IN'; // Set language to Indian English
 
                 recognition.onresult = (event: any) => {
                     let finalTranscript = "";

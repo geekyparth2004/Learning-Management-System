@@ -43,6 +43,7 @@ export default function MockInterviewPage() {
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
+                recognition.lang = 'en-IN'; // Set language to Indian English
 
                 recognition.onresult = (event: any) => {
                     let finalTranscript = "";
@@ -340,8 +341,8 @@ export default function MockInterviewPage() {
                                         <button
                                             onClick={toggleRecording}
                                             className={`group relative flex h-32 w-32 items-center justify-center rounded-full transition-all ${isRecording
-                                                    ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
-                                                    : "bg-blue-600 hover:bg-blue-500 hover:scale-105 shadow-[0_0_20px_rgba(37,99,235,0.3)]"
+                                                ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
+                                                : "bg-blue-600 hover:bg-blue-500 hover:scale-105 shadow-[0_0_20px_rgba(37,99,235,0.3)]"
                                                 }`}
                                         >
                                             {isRecording ? (

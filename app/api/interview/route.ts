@@ -124,9 +124,7 @@ export async function POST(req: Request) {
             `;
         } else if (type === "sql") {
             // SQL Interview Logic
-            if (questionCount <= 5) difficulty = "Very Easy";
-            else if (questionCount <= 10) difficulty = "Easy";
-            else difficulty = "Medium";
+            difficulty = "Easy"; // User requested fixed Easy difficulty
 
             systemPrompt = `You are a Database Expert conducting a SQL interview focused on ${subject}.
             
