@@ -1,121 +1,96 @@
+import { useState, useRef, useCallback } from "react";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+interface UseWhisperReturn {
+    isRecording: boolean;
+    isModelLoading: boolean; // Kept for compatibility, but will be unused or always false
+    isTranscribing: boolean;
+    transcribedText: string;
+    setTranscribedText: (text: string) => void;
+    startRecording: () => Promise<void>;
+    stopRecording: () => void;
+    error: string | null;
+}
 
-export function useWhisper() {
+export function useWhisper(): UseWhisperReturn {
     const [isRecording, setIsRecording] = useState(false);
-    const [isModelLoading, setIsModelLoading] = useState(true);
-    const [transcribedText, setTranscribedText] = useState('');
     const [isTranscribing, setIsTranscribing] = useState(false);
-
+    const [transcribedText, setTranscribedText] = useState("");
     const [error, setError] = useState<string | null>(null);
 
-    const worker = useRef<Worker | null>(null);
-    const mediaRecorder = useRef<MediaRecorder | null>(null);
-    const audioContext = useRef<AudioContext | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const chunksRef = useRef<Blob[]>([]);
 
-    useEffect(() => {
-        if (!worker.current) {
-            worker.current = new Worker(new URL('../app/worker.js', import.meta.url), {
-                type: 'module',
+    const transcribeAudio = async (audioBlob: Blob) => {
+        setIsTranscribing(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", audioBlob, "audio.webm");
+
+            const response = await fetch("/api/transcribe", {
+                method: "POST",
+                body: formData,
             });
 
-            worker.current.onmessage = (event) => {
-                const { type, data } = event.data;
-                if (type === 'download') {
-                    // Model downloading progress
-                    if (data.status === 'ready') {
-                        setIsModelLoading(false);
-                    }
-                } else if (type === 'complete') {
-                    setTranscribedText(prev => {
-                        const newText = data.text.trim();
-                        return prev ? `${prev} ${newText}` : newText;
-                    });
-                    setIsTranscribing(false);
-                } else if (type === 'error') {
-                    console.error('Whisper error:', data);
-                    setError(data);
-                    setIsTranscribing(false);
-                    setIsModelLoading(false); // Ensure we don't get stuck in loading
-                }
-            };
+            const data = await response.json();
 
-            // Trigger model loading immediately
-            worker.current.postMessage({ type: 'load' });
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            setTranscribedText(data.text);
+        } catch (err: any) {
+            console.error("Transcription error:", err);
+            setError(err.message || "Failed to transcribe audio.");
+        } finally {
+            setIsTranscribing(false);
         }
-
-        return () => {
-            worker.current?.terminate();
-        };
-    }, []);
+    };
 
     const startRecording = useCallback(async () => {
-        setError(null); // Clear previous errors
+        setError(null);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder.current = new MediaRecorder(stream);
-            audioContext.current = new AudioContext({ sampleRate: 16000 });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            chunksRef.current = [];
 
-            let chunks: Blob[] = [];
-
-            mediaRecorder.current.ondataavailable = (e) => {
-                if (e.data.size > 0) chunks.push(e.data);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunksRef.current.push(e.data);
+                }
             };
 
-            mediaRecorder.current.onstop = async () => {
-                const blob = new Blob(chunks, { type: 'audio/webm' });
-                chunks = [];
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+                await transcribeAudio(audioBlob);
 
-                if (worker.current) {
-                    setIsTranscribing(true);
-                    try {
-                        const arrayBuffer = await blob.arrayBuffer();
-                        const audioData = await decodeAudioData(arrayBuffer);
-                        worker.current.postMessage({
-                            type: 'transcribe',
-                            audio: audioData,
-                        });
-                    } catch (err) {
-                        console.error("Audio decoding error:", err);
-                        setError("Failed to process audio. Please try again.");
-                        setIsTranscribing(false);
-                    }
-                }
-
-                // Stop all tracks
+                // Stop all tracks to release microphone
                 stream.getTracks().forEach(track => track.stop());
             };
 
-            mediaRecorder.current.start();
+            mediaRecorder.start();
             setIsRecording(true);
-        } catch (err) {
-            console.error('Error starting recording:', err);
-            setError("Could not access microphone.");
+        } catch (err: any) {
+            console.error("Error starting recording:", err);
+            setError("Microphone access denied or not available.");
         }
     }, []);
 
     const stopRecording = useCallback(() => {
-        if (mediaRecorder.current && isRecording) {
-            mediaRecorder.current.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+            mediaRecorderRef.current.stop();
             setIsRecording(false);
         }
-    }, [isRecording]);
-
-    // Helper to decode audio data to float32 for Whisper
-    const decodeAudioData = async (arrayBuffer: ArrayBuffer) => {
-        if (!audioContext.current) return new Float32Array(0);
-        const audioBuffer = await audioContext.current.decodeAudioData(arrayBuffer);
-        return audioBuffer.getChannelData(0);
-    };
+    }, []);
 
     return {
         isRecording,
-        isModelLoading,
+        isModelLoading: false, // No model loading needed for server-side
         isTranscribing,
         transcribedText,
         setTranscribedText,
         startRecording,
         stopRecording,
-        error,
+        error
     };
 }
