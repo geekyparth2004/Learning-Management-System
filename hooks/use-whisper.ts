@@ -7,6 +7,8 @@ export function useWhisper() {
     const [transcribedText, setTranscribedText] = useState('');
     const [isTranscribing, setIsTranscribing] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
+
     const worker = useRef<Worker | null>(null);
     const mediaRecorder = useRef<MediaRecorder | null>(null);
     const audioContext = useRef<AudioContext | null>(null);
@@ -32,7 +34,9 @@ export function useWhisper() {
                     setIsTranscribing(false);
                 } else if (type === 'error') {
                     console.error('Whisper error:', data);
+                    setError(data);
                     setIsTranscribing(false);
+                    setIsModelLoading(false); // Ensure we don't get stuck in loading
                 }
             };
 
@@ -46,6 +50,7 @@ export function useWhisper() {
     }, []);
 
     const startRecording = useCallback(async () => {
+        setError(null); // Clear previous errors
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder.current = new MediaRecorder(stream);
@@ -63,12 +68,18 @@ export function useWhisper() {
 
                 if (worker.current) {
                     setIsTranscribing(true);
-                    const arrayBuffer = await blob.arrayBuffer();
-                    const audioData = await decodeAudioData(arrayBuffer);
-                    worker.current.postMessage({
-                        type: 'transcribe',
-                        audio: audioData,
-                    });
+                    try {
+                        const arrayBuffer = await blob.arrayBuffer();
+                        const audioData = await decodeAudioData(arrayBuffer);
+                        worker.current.postMessage({
+                            type: 'transcribe',
+                            audio: audioData,
+                        });
+                    } catch (err) {
+                        console.error("Audio decoding error:", err);
+                        setError("Failed to process audio. Please try again.");
+                        setIsTranscribing(false);
+                    }
                 }
 
                 // Stop all tracks
@@ -79,6 +90,7 @@ export function useWhisper() {
             setIsRecording(true);
         } catch (err) {
             console.error('Error starting recording:', err);
+            setError("Could not access microphone.");
         }
     }, []);
 
@@ -104,5 +116,6 @@ export function useWhisper() {
         setTranscribedText,
         startRecording,
         stopRecording,
+        error,
     };
 }

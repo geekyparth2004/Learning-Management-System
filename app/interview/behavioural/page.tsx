@@ -32,17 +32,6 @@ export default function BehaviouralInterviewPage() {
     // Speech Refs
     const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
-    // Whisper Hook
-    const {
-        isRecording,
-        isModelLoading,
-        isTranscribing,
-        transcribedText,
-        setTranscribedText,
-        startRecording,
-        stopRecording
-    } = useWhisper();
-
     // Initialize Speech Synthesis
     useEffect(() => {
         if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -285,7 +274,11 @@ export default function BehaviouralInterviewPage() {
                                         </button>
 
                                         <p className="text-lg text-gray-400">
-                                            {isModelLoading ? (
+                                            {error ? (
+                                                <span className="flex items-center gap-2 text-red-500">
+                                                    Error: {error}
+                                                </span>
+                                            ) : isModelLoading ? (
                                                 <span className="flex items-center gap-2 text-yellow-500">
                                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading AI Model...
                                                 </span>

@@ -3,12 +3,12 @@ import { pipeline } from '@huggingface/transformers';
 
 class AutomaticSpeechRecognitionPipeline {
     static task = 'automatic-speech-recognition';
-    static model = 'Xenova/whisper-base.en';
+    static model = 'Xenova/whisper-tiny.en';
     static instance = null;
 
     static async getInstance(progress_callback = null) {
         if (this.instance === null) {
-            this.instance = await pipeline(this.task, this.model, {
+            this.instance = pipeline(this.task, this.model, {
                 quantized: true,
                 progress_callback,
             });
