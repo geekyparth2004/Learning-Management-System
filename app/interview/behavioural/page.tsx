@@ -32,6 +32,18 @@ export default function BehaviouralInterviewPage() {
     // Speech Refs
     const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
+    // Whisper Hook
+    const {
+        isRecording,
+        isModelLoading,
+        isTranscribing,
+        transcribedText,
+        setTranscribedText,
+        startRecording,
+        stopRecording,
+        error
+    } = useWhisper();
+
     // Initialize Speech Synthesis
     useEffect(() => {
         if (typeof window !== "undefined" && window.speechSynthesis) {
