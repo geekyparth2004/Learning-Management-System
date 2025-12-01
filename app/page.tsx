@@ -66,9 +66,9 @@ export default async function Home() {
                   <p className="text-sm text-gray-400">Build a new course with modules and lessons.</p>
                 </div>
               </Link>
-              
-               <Link
-                href="/courses"
+
+              <Link
+                href="/teacher/courses"
                 className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-purple-500 hover:bg-[#1a1a1a]"
               >
                 <div className="rounded-full bg-purple-900/20 p-4 text-purple-400 transition-colors group-hover:bg-purple-500 group-hover:text-white">
@@ -81,18 +81,18 @@ export default async function Home() {
               </Link>
             </div>
           ) : (
-             <Link
-                href="/courses"
-                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
-              >
-                <div className="rounded-full bg-blue-900/20 p-4 text-blue-400 transition-colors group-hover:bg-blue-500 group-hover:text-white">
-                  <BookOpen className="h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Browse Courses</h3>
-                  <p className="text-sm text-gray-400">Explore available courses and start learning.</p>
-                </div>
-              </Link>
+            <Link
+              href="/courses"
+              className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
+            >
+              <div className="rounded-full bg-blue-900/20 p-4 text-blue-400 transition-colors group-hover:bg-blue-500 group-hover:text-white">
+                <BookOpen className="h-8 w-8" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Browse Courses</h3>
+                <p className="text-sm text-gray-400">Explore available courses and start learning.</p>
+              </div>
+            </Link>
           )}
         </div>
       </div>
