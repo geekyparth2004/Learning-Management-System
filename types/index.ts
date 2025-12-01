@@ -12,6 +12,7 @@ export interface Problem {
     defaultCode: {
         cpp: string;
         python: string;
+        java: string;
     };
     testCases: TestCase[];
 }
@@ -22,7 +23,7 @@ export interface Assignment {
     problems: Problem[];
 }
 
-export type Language = "cpp" | "python";
+export type Language = "cpp" | "python" | "java";
 
 export interface ExecutionResult {
     output: string;

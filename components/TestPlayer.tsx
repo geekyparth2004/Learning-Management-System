@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Clock, CheckCircle, XCircle, Play, Save } from "lucide-react";
-import CodeEditor from "@/components/CodeEditor";
-import { cn } from "@/lib/utils";
+import ComplexityAnalysis from "@/components/ComplexityAnalysis";
+import { ChevronDown, Lock, Video } from "lucide-react";
 
 interface TestCase {
     input: string;
@@ -17,6 +17,7 @@ interface Problem {
     description: string;
     defaultCode: any; // { python: string, cpp: string }
     testCases: TestCase[];
+    hints: string[];
 }
 
 interface TestPlayerProps {
@@ -29,7 +30,7 @@ interface TestPlayerProps {
 export default function TestPlayer({ duration, passingScore, problems, onComplete }: TestPlayerProps) {
     const [timeLeft, setTimeLeft] = useState(duration * 60);
     const [activeProblemIndex, setActiveProblemIndex] = useState(0);
-    const [language, setLanguage] = useState<"python" | "cpp">("python");
+    const [language, setLanguage] = useState<"python" | "cpp" | "java">("java");
 
     // Store code for each problem
     const [userCodes, setUserCodes] = useState<{ [key: string]: string }>({});
@@ -41,13 +42,29 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [output, setOutput] = useState("");
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
 
+    // AI Analysis State
+    const [analysis, setAnalysis] = useState<{
+        timeComplexity: string;
+        spaceComplexity: string;
+        reason: string;
+        suggestion: string;
+    } | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    // Hints State
+    const [expandedHints, setExpandedHints] = useState<number[]>([]);
+
     const activeProblem = problems[activeProblemIndex];
 
     // Initialize code
     useEffect(() => {
         const initialCodes: any = {};
         problems.forEach(p => {
-            initialCodes[p.id] = p.defaultCode?.[language] || (language === "python" ? "# Write your code here" : "// Write your code here");
+            initialCodes[p.id] = p.defaultCode?.[language] || (
+                language === "python" ? "# Write your code here" :
+                    language === "cpp" ? "// Write your code here" :
+                        "// Write your code here"
+            );
         });
         setUserCodes(initialCodes);
     }, [problems]);
@@ -75,6 +92,29 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         return () => clearInterval(timer);
     }, []);
 
+    // AI Analysis Effect
+    useEffect(() => {
+        const code = userCodes[activeProblem.id];
+        const interval = setInterval(async () => {
+            if (!code) return;
+            setIsAnalyzing(true);
+            try {
+                const res = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code, language }),
+                });
+                const data = await res.json();
+                setAnalysis(data);
+            } catch (e) {
+                console.error("Analysis failed", e);
+            } finally {
+                setIsAnalyzing(false);
+            }
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [userCodes[activeProblem.id], language, activeProblem.id]);
+
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -83,6 +123,12 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
     const handleCodeChange = (value: string | undefined) => {
         setUserCodes(prev => ({ ...prev, [activeProblem.id]: value || "" }));
+    };
+
+    const toggleHint = (index: number) => {
+        setExpandedHints(prev =>
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
     };
 
     const handleRun = async () => {
@@ -156,6 +202,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                         onChange={(e) => setLanguage(e.target.value as any)}
                         className="rounded border border-gray-700 bg-[#1e1e1e] px-3 py-1 text-sm"
                     >
+                        <option value="java">Java</option>
                         <option value="python">Python</option>
                         <option value="cpp">C++</option>
                     </select>
@@ -192,10 +239,42 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
                 {/* Main Content */}
                 <div className="flex flex-1 flex-col">
-                    {/* Problem Desc */}
+                    {/* Problem Desc & Hints */}
                     <div className="h-1/3 overflow-y-auto border-b border-gray-800 p-6">
-                        <h2 className="mb-2 text-xl font-bold">{activeProblem.title}</h2>
-                        <p className="text-gray-300 whitespace-pre-wrap">{activeProblem.description}</p>
+                        <div className="space-y-6">
+                            <div>
+                                <h2 className="mb-2 text-xl font-bold">{activeProblem.title}</h2>
+                                <p className="text-gray-300 whitespace-pre-wrap">{activeProblem.description}</p>
+                            </div>
+
+                            {/* AI Analysis */}
+                            <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
+
+                            {/* Hints */}
+                            {activeProblem.hints && activeProblem.hints.length > 0 && (
+                                <div>
+                                    <h3 className="mb-3 text-lg font-semibold">Hints</h3>
+                                    <div className="space-y-2">
+                                        {activeProblem.hints.map((hint, idx) => (
+                                            <div key={idx} className="overflow-hidden rounded-lg border border-gray-800 bg-[#161616]">
+                                                <button
+                                                    onClick={() => toggleHint(idx)}
+                                                    className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-[#1e1e1e]"
+                                                >
+                                                    <span className="text-sm font-medium text-gray-300">Hint {idx + 1}</span>
+                                                    <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
+                                                </button>
+                                                {expandedHints.includes(idx) && (
+                                                    <div className="border-t border-gray-800 bg-[#111111] p-3 text-sm text-gray-300">
+                                                        {hint}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Editor & Console */}

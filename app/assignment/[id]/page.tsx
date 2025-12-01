@@ -11,7 +11,7 @@ import ComplexityAnalysis from "@/components/ComplexityAnalysis";
 import ProblemLayout from "@/components/ProblemLayout";
 import { cn } from "@/lib/utils";
 
-type Language = "python" | "cpp";
+import { Language } from "@/types";
 
 interface TestCase {
     id: string;
@@ -32,7 +32,7 @@ interface Problem {
     title: string;
     description: string;
     difficulty: string;
-    defaultCode: { python: string; cpp: string };
+    defaultCode: { python: string; cpp: string; java: string };
     startedAt: string;
     testCases: TestCase[];
     hints: Hint[];
@@ -55,7 +55,7 @@ export default function AssignmentPage() {
     const assignmentId = params.id as string;
 
     const [problem, setProblem] = useState<Problem | null>(null);
-    const [language, setLanguage] = useState<Language>("python");
+    const [language, setLanguage] = useState<Language>("java");
     const [code, setCode] = useState("");
     const [output, setOutput] = useState("");
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
@@ -559,6 +559,7 @@ export default function AssignmentPage() {
                                 onChange={e => setLanguage(e.target.value as Language)}
                                 className="rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-sm"
                             >
+                                <option value="java">Java</option>
                                 <option value="python">Python</option>
                                 <option value="cpp">C++</option>
                             </select>

@@ -53,7 +53,7 @@ export default function CodeEditor({
         <div className="h-full w-full overflow-hidden rounded-md border border-gray-700 bg-[#1e1e1e]">
             <Editor
                 height="100%"
-                language={language === "cpp" ? "cpp" : "python"}
+                language={language === "cpp" ? "cpp" : language === "java" ? "java" : "python"}
                 value={code}
                 theme="vs-dark"
                 onChange={onChange}
@@ -68,4 +68,5 @@ export default function CodeEditor({
             />
         </div>
     );
+
 }
