@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload } from "lucide-react";
 import Link from "next/link";
+import ProblemBuilder from "@/components/ProblemBuilder";
 
 interface ModuleItem {
     id: string;
@@ -56,59 +57,34 @@ export default function CourseBuilderPage() {
     const [testPassingScore, setTestPassingScore] = useState(60);
     const [testProblems, setTestProblems] = useState<any[]>([]);
 
-    // Test Problem Input State
-    const [tpTitle, setTpTitle] = useState("");
-    const [tpDesc, setTpDesc] = useState("");
-    const [tpInput, setTpInput] = useState("");
-    const [tpOutput, setTpOutput] = useState("");
-    const [tpHints, setTpHints] = useState("");
-
-    const addTestProblem = () => {
-        if (!tpTitle || !tpDesc) return;
-        setTestProblems([...testProblems, {
-            title: tpTitle,
-            description: tpDesc,
-            hints: tpHints.split("|").map(h => h.trim()).filter(h => h),
-            defaultCode: {
-                python: "# Write your code here",
-                cpp: "// Write your code here",
-                java: "// Write your code here"
-            },
-            testCases: [{ input: tpInput, expectedOutput: tpOutput, isHidden: false }]
-        }]);
-        setTpTitle("");
-        setTpDesc("");
-        setTpInput("");
-        setTpOutput("");
-        setTpHints("");
-    };
-
     // Assignment State
     const [assignProblems, setAssignProblems] = useState<any[]>([]);
-    const [apTitle, setApTitle] = useState("");
-    const [apDesc, setApDesc] = useState("");
-    const [apInput, setApInput] = useState("");
-    const [apOutput, setApOutput] = useState("");
-    const [apHints, setApHints] = useState("");
 
-    const addAssignmentProblem = () => {
-        if (!apTitle || !apDesc) return;
-        setAssignProblems([...assignProblems, {
-            title: apTitle,
-            description: apDesc,
-            hints: apHints.split("|").map(h => h.trim()).filter(h => h),
+    // Problem Builder State
+    const [isProblemBuilderOpen, setIsProblemBuilderOpen] = useState(false);
+    const [problemBuilderType, setProblemBuilderType] = useState<"TEST" | "ASSIGNMENT">("ASSIGNMENT");
+
+    const openProblemBuilder = (type: "TEST" | "ASSIGNMENT") => {
+        setProblemBuilderType(type);
+        setIsProblemBuilderOpen(true);
+    };
+
+    const handleSaveProblem = (problem: any) => {
+        const newProblem = {
+            ...problem,
             defaultCode: {
                 python: "# Write your code here",
                 cpp: "// Write your code here",
                 java: "// Write your code here"
-            }, // Simple default
-            testCases: [{ input: apInput, expectedOutput: apOutput, isHidden: false }]
-        }]);
-        setApTitle("");
-        setApDesc("");
-        setApInput("");
-        setApOutput("");
-        setApHints("");
+            }
+        };
+
+        if (problemBuilderType === "TEST") {
+            setTestProblems([...testProblems, newProblem]);
+        } else {
+            setAssignProblems([...assignProblems, newProblem]);
+        }
+        setIsProblemBuilderOpen(false);
     };
 
     const uploadToCloudinary = async (file: File) => {
@@ -286,6 +262,15 @@ export default function CourseBuilderPage() {
 
     return (
         <div className="min-h-screen bg-[#0e0e0e] text-white">
+            {isProblemBuilderOpen && (
+                <ProblemBuilder
+                    onSave={handleSaveProblem}
+                    onCancel={() => setIsProblemBuilderOpen(false)}
+                    uploadVideo={uploadToCloudinary}
+                    isUploading={isUploading}
+                />
+            )}
+
             <header className="border-b border-gray-800 bg-[#161616] px-6 py-4">
                 <div className="mx-auto flex max-w-5xl items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -444,113 +429,41 @@ export default function CourseBuilderPage() {
                                                 </div>
 
                                                 <div className="border-t border-gray-800 pt-2">
-                                                    <h4 className="mb-2 text-xs font-bold text-gray-400">Add Problems ({testProblems.length})</h4>
+                                                    <div className="mb-2 flex items-center justify-between">
+                                                        <h4 className="text-xs font-bold text-gray-400">Problems ({testProblems.length})</h4>
+                                                        <button
+                                                            onClick={() => openProblemBuilder("TEST")}
+                                                            className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs hover:bg-gray-700"
+                                                        >
+                                                            <Plus size={12} /> Add Problem
+                                                        </button>
+                                                    </div>
                                                     {testProblems.map((p, i) => (
                                                         <div key={i} className="text-sm bg-[#111111] p-2 rounded mb-1 border border-gray-800">
                                                             <span className="font-bold">{p.title}</span>
                                                             <p className="text-xs text-gray-500 truncate">{p.description}</p>
                                                         </div>
                                                     ))}
-                                                    <div className="space-y-2 mt-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Problem Title"
-                                                            value={tpTitle}
-                                                            onChange={(e) => setTpTitle(e.target.value)}
-                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                        />
-                                                        <textarea
-                                                            placeholder="Description"
-                                                            value={tpDesc}
-                                                            onChange={(e) => setTpDesc(e.target.value)}
-                                                            className="w-full h-16 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Hints (separated by |)"
-                                                            value={tpHints}
-                                                            onChange={(e) => setTpHints(e.target.value)}
-                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Test Input"
-                                                                value={tpInput}
-                                                                onChange={(e) => setTpInput(e.target.value)}
-                                                                className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Expected Output"
-                                                                value={tpOutput}
-                                                                onChange={(e) => setTpOutput(e.target.value)}
-                                                                className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            onClick={addTestProblem}
-                                                            className="w-full rounded bg-gray-800 py-1 text-xs hover:bg-gray-700"
-                                                        >
-                                                            Add Problem
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             </div>
                                         ) : newItemType === "ASSIGNMENT" ? (
                                             <div className="space-y-3 rounded border border-gray-800 p-3">
                                                 <div className="border-t border-gray-800 pt-2">
-                                                    <h4 className="mb-2 text-xs font-bold text-gray-400">Add Problems ({assignProblems.length})</h4>
+                                                    <div className="mb-2 flex items-center justify-between">
+                                                        <h4 className="text-xs font-bold text-gray-400">Problems ({assignProblems.length})</h4>
+                                                        <button
+                                                            onClick={() => openProblemBuilder("ASSIGNMENT")}
+                                                            className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs hover:bg-gray-700"
+                                                        >
+                                                            <Plus size={12} /> Add Problem
+                                                        </button>
+                                                    </div>
                                                     {assignProblems.map((p, i) => (
                                                         <div key={i} className="text-sm bg-[#111111] p-2 rounded mb-1 border border-gray-800">
                                                             <span className="font-bold">{p.title}</span>
                                                             <p className="text-xs text-gray-500 truncate">{p.description}</p>
                                                         </div>
                                                     ))}
-                                                    <div className="space-y-2 mt-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Problem Title"
-                                                            value={apTitle}
-                                                            onChange={(e) => setApTitle(e.target.value)}
-                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                        />
-                                                        <textarea
-                                                            placeholder="Description"
-                                                            value={apDesc}
-                                                            onChange={(e) => setApDesc(e.target.value)}
-                                                            className="w-full h-16 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Hints (separated by |)"
-                                                            value={apHints}
-                                                            onChange={(e) => setApHints(e.target.value)}
-                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                        />
-                                                        <div className="flex gap-2">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Test Input"
-                                                                value={apInput}
-                                                                onChange={(e) => setApInput(e.target.value)}
-                                                                className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Expected Output"
-                                                                value={apOutput}
-                                                                onChange={(e) => setApOutput(e.target.value)}
-                                                                className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            onClick={addAssignmentProblem}
-                                                            className="w-full rounded bg-gray-800 py-1 text-xs hover:bg-gray-700"
-                                                        >
-                                                            Add Problem
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             </div>
                                         ) : null}
