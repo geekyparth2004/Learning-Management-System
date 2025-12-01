@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error("Error creating assignment:", error);
         return NextResponse.json(
-            { error: "Failed to create assignment" },
+            { error: "Failed to create assignment", details: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         );
     }
