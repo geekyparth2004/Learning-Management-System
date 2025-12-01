@@ -123,14 +123,20 @@ export default function CourseBuilderPage() {
         fetchCourse();
     }, [courseId]);
 
+    const [error, setError] = useState<string | null>(null);
+
     const fetchCourse = async () => {
         try {
             const res = await fetch(`/api/courses/${courseId}/builder`);
-            if (!res.ok) throw new Error("Failed to fetch course");
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || `Failed to fetch course: ${res.status}`);
+            }
             const data = await res.json();
             setCourse(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            setError(error.message);
         } finally {
             setIsLoading(false);
         }
@@ -225,6 +231,7 @@ export default function CourseBuilderPage() {
     };
 
     if (isLoading) return <div className="p-8 text-white">Loading...</div>;
+    if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
     if (!course) return <div className="p-8 text-white">Course not found</div>;
 
     return (
