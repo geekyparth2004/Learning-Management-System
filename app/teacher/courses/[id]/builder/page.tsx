@@ -191,9 +191,20 @@ export default function CourseBuilderPage() {
         let content = newItemContent;
 
         try {
-            if (newItemType === "VIDEO" && videoFile) {
+            if (newItemType === "VIDEO") {
+                if (!videoFile) {
+                    alert("Please select a video file");
+                    return;
+                }
                 setIsUploading(true);
-                content = await uploadToCloudinary(videoFile);
+                try {
+                    content = await uploadToCloudinary(videoFile);
+                } catch (error) {
+                    console.error("Upload failed:", error);
+                    setIsUploading(false);
+                    alert("Failed to upload video");
+                    return;
+                }
                 setIsUploading(false);
             } else if (newItemType === "AI_INTERVIEW") {
                 content = JSON.stringify({ topic: aiTopic, count: aiCount });
@@ -382,11 +393,14 @@ export default function CourseBuilderPage() {
                                                     </label>
                                                 </div>
                                                 {uploadProgress > 0 && (
-                                                    <div className="h-1 w-full overflow-hidden rounded-full bg-gray-800">
-                                                        <div
-                                                            className="h-full bg-blue-500 transition-all duration-300"
-                                                            style={{ width: `${uploadProgress}%` }}
-                                                        />
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-1 flex-1 overflow-hidden rounded-full bg-gray-800">
+                                                            <div
+                                                                className="h-full bg-blue-500 transition-all duration-300"
+                                                                style={{ width: `${uploadProgress}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-xs text-gray-400">{uploadProgress}%</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -477,9 +491,10 @@ export default function CourseBuilderPage() {
                                             </button>
                                             <button
                                                 onClick={addItem}
-                                                className="rounded bg-blue-600 px-3 py-1 text-xs font-medium hover:bg-blue-700"
+                                                disabled={isUploading}
+                                                className="rounded bg-blue-600 px-3 py-1 text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Add Item
+                                                {isUploading ? "Uploading..." : "Add Item"}
                                             </button>
                                         </div>
                                     </div>
