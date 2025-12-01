@@ -39,7 +39,7 @@ model User {
   assignmentProgress AssignmentProgress[]
   
   createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  updatedAt          DateTime?            @updatedAt
 }
 
 model Course {
@@ -112,7 +112,7 @@ model Assignment {
   moduleItems ModuleItem[]
   
   createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
+  updatedAt DateTime?            @updatedAt
 }
 
 model Problem {
@@ -139,7 +139,7 @@ model Problem {
   videoSolution String?
 
   createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  updatedAt     DateTime?    @updatedAt
 
   @@index([assignmentId])
   @@index([moduleItemId])
