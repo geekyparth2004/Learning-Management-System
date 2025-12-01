@@ -63,7 +63,7 @@ export async function GET(
             ...assignment,
             startedAt: startedAt.toISOString(),
             problems: assignment.problems.map((p) => {
-                const hintsRaw = JSON.parse(p.hints || "[]");
+                const hintsRaw = p.hints || [];
                 const processedHints = hintsRaw.map((hintContent: string, index: number) => {
                     // Unlock schedule: 5, 10, 15, 20 minutes
                     const unlockThreshold = (index + 1) * 5;
@@ -86,7 +86,7 @@ export async function GET(
 
                 return {
                     ...p,
-                    defaultCode: JSON.parse(p.defaultCode),
+                    defaultCode: p.defaultCode,
                     hints: processedHints,
                 };
             }),
