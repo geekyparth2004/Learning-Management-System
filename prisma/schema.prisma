@@ -10,84 +10,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Assignment {
-  id        String    @id @default(cuid())
-  title     String
-  createdAt DateTime  @default(now())
-  problems  Problem[]
-  progress  AssignmentProgress[]
-  moduleItems ModuleItem[]
+enum UserRole {
+  STUDENT
+  TEACHER
 }
 
-model Problem {
-  id           String       @id @default(cuid())
-  title        String
-  description  String
-  defaultCode  String       // Stored as JSON string: { "cpp": "...", "python": "..." }
-  hints        String       @default("[]") // Stored as JSON string: ["hint1", "hint2", "hint3", "hint4/video"]
-  videoSolution String?     // Path to uploaded video file (optional)
-  leetcodeUrl  String?      // URL to LeetCode problem
-  slug         String?      // LeetCode problem slug (e.g., "two-sum")
-  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  assignmentId String
-  testCases    TestCase[]
-  submissions  Submission[]
-}
-
-model TestCase {
-  id             String  @id @default(cuid())
-  input          String
-  expectedOutput String
-  isHidden       Boolean @default(false)
-  problem        Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  problemId      String
+enum ModuleItemType {
+  VIDEO
+  ASSIGNMENT
+  AI_INTERVIEW
+  TEST
 }
 
 model User {
-  id          String       @id @default(cuid())
-  name        String
-  email       String       @unique
-  password    String
-  role        String       @default("STUDENT") // "TEACHER" or "STUDENT"
-  submissions Submission[]
-  progress    AssignmentProgress[]
+  id                 String               @id @default(cuid())
+  name               String?
+  email              String               @unique
+  password           String?
+  image              String?
+  role               UserRole             @default(STUDENT)
+  
+  // Relations
   courses            Course[]             @relation("TeacherCourses")
   enrollments        Enrollment[]
   moduleProgress     ModuleProgress[]
   moduleItemProgress ModuleItemProgress[]
-}
-
-model Submission {
-  id        String   @id @default(cuid())
-  code      String
-  language  String
-  status    String   // "PASSED" | "FAILED"
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  problemId String
-}
-
-model AssignmentProgress {
-  id           String     @id @default(cuid())
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String
-  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  assignmentId String
-  startedAt    DateTime   @default(now())
-
-  @@unique([userId, assignmentId])
+  submissions        Submission[]
+  assignmentProgress AssignmentProgress[]
+  
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 }
 
 model Course {
   id          String       @id @default(cuid())
   title       String
-  description String
+  description String?
+  
   teacherId   String
   teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
+  
   modules     Module[]
   enrollments Enrollment[]
+  
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -99,8 +64,10 @@ model Module {
   course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   order       Int
   timeLimit   Int              // In minutes
+  
   items       ModuleItem[]
   progress    ModuleProgress[]
+  
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 }
@@ -108,23 +75,108 @@ model Module {
 model ModuleItem {
   id           String               @id @default(cuid())
   title        String
-  type         String               // "VIDEO" | "ASSIGNMENT"
-  content      String?              // URL for video
-  assignmentId String?
-  assignment   Assignment?          @relation(fields: [assignmentId], references: [id])
+  type         ModuleItemType
+  content      String?              // Video URL or Assignment ID (for legacy/simple assignment)
+  order        Int
+  
+  // Relations
   moduleId     String
   module       Module               @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  order        Int
+  
+  // AI Interview Fields
+  aiInterviewTopic String?
+  aiQuestionsCount Int?
+
+  // Test Fields
+  testDuration      Int?            // in minutes
+  testPassingScore  Int?            // percentage (e.g. 60)
+  testProblems      Problem[]       // Problems specific to this test item
+
+  assignmentId String?
+  assignment   Assignment?          @relation(fields: [assignmentId], references: [id])
+
   progress     ModuleItemProgress[]
+
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([moduleId])
+  @@index([assignmentId])
+}
+
+model Assignment {
+  id        String               @id @default(cuid())
+  title     String
+  problems  Problem[]
+  progress  AssignmentProgress[]
+  moduleItems ModuleItem[]
+  
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+}
+
+model Problem {
+  id            String       @id @default(cuid())
+  title         String
+  description   String
+  difficulty    String       @default("Medium")
+  slug          String?      @unique
+  
+  // Relations
+  assignmentId  String?
+  assignment    Assignment?  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  
+  moduleItemId  String?
+  moduleItem    ModuleItem?  @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
+
+  testCases     TestCase[]
+  submissions   Submission[]
+  
+  // Content
+  defaultCode   Json?        // { "cpp": "...", "python": "..." }
+  hints         String[]
+  leetcodeUrl   String?
+  videoSolution String?
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([assignmentId])
+  @@index([moduleItemId])
+}
+
+model TestCase {
+  id             String  @id @default(cuid())
+  input          String
+  expectedOutput String
+  isHidden       Boolean @default(false)
+  
+  problemId      String
+  problem        Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model Submission {
+  id        String   @id @default(cuid())
+  code      String
+  language  String
+  status    String   // "PASSED" | "FAILED"
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  problemId String
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
 }
 
 model Enrollment {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  status    String   @default("ACTIVE") // "ACTIVE" | "COMPLETED"
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status     String   @default("ACTIVE") // "ACTIVE" | "COMPLETED"
   enrolledAt DateTime @default(now())
 
   @@unique([userId, courseId])
@@ -153,4 +205,15 @@ model ModuleItemProgress {
   completedAt  DateTime?
 
   @@unique([userId, moduleItemId])
+}
+
+model AssignmentProgress {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  startedAt    DateTime   @default(now())
+
+  @@unique([userId, assignmentId])
 }

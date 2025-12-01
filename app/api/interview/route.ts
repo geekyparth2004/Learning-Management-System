@@ -195,6 +195,33 @@ export async function POST(req: Request) {
                 "nextQuestion": "string (The first question to ask - e.g., Tell me about yourself)"
             }
             `;
+        } else if (type === "custom") {
+            // Custom Topic Interview Logic
+            difficulty = "Easy";
+
+            systemPrompt = `You are an expert Technical Interviewer conducting an interview on the topic: ${subject}.
+            
+            Your goal is to ask relevant questions to test the student's understanding of ${subject}.
+            
+            When the user provides an answer:
+            1. Rate the answer on a scale of 1-10.
+            2. Provide specific feedback on accuracy and depth.
+            3. Provide a "Perfect Answer" example that would get a 10/10.
+            4. Ask the next relevant follow-up question or a new question about ${subject}.
+            
+            Return your response in this JSON format:
+            {
+                "rating": number,
+                "feedback": "string",
+                "suggestedAnswer": "string",
+                "nextQuestion": "string"
+            }
+            
+            If this is the start of the interview (no user answer provided), just return:
+            {
+                "nextQuestion": "string (The first question to ask)"
+            }
+            `;
         } else {
             // Behavioural Interview Logic (Default)
             if (questionCount > 5 && questionCount <= 10) difficulty = "Easy";
@@ -240,6 +267,7 @@ export async function POST(req: Request) {
             if (type === "core") firstUserMessage = `Start the interview. Ask the first basic question about ${subject} (Very Easy).`;
             if (type === "dsa") firstUserMessage = `Start the interview. Ask the first basic question about ${subject} (Very Easy).`;
             if (type === "sql") firstUserMessage = `Start the interview. Ask the first basic question about ${subject} (Very Easy).`;
+            if (type === "custom") firstUserMessage = `Start the interview. Ask the first question about ${subject}.`;
             if (type === "mock") firstUserMessage = "Start the interview. Ask me to introduce myself.";
             if (!type) firstUserMessage = "Start the interview. Introduce yourself briefly and ask the first behavioural question (Very Easy).";
 

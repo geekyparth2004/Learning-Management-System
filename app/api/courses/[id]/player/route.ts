@@ -19,6 +19,13 @@ export async function GET(
                     include: {
                         items: {
                             orderBy: { order: "asc" },
+                            include: {
+                                testProblems: {
+                                    include: {
+                                        testCases: true
+                                    }
+                                }
+                            }
                         },
                     },
                 },

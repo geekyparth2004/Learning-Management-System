@@ -2,16 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock } from "lucide-react";
+import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock, Video, Brain, Code, FileText } from "lucide-react";
 import Link from "next/link";
+import AIInterviewPlayer from "@/components/AIInterviewPlayer";
+import TestPlayer from "@/components/TestPlayer";
 
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST";
     content?: string;
     assignmentId?: string;
     isCompleted: boolean;
+    aiInterviewTopic?: string;
+    aiQuestionsCount?: number;
+    testDuration?: number;
+    testPassingScore?: number;
+    testProblems?: any[];
 }
 
 interface Module {
@@ -88,10 +95,6 @@ export default function CoursePlayerPage() {
                 const currentModule = data.modules.find((m: Module) => m.status === "IN_PROGRESS")
                     || data.modules.find((m: Module) => m.status === "LOCKED")
                     || data.modules[0];
-
-                // If it's locked but it's the first one (or previous is completed), we might need to start it?
-                // The API should handle unlocking the first module on enrollment.
-                // If status is LOCKED but it's the current one, the user needs to click "Start".
 
                 setActiveModuleId(currentModule.id);
                 if (currentModule.items.length > 0) {
@@ -200,16 +203,20 @@ export default function CoursePlayerPage() {
                                         }}
                                         disabled={module.status === "LOCKED"}
                                         className={`flex w-full items-center gap-3 rounded px-3 py-2 text-sm transition-colors ${activeItemId === item.id && activeModuleId === module.id
-                                                ? "bg-blue-900/30 text-blue-400"
-                                                : "text-gray-400 hover:bg-[#1e1e1e] hover:text-white"
+                                            ? "bg-blue-900/30 text-blue-400"
+                                            : "text-gray-400 hover:bg-[#1e1e1e] hover:text-white"
                                             } ${module.status === "LOCKED" ? "cursor-not-allowed opacity-50" : ""}`}
                                     >
                                         {item.isCompleted ? (
                                             <CheckCircle size={14} className="text-green-500" />
                                         ) : item.type === "VIDEO" ? (
-                                            <PlayCircle size={14} />
+                                            <Video size={16} className="text-blue-400" />
+                                        ) : item.type === "AI_INTERVIEW" ? (
+                                            <Brain size={16} className="text-pink-400" />
+                                        ) : item.type === "TEST" ? (
+                                            <Code size={16} className="text-yellow-400" />
                                         ) : (
-                                            <FileCode size={14} />
+                                            <FileText size={16} className="text-purple-400" />
                                         )}
                                         <span className="truncate">{item.title}</span>
                                     </button>
@@ -240,7 +247,7 @@ export default function CoursePlayerPage() {
                         </button>
                     </div>
                 ) : activeItem ? (
-                    <div className="mx-auto max-w-4xl">
+                    <div className="mx-auto max-w-4xl h-full flex flex-col">
                         <div className="mb-6 flex items-center justify-between">
                             <h1 className="text-2xl font-bold">{activeItem.title}</h1>
                             {timeLeft && (
@@ -251,31 +258,66 @@ export default function CoursePlayerPage() {
                             )}
                         </div>
 
-                        <div className="mb-8 rounded-lg border border-gray-800 bg-[#111111] p-6">
+                        <div className="mb-8 flex-1 rounded-lg border border-gray-800 bg-[#111111] overflow-hidden">
                             {activeItem.type === "VIDEO" ? (
                                 <div className="aspect-video w-full bg-black">
-                                    {/* Video Player Placeholder */}
-                                    <iframe
-                                        src={activeItem.content?.replace("watch?v=", "embed/")}
-                                        className="h-full w-full"
-                                        allowFullScreen
+                                    {activeItem.content?.includes("cloudinary.com") ? (
+                                        <video
+                                            src={activeItem.content}
+                                            controls
+                                            className="h-full w-full"
+                                        />
+                                    ) : (
+                                        <iframe
+                                            src={activeItem.content?.replace("watch?v=", "embed/")}
+                                            className="h-full w-full"
+                                            allowFullScreen
+                                        />
+                                    )}
+                                </div>
+                            ) : activeItem.type === "AI_INTERVIEW" ? (
+                                <div className="h-full w-full overflow-y-auto bg-[#0e0e0e]">
+                                    <AIInterviewPlayer
+                                        topic={activeItem.aiInterviewTopic || "General"}
+                                        questionCountLimit={activeItem.aiQuestionsCount || 5}
+                                        onComplete={() => completeItem(activeItem.id)}
+                                    />
+                                </div>
+                            ) : activeItem.type === "TEST" ? (
+                                <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                    <TestPlayer
+                                        duration={activeItem.testDuration || 30}
+                                        passingScore={activeItem.testPassingScore || 60}
+                                        problems={activeItem.testProblems || []}
+                                        onComplete={(passed, score) => {
+                                            if (passed) {
+                                                alert(`Test Passed! Score: ${score.toFixed(1)}%`);
+                                                completeItem(activeItem.id);
+                                            } else {
+                                                alert(`Test Failed. Score: ${score.toFixed(1)}%. You need ${activeItem.testPassingScore}% to pass.`);
+                                            }
+                                        }}
                                     />
                                 </div>
                             ) : (
-                                <div className="text-center">
-                                    <p className="mb-4 text-gray-400">This is an assignment task.</p>
+                                <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                    <FileText className="h-16 w-16 text-gray-600" />
+                                    <h2 className="text-xl font-bold">Coding Assignment</h2>
+                                    <p className="text-gray-400">
+                                        This module contains a coding assignment. Click below to start.
+                                    </p>
                                     <Link
                                         href={`/assignment/${activeItem.assignmentId}`}
-                                        className="inline-block rounded bg-blue-600 px-6 py-2 font-medium hover:bg-blue-700"
+                                        className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
                                     >
-                                        Go to Assignment
+                                        Start Assignment
                                     </Link>
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex justify-end">
-                            {!activeItem.isCompleted && (
+                        <div className="flex justify-end pb-8">
+                            {!activeItem.isCompleted && activeItem.type === "VIDEO" && (
                                 <button
                                     onClick={() => completeItem(activeItem.id)}
                                     className="rounded bg-green-600 px-6 py-2 font-medium hover:bg-green-700"
