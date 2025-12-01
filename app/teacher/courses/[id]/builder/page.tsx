@@ -689,8 +689,9 @@ export default function CourseBuilderPage() {
                             <Plus size={20} /> Add Module
                         </button>
                     )}
-                </div>
-            </main>
-        </div>
+
+                </DragDropContext>
+            </main >
+        </div >
     );
 }
