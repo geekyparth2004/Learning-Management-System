@@ -313,52 +313,16 @@ export default function AssignmentPage() {
     // Submit solution
     const handleSubmit = async () => {
         if (!problem) return;
-        if (!confirm("Are you sure you want to submit?")) return;
-        await handleRunTestCases();
-        const allPassed = testCaseResults.every(r => r.passed);
+
         try {
             await fetch(`/api/assignments/${assignmentId}/submissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, language, passed: allPassed }),
+                body: JSON.stringify({ code, language, passed: true }),
             });
 
-            if (allPassed) {
-                if (isFocusMode) {
-                    alert("Correct! Loading next question...");
-                    const res = await fetch("/api/focus/next");
-                    const data = await res.json();
-                    if (data.assignmentId) {
-                        router.push(`/assignment/${data.assignmentId}?mode=focus`);
-                    } else {
-                        alert("You have solved all available questions!");
-                        handleExitFocus();
-                    }
-                } else {
-                    alert("Submission successful! ✅\nTimers have been reset.");
-                    // Reload assignment data to refresh timers
-                    const res = await fetch(`/api/assignments/${assignmentId}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        const problemData: Problem = data.problems[0];
-                        const fullProblemData = { ...problemData, startedAt: data.startedAt };
-                        setProblem(fullProblemData);
-                        setAiMessage(null);
-                        setShowGiveAnswer(false);
-                        setCanAskAi(false);
-                    }
-                }
-            } else {
-                alert("Some test cases failed ❌\nTimers have been reset.");
-                // Reload assignment data to refresh timers even on failure
-                const res = await fetch(`/api/assignments/${assignmentId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const problemData: Problem = data.problems[0];
-                    const fullProblemData = { ...problemData, startedAt: data.startedAt };
-                    setProblem(fullProblemData);
-                }
-            }
+            alert("Assignment Completed! Redirecting...");
+            router.push("/");
         } catch (e) {
             console.error("Submission failed:", e);
             alert("Failed to submit");
@@ -565,7 +529,9 @@ export default function AssignmentPage() {
                             </select>
                             <button onClick={handleRun} disabled={status === "running"} className="rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Run</button>
                             <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
-                            <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                            {testCaseResults.length > 0 && testCaseResults.every(r => r.passed) && (
+                                <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                            )}
                         </>
                     )}
                     {isFocusMode && (
@@ -753,7 +719,16 @@ export default function AssignmentPage() {
                     {/* Tab Content */}
                     <div className="flex-1 overflow-hidden relative">
                         <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
-                            <CodeEditor language={language} code={code} onChange={(value) => setCode(value || "")} errorLine={errorLine} errorMessage={status === "error" ? output : null} />
+                            <CodeEditor
+                                language={language}
+                                code={code}
+                                onChange={(value) => {
+                                    setCode(value || "");
+                                    setTestCaseResults([]); // Reset results on code change
+                                }}
+                                errorLine={errorLine}
+                                errorMessage={status === "error" ? output : null}
+                            />
                         </div>
 
                         {activeTab === "console" && (

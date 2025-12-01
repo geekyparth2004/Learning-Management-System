@@ -384,22 +384,32 @@ export default function CourseBuilderPage() {
                                                         className="hidden"
                                                         id="video-upload"
                                                     />
-                                                    <label
-                                                        htmlFor="video-upload"
-                                                        className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
-                                                    >
-                                                        {videoFile ? (
-                                                            <>
-                                                                <Video className="h-8 w-8 text-blue-500" />
+                                                    {videoFile ? (
+                                                        <div className="w-full space-y-2">
+                                                            <video
+                                                                src={URL.createObjectURL(videoFile)}
+                                                                controls
+                                                                className="max-h-[300px] w-full rounded bg-black"
+                                                            />
+                                                            <div className="flex items-center justify-between">
                                                                 <span className="text-sm font-medium text-blue-400">{videoFile.name}</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Upload className="h-8 w-8" />
-                                                                <span className="text-sm">Click to upload video</span>
-                                                            </>
-                                                        )}
-                                                    </label>
+                                                                <label
+                                                                    htmlFor="video-upload"
+                                                                    className="cursor-pointer text-xs text-gray-400 hover:text-white"
+                                                                >
+                                                                    Change Video
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <label
+                                                            htmlFor="video-upload"
+                                                            className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
+                                                        >
+                                                            <Upload className="h-8 w-8" />
+                                                            <span className="text-sm">Click to upload video</span>
+                                                        </label>
+                                                    )}
                                                 </div>
                                                 {uploadProgress > 0 && (
                                                     <div className="flex items-center gap-2">
