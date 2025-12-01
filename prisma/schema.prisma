@@ -25,6 +25,8 @@ model Problem {
   defaultCode  String       // Stored as JSON string: { "cpp": "...", "python": "..." }
   hints        String       @default("[]") // Stored as JSON string: ["hint1", "hint2", "hint3", "hint4/video"]
   videoSolution String?     // Path to uploaded video file (optional)
+  leetcodeUrl  String?      // URL to LeetCode problem
+  slug         String?      // LeetCode problem slug (e.g., "two-sum")
   assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   assignmentId String
   testCases    TestCase[]

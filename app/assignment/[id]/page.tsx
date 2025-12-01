@@ -36,6 +36,8 @@ interface Problem {
     startedAt: string;
     testCases: TestCase[];
     hints: Hint[];
+    leetcodeUrl?: string;
+    slug?: string;
 }
 
 interface TestCaseResult {
@@ -72,6 +74,8 @@ export default function AssignmentPage() {
     const [isAskingAi, setIsAskingAi] = useState(false);
     const [canAskAi, setCanAskAi] = useState(false);
     const [timeToAi, setTimeToAi] = useState<string>("");
+    const [leetcodeUsername, setLeetcodeUsername] = useState("");
+    const [isVerifying, setIsVerifying] = useState(false);
 
 
     const [showGiveAnswer, setShowGiveAnswer] = useState(false);
@@ -361,6 +365,42 @@ export default function AssignmentPage() {
         }
     };
 
+    const handleVerify = async () => {
+        if (!problem?.slug) return;
+        if (!leetcodeUsername) {
+            alert("Please enter your LeetCode username");
+            return;
+        }
+
+        setIsVerifying(true);
+        try {
+            const res = await fetch("/api/leetcode/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: leetcodeUsername, slug: problem.slug }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Verification Successful! Assignment Completed. ✅");
+                // Mark as completed in DB (reusing submission logic but with a flag)
+                await fetch(`/api/assignments/${assignmentId}/submissions`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
+                });
+                router.push("/");
+            } else {
+                alert(`Verification Failed: ${data.message}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Verification failed due to an error.");
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
     const toggleHint = (index: number) => {
         setExpandedHints(prev =>
             prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
@@ -487,17 +527,46 @@ export default function AssignmentPage() {
                     <span className="text-sm text-gray-400">{problem.difficulty}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <select
-                        value={language}
-                        onChange={e => setLanguage(e.target.value as Language)}
-                        className="rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-sm"
-                    >
-                        <option value="python">Python</option>
-                        <option value="cpp">C++</option>
-                    </select>
-                    <button onClick={handleRun} disabled={status === "running"} className="rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Run</button>
-                    <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
-                    <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                    {problem.leetcodeUrl ? (
+                        <>
+                            <input
+                                type="text"
+                                placeholder="LeetCode Username"
+                                value={leetcodeUsername}
+                                onChange={(e) => setLeetcodeUsername(e.target.value)}
+                                className="rounded border border-gray-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            />
+                            <a
+                                href={problem.leetcodeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded bg-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-600"
+                            >
+                                Solve on LeetCode
+                            </a>
+                            <button
+                                onClick={handleVerify}
+                                disabled={isVerifying}
+                                className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                            >
+                                {isVerifying ? "Verifying..." : "Verify Submission"}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <select
+                                value={language}
+                                onChange={e => setLanguage(e.target.value as Language)}
+                                className="rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-sm"
+                            >
+                                <option value="python">Python</option>
+                                <option value="cpp">C++</option>
+                            </select>
+                            <button onClick={handleRun} disabled={status === "running"} className="rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Run</button>
+                            <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
+                            <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                        </>
+                    )}
                     {isFocusMode && (
                         <button
                             onClick={handleExitFocus}

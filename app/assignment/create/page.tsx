@@ -18,6 +18,10 @@ export default function CreateAssignmentPage() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
 
+    // LeetCode State
+    const [problemType, setProblemType] = useState<"internal" | "leetcode">("internal");
+    const [leetcodeUrl, setLeetcodeUrl] = useState("");
+
     // Hints State
     const [hints, setHints] = useState<string[]>(["", "", ""]);
     const [hint4Type, setHint4Type] = useState<"text" | "video">("text");
@@ -166,6 +170,8 @@ export default function CreateAssignmentPage() {
             }
 
             // Prepare problems array (currently single problem)
+            const slug = problemType === "leetcode" ? leetcodeUrl.split("/problems/")[1]?.split("/")[0] : null;
+
             const problems = [
                 {
                     title,
@@ -175,6 +181,8 @@ export default function CreateAssignmentPage() {
                         python: `# Write your code here\n`,
                     },
                     hints: finalHints,
+                    leetcodeUrl: problemType === "leetcode" ? leetcodeUrl : null,
+                    slug: slug,
                     testCases: testCases.map(({ input, expectedOutput, isHidden }) => ({
                         input,
                         expectedOutput,
@@ -239,7 +247,42 @@ export default function CreateAssignmentPage() {
                 <div className="space-y-8">
                     {/* General Info */}
                     <section className="space-y-4 rounded-lg border border-gray-800 bg-[#111111] p-6">
-                        <h2 className="text-lg font-semibold">Problem Details</h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-semibold">Problem Details</h2>
+                            <div className="flex rounded bg-[#1e1e1e] p-1">
+                                <button
+                                    onClick={() => setProblemType("internal")}
+                                    className={cn(
+                                        "rounded px-3 py-1 text-xs font-medium transition-colors",
+                                        problemType === "internal" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Internal
+                                </button>
+                                <button
+                                    onClick={() => setProblemType("leetcode")}
+                                    className={cn(
+                                        "rounded px-3 py-1 text-xs font-medium transition-colors",
+                                        problemType === "leetcode" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    LeetCode
+                                </button>
+                            </div>
+                        </div>
+
+                        {problemType === "leetcode" && (
+                            <div className="space-y-2">
+                                <label className="text-sm text-gray-400">LeetCode Problem URL</label>
+                                <input
+                                    type="text"
+                                    value={leetcodeUrl}
+                                    onChange={(e) => setLeetcodeUrl(e.target.value)}
+                                    className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 focus:border-blue-500 focus:outline-none"
+                                    placeholder="https://leetcode.com/problems/two-sum/"
+                                />
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <label className="text-sm text-gray-400">Problem Title</label>
@@ -264,153 +307,157 @@ export default function CreateAssignmentPage() {
                     </section>
 
                     {/* Hints Section */}
-                    <section className="space-y-4 rounded-lg border border-gray-800 bg-[#111111] p-6">
-                        <h2 className="text-lg font-semibold">Hints & Solution</h2>
-                        <p className="text-sm text-gray-400">Add up to 4 hints. Hints unlock every 5 minutes.</p>
+                    {problemType === "internal" && (
+                        <section className="space-y-4 rounded-lg border border-gray-800 bg-[#111111] p-6">
+                            <h2 className="text-lg font-semibold">Hints & Solution</h2>
+                            <p className="text-sm text-gray-400">Add up to 4 hints. Hints unlock every 5 minutes.</p>
 
-                        <div className="space-y-4">
-                            {[0, 1, 2].map((idx) => (
-                                <div key={idx} className="space-y-2">
-                                    <label className="text-sm text-gray-400">Hint {idx + 1} (Text)</label>
-                                    <input
-                                        type="text"
-                                        value={hints[idx]}
-                                        onChange={(e) => handleHintChange(idx, e.target.value)}
-                                        className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 focus:border-blue-500 focus:outline-none"
-                                        placeholder={`Enter hint ${idx + 1}...`}
-                                    />
-                                </div>
-                            ))}
-
-                            {/* Hint 4 / Video Solution */}
-                            <div className="space-y-2 rounded border border-gray-700 bg-[#1e1e1e] p-4">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-white">Hint 4 / Solution</label>
-                                    <div className="flex rounded bg-[#111111] p-1">
-                                        <button
-                                            onClick={() => setHint4Type("text")}
-                                            className={cn(
-                                                "rounded px-3 py-1 text-xs font-medium transition-colors",
-                                                hint4Type === "text" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
-                                            )}
-                                        >
-                                            Text
-                                        </button>
-                                        <button
-                                            onClick={() => setHint4Type("video")}
-                                            className={cn(
-                                                "rounded px-3 py-1 text-xs font-medium transition-colors",
-                                                hint4Type === "video" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
-                                            )}
-                                        >
-                                            Video
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {hint4Type === "text" ? (
-                                    <input
-                                        type="text"
-                                        value={hint4Text}
-                                        onChange={(e) => setHint4Text(e.target.value)}
-                                        className="w-full rounded border border-gray-700 bg-[#111111] px-4 py-2 focus:border-blue-500 focus:outline-none"
-                                        placeholder="Enter final hint text..."
-                                    />
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
+                            <div className="space-y-4">
+                                {[0, 1, 2].map((idx) => (
+                                    <div key={idx} className="space-y-2">
+                                        <label className="text-sm text-gray-400">Hint {idx + 1} (Text)</label>
                                         <input
-                                            type="file"
-                                            accept="video/*"
-                                            onChange={handleVideoUpload}
-                                            className="hidden"
-                                            id="video-upload"
+                                            type="text"
+                                            value={hints[idx]}
+                                            onChange={(e) => handleHintChange(idx, e.target.value)}
+                                            className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 focus:border-blue-500 focus:outline-none"
+                                            placeholder={`Enter hint ${idx + 1}...`}
                                         />
-                                        <label
-                                            htmlFor="video-upload"
-                                            className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
-                                        >
-                                            {hint4Video ? (
-                                                <>
-                                                    <FileVideo className="h-8 w-8 text-blue-500" />
-                                                    <span className="text-sm font-medium text-blue-400">{hint4Video.name}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Upload className="h-8 w-8" />
-                                                    <span className="text-sm">Click to upload video solution</span>
-                                                </>
-                                            )}
-                                        </label>
                                     </div>
-                                )}
+                                ))}
+
+                                {/* Hint 4 / Video Solution */}
+                                <div className="space-y-2 rounded border border-gray-700 bg-[#1e1e1e] p-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium text-white">Hint 4 / Solution</label>
+                                        <div className="flex rounded bg-[#111111] p-1">
+                                            <button
+                                                onClick={() => setHint4Type("text")}
+                                                className={cn(
+                                                    "rounded px-3 py-1 text-xs font-medium transition-colors",
+                                                    hint4Type === "text" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                                                )}
+                                            >
+                                                Text
+                                            </button>
+                                            <button
+                                                onClick={() => setHint4Type("video")}
+                                                className={cn(
+                                                    "rounded px-3 py-1 text-xs font-medium transition-colors",
+                                                    hint4Type === "video" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+                                                )}
+                                            >
+                                                Video
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {hint4Type === "text" ? (
+                                        <input
+                                            type="text"
+                                            value={hint4Text}
+                                            onChange={(e) => setHint4Text(e.target.value)}
+                                            className="w-full rounded border border-gray-700 bg-[#111111] px-4 py-2 focus:border-blue-500 focus:outline-none"
+                                            placeholder="Enter final hint text..."
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
+                                            <input
+                                                type="file"
+                                                accept="video/*"
+                                                onChange={handleVideoUpload}
+                                                className="hidden"
+                                                id="video-upload"
+                                            />
+                                            <label
+                                                htmlFor="video-upload"
+                                                className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
+                                            >
+                                                {hint4Video ? (
+                                                    <>
+                                                        <FileVideo className="h-8 w-8 text-blue-500" />
+                                                        <span className="text-sm font-medium text-blue-400">{hint4Video.name}</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="h-8 w-8" />
+                                                        <span className="text-sm">Click to upload video solution</span>
+                                                    </>
+                                                )}
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    )}
 
                     {/* Test Cases */}
-                    <section className="space-y-4 rounded-lg border border-gray-800 bg-[#111111] p-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">Test Cases</h2>
-                            <button
-                                onClick={addTestCase}
-                                className="flex items-center gap-2 rounded border border-gray-700 px-3 py-1.5 text-sm hover:bg-gray-800"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Add Test Case
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {testCases.map((tc, idx) => (
-                                <div
-                                    key={tc.id}
-                                    className="relative grid grid-cols-1 gap-4 rounded border border-gray-700 bg-[#1e1e1e] p-4 md:grid-cols-2"
+                    {problemType === "internal" && (
+                        <section className="space-y-4 rounded-lg border border-gray-800 bg-[#111111] p-6">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold">Test Cases</h2>
+                                <button
+                                    onClick={addTestCase}
+                                    className="flex items-center gap-2 rounded border border-gray-700 px-3 py-1.5 text-sm hover:bg-gray-800"
                                 >
-                                    <div className="absolute right-2 top-2 flex gap-2">
-                                        <button
-                                            onClick={() => updateTestCase(tc.id, "isHidden", !tc.isHidden)}
-                                            className={cn(
-                                                "rounded px-2 py-1 text-xs font-medium transition-colors",
-                                                tc.isHidden
-                                                    ? "bg-purple-900 text-purple-200"
-                                                    : "bg-gray-700 text-gray-400 hover:bg-gray-600"
-                                            )}
-                                        >
-                                            {tc.isHidden ? "Hidden" : "Visible"}
-                                        </button>
-                                        <button
-                                            onClick={() => removeTestCase(tc.id)}
-                                            className="text-gray-500 hover:text-red-400"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                                    <Plus className="h-4 w-4" />
+                                    Add Test Case
+                                </button>
+                            </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-gray-500">Input</label>
-                                        <textarea
-                                            value={tc.input}
-                                            onChange={(e) => updateTestCase(tc.id, "input", e.target.value)}
-                                            className="h-24 w-full rounded border border-gray-700 bg-[#111111] p-2 font-mono text-sm focus:border-blue-500 focus:outline-none"
-                                            placeholder="Input data..."
-                                        />
-                                    </div>
+                            <div className="space-y-4">
+                                {testCases.map((tc, idx) => (
+                                    <div
+                                        key={tc.id}
+                                        className="relative grid grid-cols-1 gap-4 rounded border border-gray-700 bg-[#1e1e1e] p-4 md:grid-cols-2"
+                                    >
+                                        <div className="absolute right-2 top-2 flex gap-2">
+                                            <button
+                                                onClick={() => updateTestCase(tc.id, "isHidden", !tc.isHidden)}
+                                                className={cn(
+                                                    "rounded px-2 py-1 text-xs font-medium transition-colors",
+                                                    tc.isHidden
+                                                        ? "bg-purple-900 text-purple-200"
+                                                        : "bg-gray-700 text-gray-400 hover:bg-gray-600"
+                                                )}
+                                            >
+                                                {tc.isHidden ? "Hidden" : "Visible"}
+                                            </button>
+                                            <button
+                                                onClick={() => removeTestCase(tc.id)}
+                                                className="text-gray-500 hover:text-red-400"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-gray-500">Expected Output</label>
-                                        <textarea
-                                            value={tc.expectedOutput}
-                                            onChange={(e) =>
-                                                updateTestCase(tc.id, "expectedOutput", e.target.value)
-                                            }
-                                            className="h-24 w-full rounded border border-gray-700 bg-[#111111] p-2 font-mono text-sm focus:border-blue-500 focus:outline-none"
-                                            placeholder="Expected output..."
-                                        />
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-gray-500">Input</label>
+                                            <textarea
+                                                value={tc.input}
+                                                onChange={(e) => updateTestCase(tc.id, "input", e.target.value)}
+                                                className="h-24 w-full rounded border border-gray-700 bg-[#111111] p-2 font-mono text-sm focus:border-blue-500 focus:outline-none"
+                                                placeholder="Input data..."
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-gray-500">Expected Output</label>
+                                            <textarea
+                                                value={tc.expectedOutput}
+                                                onChange={(e) =>
+                                                    updateTestCase(tc.id, "expectedOutput", e.target.value)
+                                                }
+                                                className="h-24 w-full rounded border border-gray-700 bg-[#111111] p-2 font-mono text-sm focus:border-blue-500 focus:outline-none"
+                                                placeholder="Expected output..."
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
             </main>
         </div>
