@@ -16,6 +16,7 @@ model Assignment {
   createdAt DateTime  @default(now())
   problems  Problem[]
   progress  AssignmentProgress[]
+  moduleItems ModuleItem[]
 }
 
 model Problem {
@@ -50,6 +51,10 @@ model User {
   role        String       @default("STUDENT") // "TEACHER" or "STUDENT"
   submissions Submission[]
   progress    AssignmentProgress[]
+  courses            Course[]             @relation("TeacherCourses")
+  enrollments        Enrollment[]
+  moduleProgress     ModuleProgress[]
+  moduleItemProgress ModuleItemProgress[]
 }
 
 model Submission {
@@ -73,4 +78,79 @@ model AssignmentProgress {
   startedAt    DateTime   @default(now())
 
   @@unique([userId, assignmentId])
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  teacherId   String
+  teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
+  modules     Module[]
+  enrollments Enrollment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Module {
+  id          String           @id @default(cuid())
+  title       String
+  courseId    String
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order       Int
+  timeLimit   Int              // In minutes
+  items       ModuleItem[]
+  progress    ModuleProgress[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model ModuleItem {
+  id           String               @id @default(cuid())
+  title        String
+  type         String               // "VIDEO" | "ASSIGNMENT"
+  content      String?              // URL for video
+  assignmentId String?
+  assignment   Assignment?          @relation(fields: [assignmentId], references: [id])
+  moduleId     String
+  module       Module               @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  order        Int
+  progress     ModuleItemProgress[]
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status    String   @default("ACTIVE") // "ACTIVE" | "COMPLETED"
+  enrolledAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model ModuleProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId    String
+  module      Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  status      String    @default("LOCKED") // "LOCKED" | "IN_PROGRESS" | "COMPLETED"
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@unique([userId, moduleId])
+}
+
+model ModuleItemProgress {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleItemId String
+  moduleItem   ModuleItem @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
+  isCompleted  Boolean    @default(false)
+  completedAt  DateTime?
+
+  @@unique([userId, moduleItemId])
 }
