@@ -74,9 +74,9 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
         if (videoFile) {
             try {
                 finalVideoUrl = await uploadVideo(videoFile);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Video upload failed", error);
-                alert("Failed to upload video");
+                alert(`Failed to upload video: ${error.message}`);
                 return;
             }
         }

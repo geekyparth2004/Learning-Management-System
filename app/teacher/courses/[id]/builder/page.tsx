@@ -122,11 +122,20 @@ export default function CourseBuilderPage() {
                     const data = JSON.parse(xhr.responseText);
                     resolve(data.secure_url);
                 } else {
-                    reject(new Error("Upload failed"));
+                    console.error("Cloudinary Upload Error:", xhr.responseText);
+                    try {
+                        const errorData = JSON.parse(xhr.responseText);
+                        reject(new Error(errorData.error?.message || "Upload failed"));
+                    } catch (e) {
+                        reject(new Error(`Upload failed with status ${xhr.status}`));
+                    }
                 }
             };
 
-            xhr.onerror = () => reject(new Error("Network error"));
+            xhr.onerror = () => {
+                console.error("Cloudinary Network Error");
+                reject(new Error("Network error during upload"));
+            };
             xhr.send(formData);
         });
     };
