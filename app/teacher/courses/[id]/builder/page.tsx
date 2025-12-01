@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload } from "lucide-react";
 import Link from "next/link";
 import ProblemBuilder from "@/components/ProblemBuilder";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface ModuleItem {
     id: string;
@@ -110,10 +111,15 @@ export default function CourseBuilderPage() {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
 
+            let lastProgress = 0;
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
                     const percent = Math.round((event.loaded / event.total) * 100);
-                    setUploadProgress(percent);
+                    // Throttle updates to every 5% or when complete to prevent flickering
+                    if (percent === 0 || percent === 100 || percent >= lastProgress + 5) {
+                        setUploadProgress(percent);
+                        lastProgress = percent;
+                    }
                 }
             };
 
@@ -276,6 +282,74 @@ export default function CourseBuilderPage() {
         }
     };
 
+    const onDragEnd = async (result: DropResult) => {
+        const { destination, source, type } = result;
+
+        if (!destination) return;
+
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+
+        if (type === "module") {
+            const newModules = Array.from(course!.modules);
+            const [reorderedModule] = newModules.splice(source.index, 1);
+            newModules.splice(destination.index, 0, reorderedModule);
+
+            setCourse({ ...course!, modules: newModules });
+
+            const updates = newModules.map((module, index) => ({
+                id: module.id,
+                order: index,
+            }));
+
+            try {
+                await fetch(`/api/courses/${courseId}/modules/reorder`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ list: updates }),
+                });
+            } catch (error) {
+                console.error("Failed to reorder modules", error);
+            }
+        } else if (type === "item") {
+            const sourceModuleId = source.droppableId;
+            const destModuleId = destination.droppableId;
+
+            if (sourceModuleId !== destModuleId) {
+                // Moving items between modules is not supported yet for simplicity
+                return;
+            }
+
+            const moduleIndex = course!.modules.findIndex(m => m.id === sourceModuleId);
+            const newModules = [...course!.modules];
+            const newItems = Array.from(newModules[moduleIndex].items);
+            const [reorderedItem] = newItems.splice(source.index, 1);
+            newItems.splice(destination.index, 0, reorderedItem);
+
+            newModules[moduleIndex] = { ...newModules[moduleIndex], items: newItems };
+            setCourse({ ...course!, modules: newModules });
+
+            const updates = newItems.map((item, index) => ({
+                id: item.id,
+                order: index,
+            }));
+
+            try {
+                await fetch(`/api/modules/${sourceModuleId}/items/reorder`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ list: updates }),
+                });
+            } catch (error) {
+                console.error("Failed to reorder items", error);
+            }
+        }
+    };
+
     if (isLoading) return <div className="p-8 text-white">Loading...</div>;
     if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
     if (!course) return <div className="p-8 text-white">Course not found</div>;
@@ -306,228 +380,270 @@ export default function CourseBuilderPage() {
             </header>
 
             <main className="mx-auto max-w-4xl p-6">
-                <div className="space-y-6">
-                    {course.modules.map((module, index) => (
-                        <div key={module.id} className="rounded-lg border border-gray-800 bg-[#111111] overflow-hidden">
-                            <div className="flex items-center justify-between bg-[#161616] px-6 py-4 border-b border-gray-800">
-                                <div className="flex items-center gap-3">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900/50 text-xs font-bold text-blue-400">
-                                        {index + 1}
-                                    </span>
-                                    <h3 className="font-semibold">{module.title}</h3>
-                                    <div className="flex items-center gap-1 rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
-                                        <Clock size={12} />
-                                        <span>{Math.round(module.timeLimit / 60)}h</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => deleteModule(module.id)}
-                                        className="text-gray-500 hover:text-red-400"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="p-4 space-y-3">
-                                {module.items.map((item) => (
-                                    <div key={item.id} className="flex items-center justify-between rounded border border-gray-800 bg-[#1e1e1e] p-3">
-                                        <div className="flex items-center gap-3">
-                                            <GripVertical className="text-gray-600 cursor-move" size={16} />
-                                            {item.type === "VIDEO" ? (
-                                                <Video size={16} className="text-blue-400" />
-                                            ) : (
-                                                <FileCode size={16} className="text-purple-400" />
-                                            )}
-                                            <span className="text-sm">{item.title}</span>
-                                        </div>
-                                        <button
-                                            onClick={() => deleteItem(item.id)}
-                                            className="text-gray-500 hover:text-red-400"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    </div>
-                                ))}
-
-                                {activeModuleId === module.id ? (
-                                    <div className="rounded border border-dashed border-gray-700 bg-[#1e1e1e] p-4 space-y-3">
-                                        <div className="flex gap-2">
-                                            <select
-                                                value={newItemType}
-                                                onChange={(e) => setNewItemType(e.target.value as any)}
-                                                className="rounded bg-[#111111] border border-gray-700 px-2 py-1 text-sm"
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="modules" type="module">
+                        {(provided) => (
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="space-y-6"
+                            >
+                                {course.modules.map((module, index) => (
+                                    <Draggable key={module.id} draggableId={module.id} index={index}>
+                                        {(provided) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                className="rounded-lg border border-gray-800 bg-[#111111] overflow-hidden"
                                             >
-                                                <option value="VIDEO">Video</option>
-                                                <option value="ASSIGNMENT">Assignment</option>
-                                                <option value="AI_INTERVIEW">AI Interview</option>
-                                                <option value="TEST">Test</option>
-                                            </select>
-                                            <input
-                                                type="text"
-                                                placeholder="Item Title"
-                                                value={newItemTitle}
-                                                onChange={(e) => setNewItemTitle(e.target.value)}
-                                                className="flex-1 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                            />
+                                                <div className="flex items-center justify-between bg-[#161616] px-6 py-4 border-b border-gray-800">
+                                                    <div className="flex items-center gap-3">
+                                                        <div {...provided.dragHandleProps} className="cursor-grab text-gray-500 hover:text-white">
+                                                            <GripVertical size={20} />
+                                                        </div>
+                                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900/50 text-xs font-bold text-blue-400">
+                                                            {index + 1}
+                                                        </span>
+                                                        <h3 className="font-semibold">{module.title}</h3>
+                                                        <div className="flex items-center gap-1 rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
+                                                            <Clock size={12} />
+                                                            <span>{Math.round(module.timeLimit / 60)}h</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => deleteModule(module.id)}
+                                                            className="text-gray-500 hover:text-red-400"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                                        </div>
+                                                <div className="p-4 space-y-3">
+                                                    <Droppable droppableId={module.id} type="item">
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.droppableProps}
+                                                                className="space-y-3"
+                                                            >
+                                                                {module.items.map((item, itemIndex) => (
+                                                                    <Draggable key={item.id} draggableId={item.id} index={itemIndex}>
+                                                                        {(provided) => (
+                                                                            <div
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                className="flex items-center justify-between rounded border border-gray-800 bg-[#1e1e1e] p-3"
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <GripVertical className="text-gray-600 cursor-grab" size={16} />
+                                                                                    {item.type === "VIDEO" ? (
+                                                                                        <Video size={16} className="text-blue-400" />
+                                                                                    ) : (
+                                                                                        <FileCode size={16} className="text-purple-400" />
+                                                                                    )}
+                                                                                    <span className="text-sm">{item.title}</span>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => deleteItem(item.id)}
+                                                                                    className="text-gray-500 hover:text-red-400"
+                                                                                >
+                                                                                    <Trash2 size={14} />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        )}
+                                                    </Droppable>
 
-                                        {newItemType === "VIDEO" ? (
-                                            <div className="space-y-2">
-                                                <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
-                                                    <input
-                                                        type="file"
-                                                        accept="video/*"
-                                                        onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                                                        className="hidden"
-                                                        id="video-upload"
-                                                    />
-                                                    {videoFile ? (
-                                                        <div className="w-full space-y-2">
-                                                            <video
-                                                                src={URL.createObjectURL(videoFile)}
-                                                                controls
-                                                                className="max-h-[300px] w-full rounded bg-black"
-                                                            />
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="text-sm font-medium text-blue-400">{videoFile.name}</span>
-                                                                <label
-                                                                    htmlFor="video-upload"
-                                                                    className="cursor-pointer text-xs text-gray-400 hover:text-white"
+                                                    {activeModuleId === module.id ? (
+                                                        <div className="rounded border border-dashed border-gray-700 bg-[#1e1e1e] p-4 space-y-3">
+                                                            <div className="flex gap-2">
+                                                                <select
+                                                                    value={newItemType}
+                                                                    onChange={(e) => setNewItemType(e.target.value as any)}
+                                                                    className="rounded bg-[#111111] border border-gray-700 px-2 py-1 text-sm"
                                                                 >
-                                                                    Change Video
-                                                                </label>
+                                                                    <option value="VIDEO">Video</option>
+                                                                    <option value="ASSIGNMENT">Assignment</option>
+                                                                    <option value="AI_INTERVIEW">AI Interview</option>
+                                                                    <option value="TEST">Test</option>
+                                                                </select>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Item Title"
+                                                                    value={newItemTitle}
+                                                                    onChange={(e) => setNewItemTitle(e.target.value)}
+                                                                    className="flex-1 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                />
+
+                                                            </div>
+
+                                                            {newItemType === "VIDEO" ? (
+                                                                <div className="space-y-2">
+                                                                    <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
+                                                                        <input
+                                                                            type="file"
+                                                                            accept="video/*"
+                                                                            onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                                                                            className="hidden"
+                                                                            id="video-upload"
+                                                                        />
+                                                                        {videoFile ? (
+                                                                            <div className="w-full space-y-2">
+                                                                                <video
+                                                                                    src={URL.createObjectURL(videoFile)}
+                                                                                    controls
+                                                                                    className="max-h-[300px] w-full rounded bg-black"
+                                                                                />
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <span className="text-sm font-medium text-blue-400">{videoFile.name}</span>
+                                                                                    <label
+                                                                                        htmlFor="video-upload"
+                                                                                        className="cursor-pointer text-xs text-gray-400 hover:text-white"
+                                                                                    >
+                                                                                        Change Video
+                                                                                    </label>
+                                                                                </div>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <label
+                                                                                htmlFor="video-upload"
+                                                                                className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
+                                                                            >
+                                                                                <Upload className="h-8 w-8" />
+                                                                                <span className="text-sm">Click to upload video</span>
+                                                                            </label>
+                                                                        )}
+                                                                    </div>
+                                                                    {uploadProgress > 0 && (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="h-1 flex-1 overflow-hidden rounded-full bg-gray-800">
+                                                                                <div
+                                                                                    className="h-full bg-blue-500 transition-all duration-300"
+                                                                                    style={{ width: `${uploadProgress}%` }}
+                                                                                />
+                                                                            </div>
+                                                                            <span className="text-xs text-gray-400">{uploadProgress}%</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : newItemType === "AI_INTERVIEW" ? (
+                                                                <div className="space-y-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Interview Topic (e.g. React Hooks)"
+                                                                        value={aiTopic}
+                                                                        onChange={(e) => setAiTopic(e.target.value)}
+                                                                        className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                    />
+                                                                    <div className="flex items-center gap-2">
+                                                                        <label className="text-sm text-gray-400">Questions:</label>
+                                                                        <input
+                                                                            type="number"
+                                                                            value={aiCount}
+                                                                            onChange={(e) => setAiCount(parseInt(e.target.value))}
+                                                                            className="w-20 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            ) : newItemType === "TEST" ? (
+                                                                <div className="space-y-3 rounded border border-gray-800 p-3">
+                                                                    <div className="flex gap-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            placeholder="Duration (mins)"
+                                                                            value={testDuration}
+                                                                            onChange={(e) => setTestDuration(parseInt(e.target.value))}
+                                                                            className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                        />
+                                                                        <input
+                                                                            type="number"
+                                                                            placeholder="Pass %"
+                                                                            value={testPassingScore}
+                                                                            onChange={(e) => setTestPassingScore(parseInt(e.target.value))}
+                                                                            className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="border-t border-gray-800 pt-2">
+                                                                        <div className="mb-2 flex items-center justify-between">
+                                                                            <h4 className="text-xs font-bold text-gray-400">Problems ({testProblems.length})</h4>
+                                                                            <button
+                                                                                onClick={() => openProblemBuilder("TEST")}
+                                                                                className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs hover:bg-gray-700"
+                                                                            >
+                                                                                <Plus size={12} /> Add Problem
+                                                                            </button>
+                                                                        </div>
+                                                                        {testProblems.map((p, i) => (
+                                                                            <div key={i} className="text-sm bg-[#111111] p-2 rounded mb-1 border border-gray-800">
+                                                                                <span className="font-bold">{p.title}</span>
+                                                                                <p className="text-xs text-gray-500 truncate">{p.description}</p>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : newItemType === "ASSIGNMENT" ? (
+                                                                <div className="space-y-3 rounded border border-gray-800 p-3">
+                                                                    <div className="border-t border-gray-800 pt-2">
+                                                                        <div className="mb-2 flex items-center justify-between">
+                                                                            <h4 className="text-xs font-bold text-gray-400">Problems ({assignProblems.length})</h4>
+                                                                            <button
+                                                                                onClick={() => openProblemBuilder("ASSIGNMENT")}
+                                                                                className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs hover:bg-gray-700"
+                                                                            >
+                                                                                <Plus size={12} /> Add Problem
+                                                                            </button>
+                                                                        </div>
+                                                                        {assignProblems.map((p, i) => (
+                                                                            <div key={i} className="text-sm bg-[#111111] p-2 rounded mb-1 border border-gray-800">
+                                                                                <span className="font-bold">{p.title}</span>
+                                                                                <p className="text-xs text-gray-500 truncate">{p.description}</p>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : null}
+
+                                                            <div className="flex justify-end gap-2">
+                                                                <button
+                                                                    onClick={() => setActiveModuleId(null)}
+                                                                    className="text-xs text-gray-400 hover:text-white"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                                <button
+                                                                    onClick={addItem}
+                                                                    disabled={isUploading}
+                                                                    className="rounded bg-blue-600 px-3 py-1 text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                >
+                                                                    {isUploading ? "Uploading..." : "Add Item"}
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <label
-                                                            htmlFor="video-upload"
-                                                            className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
+                                                        <button
+                                                            onClick={() => setActiveModuleId(module.id)}
+                                                            className="flex w-full items-center justify-center gap-2 rounded border border-dashed border-gray-700 py-2 text-sm text-gray-400 hover:border-gray-500 hover:text-white"
                                                         >
-                                                            <Upload className="h-8 w-8" />
-                                                            <span className="text-sm">Click to upload video</span>
-                                                        </label>
+                                                            <Plus size={14} /> Add Content
+                                                        </button>
                                                     )}
                                                 </div>
-                                                {uploadProgress > 0 && (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-1 flex-1 overflow-hidden rounded-full bg-gray-800">
-                                                            <div
-                                                                className="h-full bg-blue-500 transition-all duration-300"
-                                                                style={{ width: `${uploadProgress}%` }}
-                                                            />
-                                                        </div>
-                                                        <span className="text-xs text-gray-400">{uploadProgress}%</span>
-                                                    </div>
-                                                )}
                                             </div>
-                                        ) : newItemType === "AI_INTERVIEW" ? (
-                                            <div className="space-y-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Interview Topic (e.g. React Hooks)"
-                                                    value={aiTopic}
-                                                    onChange={(e) => setAiTopic(e.target.value)}
-                                                    className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                />
-                                                <div className="flex items-center gap-2">
-                                                    <label className="text-sm text-gray-400">Questions:</label>
-                                                    <input
-                                                        type="number"
-                                                        value={aiCount}
-                                                        onChange={(e) => setAiCount(parseInt(e.target.value))}
-                                                        className="w-20 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : newItemType === "TEST" ? (
-                                            <div className="space-y-3 rounded border border-gray-800 p-3">
-                                                <div className="flex gap-2">
-                                                    <input
-                                                        type="number"
-                                                        placeholder="Duration (mins)"
-                                                        value={testDuration}
-                                                        onChange={(e) => setTestDuration(parseInt(e.target.value))}
-                                                        className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        placeholder="Pass %"
-                                                        value={testPassingScore}
-                                                        onChange={(e) => setTestPassingScore(parseInt(e.target.value))}
-                                                        className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                    />
-                                                </div>
-
-                                                <div className="border-t border-gray-800 pt-2">
-                                                    <div className="mb-2 flex items-center justify-between">
-                                                        <h4 className="text-xs font-bold text-gray-400">Problems ({testProblems.length})</h4>
-                                                        <button
-                                                            onClick={() => openProblemBuilder("TEST")}
-                                                            className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs hover:bg-gray-700"
-                                                        >
-                                                            <Plus size={12} /> Add Problem
-                                                        </button>
-                                                    </div>
-                                                    {testProblems.map((p, i) => (
-                                                        <div key={i} className="text-sm bg-[#111111] p-2 rounded mb-1 border border-gray-800">
-                                                            <span className="font-bold">{p.title}</span>
-                                                            <p className="text-xs text-gray-500 truncate">{p.description}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ) : newItemType === "ASSIGNMENT" ? (
-                                            <div className="space-y-3 rounded border border-gray-800 p-3">
-                                                <div className="border-t border-gray-800 pt-2">
-                                                    <div className="mb-2 flex items-center justify-between">
-                                                        <h4 className="text-xs font-bold text-gray-400">Problems ({assignProblems.length})</h4>
-                                                        <button
-                                                            onClick={() => openProblemBuilder("ASSIGNMENT")}
-                                                            className="flex items-center gap-1 rounded bg-gray-800 px-2 py-1 text-xs hover:bg-gray-700"
-                                                        >
-                                                            <Plus size={12} /> Add Problem
-                                                        </button>
-                                                    </div>
-                                                    {assignProblems.map((p, i) => (
-                                                        <div key={i} className="text-sm bg-[#111111] p-2 rounded mb-1 border border-gray-800">
-                                                            <span className="font-bold">{p.title}</span>
-                                                            <p className="text-xs text-gray-500 truncate">{p.description}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ) : null}
-
-                                        <div className="flex justify-end gap-2">
-                                            <button
-                                                onClick={() => setActiveModuleId(null)}
-                                                className="text-xs text-gray-400 hover:text-white"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={addItem}
-                                                disabled={isUploading}
-                                                className="rounded bg-blue-600 px-3 py-1 text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isUploading ? "Uploading..." : "Add Item"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => setActiveModuleId(module.id)}
-                                        className="flex w-full items-center justify-center gap-2 rounded border border-dashed border-gray-700 py-2 text-sm text-gray-400 hover:border-gray-500 hover:text-white"
-                                    >
-                                        <Plus size={14} /> Add Content
-                                    </button>
-                                )}
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
                             </div>
-                        </div>
-                    ))}
+                        )}
+                    </Droppable>
 
                     {isAddingModule ? (
                         <div className="rounded-lg border border-gray-800 bg-[#111111] p-6 space-y-4">

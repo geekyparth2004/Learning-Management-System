@@ -260,12 +260,13 @@ export default function CoursePlayerPage() {
 
                         <div className="mb-8 flex-1 rounded-lg border border-gray-800 bg-[#111111] overflow-hidden">
                             {activeItem.type === "VIDEO" ? (
-                                <div className="aspect-video w-full bg-black">
+                                <div className="h-full w-full bg-black flex items-center justify-center">
                                     {activeItem.content?.includes("cloudinary.com") ? (
                                         <video
                                             src={activeItem.content}
                                             controls
-                                            className="h-full w-full"
+                                            playsInline
+                                            className="max-h-full max-w-full object-contain"
                                         />
                                     ) : (
                                         <iframe

@@ -107,10 +107,98 @@ export async function POST(
             },
         });
 
+        if (passed) {
+            // Find the ModuleItem associated with this assignment
+            const moduleItem = await db.moduleItem.findFirst({
+                where: { assignmentId: assignmentId },
+                include: { module: { include: { items: true } } }
+            });
+
+            if (moduleItem) {
+                const userId = session.user.id;
+
+                // 1. Mark item as completed
+                const existingProgress = await db.moduleItemProgress.findUnique({
+                    where: { userId_moduleItemId: { userId, moduleItemId: moduleItem.id } },
+                });
+
+                if (!existingProgress) {
+                    await db.moduleItemProgress.create({
+                        data: {
+                            userId,
+                            moduleItemId: moduleItem.id,
+                            isCompleted: true,
+                            completedAt: new Date(),
+                        },
+                    });
+                } else if (!existingProgress.isCompleted) {
+                    await db.moduleItemProgress.update({
+                        where: { id: existingProgress.id },
+                        data: { isCompleted: true, completedAt: new Date() },
+                    });
+                }
+
+                // 2. Check Module Completion
+                const module = moduleItem.module;
+                const allItems = module.items;
+
+                // Fetch all progress for this module
+                const allProgress = await db.moduleItemProgress.findMany({
+                    where: {
+                        userId,
+                        moduleItemId: { in: allItems.map(i => i.id) },
+                    },
+                });
+
+                const allCompleted = allItems.every(i =>
+                    allProgress.some(p => p.moduleItemId === i.id && p.isCompleted)
+                );
+
+                if (allCompleted) {
+                    // Mark module as completed
+                    await db.moduleProgress.update({
+                        where: { userId_moduleId: { userId, moduleId: module.id } },
+                        data: { status: "COMPLETED", completedAt: new Date() },
+                    });
+
+                    // 3. Unlock Next Module
+                    const nextModule = await db.module.findFirst({
+                        where: {
+                            courseId: module.courseId,
+                            order: { gt: module.order },
+                        },
+                        orderBy: { order: "asc" },
+                    });
+
+                    if (nextModule) {
+                        const nextProgress = await db.moduleProgress.findUnique({
+                            where: { userId_moduleId: { userId, moduleId: nextModule.id } },
+                        });
+
+                        if (!nextProgress) {
+                            await db.moduleProgress.create({
+                                data: {
+                                    userId,
+                                    moduleId: nextModule.id,
+                                    status: "IN_PROGRESS",
+                                },
+                            });
+                        }
+                    } else {
+                        // Course Completed?
+                        await db.enrollment.update({
+                            where: { userId_courseId: { userId, courseId: module.courseId } },
+                            data: { status: "COMPLETED" },
+                        });
+                    }
+                }
+            }
+        }
+
         return NextResponse.json({
             success: true,
             submission,
-            message: "Timers have been reset"
+            message: "Submission successful"
         });
     } catch (error) {
         console.error("Submission error:", error);
