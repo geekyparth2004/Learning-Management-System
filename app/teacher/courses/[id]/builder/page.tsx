@@ -208,10 +208,10 @@ export default function CourseBuilderPage() {
                 setIsUploading(true);
                 try {
                     content = await uploadToCloudinary(videoFile);
-                } catch (error) {
+                } catch (error: any) {
                     console.error("Upload failed:", error);
                     setIsUploading(false);
-                    alert("Failed to upload video");
+                    alert(`Failed to upload video: ${error.message}`);
                     return;
                 }
                 setIsUploading(false);
