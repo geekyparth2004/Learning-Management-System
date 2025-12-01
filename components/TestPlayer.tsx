@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Clock, CheckCircle, XCircle, Play, Save } from "lucide-react";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
+import CodeEditor from "@/components/CodeEditor";
 import { ChevronDown, Lock, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
