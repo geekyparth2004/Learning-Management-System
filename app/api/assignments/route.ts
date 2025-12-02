@@ -46,7 +46,7 @@ export async function POST(request: Request) {
                     create: processedProblems.map((p: any) => ({
                         title: p.title,
                         description: p.description,
-                        defaultCode: p.defaultCode,
+                        defaultCode: JSON.stringify(p.defaultCode),
                         hints: JSON.stringify(p.hints || []),
                         videoSolution: p.videoSolution,
                         leetcodeUrl: p.leetcodeUrl,
