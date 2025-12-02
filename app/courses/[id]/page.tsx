@@ -6,7 +6,9 @@ import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock, Video, Brain, C
 import Link from "next/link";
 import AIInterviewPlayer from "@/components/AIInterviewPlayer";
 import TestPlayer from "@/components/TestPlayer";
+
 import CodeEditor from "@/components/CodeEditor";
+import Console from "@/components/Console";
 import { Language } from "@/types";
 
 interface ModuleItem {
@@ -56,7 +58,9 @@ export default function CoursePlayerPage() {
     const [practiceCode, setPracticeCode] = useState("");
     const [practiceLanguage, setPracticeLanguage] = useState<Language>("python");
     const [practiceOutput, setPracticeOutput] = useState("");
+    const [customInput, setCustomInput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
+    const [runStatus, setRunStatus] = useState<"idle" | "running" | "success" | "error">("idle");
 
     useEffect(() => {
         fetchCourseData();
@@ -153,7 +157,8 @@ export default function CoursePlayerPage() {
 
     const runPracticeCode = async () => {
         setIsRunning(true);
-        setPracticeOutput("Running...");
+        setRunStatus("running");
+        setPracticeOutput("");
         try {
             const res = await fetch("/api/compile", {
                 method: "POST",
@@ -161,11 +166,19 @@ export default function CoursePlayerPage() {
                 body: JSON.stringify({
                     code: practiceCode,
                     language: practiceLanguage,
+                    input: customInput,
                 }),
             });
             const data = await res.json();
-            setPracticeOutput(data.output || data.error || "No output");
+            if (data.error) {
+                setRunStatus("error");
+                setPracticeOutput(data.error);
+            } else {
+                setRunStatus("success");
+                setPracticeOutput(data.output || "No output");
+            }
         } catch (error) {
+            setRunStatus("error");
             setPracticeOutput("Failed to run code");
         } finally {
             setIsRunning(false);
@@ -198,64 +211,66 @@ export default function CoursePlayerPage() {
     return (
         <div className="flex h-screen bg-[#0e0e0e] text-white">
             {/* Sidebar */}
-            <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
-                <div className="border-b border-gray-800 p-4">
-                    <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
-                        ← Back to Courses
-                    </Link>
-                    <h2 className="font-bold">{course.title}</h2>
-                </div>
-                <div className="p-4">
-                    {course.modules.map((module, idx) => (
-                        <div key={module.id} className="mb-6">
-                            <div className="mb-2 flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-gray-300">
-                                    Module {idx + 1}: {module.title}
-                                </h3>
-                                {module.status === "LOCKED" ? (
-                                    <Lock size={14} className="text-gray-600" />
-                                ) : module.status === "COMPLETED" ? (
-                                    <CheckCircle size={14} className="text-green-500" />
-                                ) : (
-                                    <Unlock size={14} className="text-blue-500" />
-                                )}
-                            </div>
+            {!showPractice && (
+                <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
+                    <div className="border-b border-gray-800 p-4">
+                        <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
+                            ← Back to Courses
+                        </Link>
+                        <h2 className="font-bold">{course.title}</h2>
+                    </div>
+                    <div className="p-4">
+                        {course.modules.map((module, idx) => (
+                            <div key={module.id} className="mb-6">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-gray-300">
+                                        Module {idx + 1}: {module.title}
+                                    </h3>
+                                    {module.status === "LOCKED" ? (
+                                        <Lock size={14} className="text-gray-600" />
+                                    ) : module.status === "COMPLETED" ? (
+                                        <CheckCircle size={14} className="text-green-500" />
+                                    ) : (
+                                        <Unlock size={14} className="text-blue-500" />
+                                    )}
+                                </div>
 
-                            <div className="space-y-1">
-                                {module.items.map((item) => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => {
-                                            if (module.status !== "LOCKED") {
-                                                setActiveModuleId(module.id);
-                                                setActiveItemId(item.id);
-                                            }
-                                        }}
-                                        disabled={module.status === "LOCKED"}
-                                        className={`flex w-full items-center gap-3 rounded px-3 py-2 text-sm transition-colors ${activeItemId === item.id && activeModuleId === module.id
-                                            ? "bg-blue-900/30 text-blue-400"
-                                            : "text-gray-400 hover:bg-[#1e1e1e] hover:text-white"
-                                            } ${module.status === "LOCKED" ? "cursor-not-allowed opacity-50" : ""}`}
-                                    >
-                                        {item.isCompleted ? (
-                                            <CheckCircle size={14} className="text-green-500" />
-                                        ) : item.type === "VIDEO" ? (
-                                            <Video size={16} className="text-blue-400" />
-                                        ) : item.type === "AI_INTERVIEW" ? (
-                                            <Brain size={16} className="text-pink-400" />
-                                        ) : item.type === "TEST" ? (
-                                            <Code size={16} className="text-yellow-400" />
-                                        ) : (
-                                            <FileText size={16} className="text-purple-400" />
-                                        )}
-                                        <span className="truncate">{item.title}</span>
-                                    </button>
-                                ))}
+                                <div className="space-y-1">
+                                    {module.items.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => {
+                                                if (module.status !== "LOCKED") {
+                                                    setActiveModuleId(module.id);
+                                                    setActiveItemId(item.id);
+                                                }
+                                            }}
+                                            disabled={module.status === "LOCKED"}
+                                            className={`flex w-full items-center gap-3 rounded px-3 py-2 text-sm transition-colors ${activeItemId === item.id && activeModuleId === module.id
+                                                ? "bg-blue-900/30 text-blue-400"
+                                                : "text-gray-400 hover:bg-[#1e1e1e] hover:text-white"
+                                                } ${module.status === "LOCKED" ? "cursor-not-allowed opacity-50" : ""}`}
+                                        >
+                                            {item.isCompleted ? (
+                                                <CheckCircle size={14} className="text-green-500" />
+                                            ) : item.type === "VIDEO" ? (
+                                                <Video size={16} className="text-blue-400" />
+                                            ) : item.type === "AI_INTERVIEW" ? (
+                                                <Brain size={16} className="text-pink-400" />
+                                            ) : item.type === "TEST" ? (
+                                                <Code size={16} className="text-yellow-400" />
+                                            ) : (
+                                                <FileText size={16} className="text-purple-400" />
+                                            )}
+                                            <span className="truncate">{item.title}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </aside>
+                        ))}
+                    </div>
+                </aside>
+            )}
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto p-8">
@@ -390,12 +405,11 @@ export default function CoursePlayerPage() {
                                         </div>
                                     </div>
                                     <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
-                                        <div className="border-b border-gray-800 bg-[#161616] px-4 py-2 text-xs font-bold text-gray-400">
-                                            Output
-                                        </div>
-                                        <pre className="h-full overflow-auto p-4 text-sm font-mono text-gray-300">
-                                            {practiceOutput || "Run code to see output..."}
-                                        </pre>
+                                        <Console
+                                            output={practiceOutput}
+                                            status={runStatus}
+                                            onInput={setCustomInput}
+                                        />
                                     </div>
                                 </div>
                             )}
