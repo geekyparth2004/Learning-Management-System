@@ -255,7 +255,10 @@ export default function CourseBuilderPage() {
                     body: formData,
                 });
 
-                if (!assignRes.ok) throw new Error("Failed to create assignment");
+                if (!assignRes.ok) {
+                    const errorData = await assignRes.json();
+                    throw new Error(errorData.details || errorData.error || "Failed to create assignment");
+                }
                 const assignment = await assignRes.json();
                 content = assignment.id;
             }
