@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Terminal, Play, AlertCircle, CheckCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState, useRef, useEffect } from "react";
+import { Terminal } from "lucide-react";
 
 interface ConsoleProps {
     output: string;
@@ -13,10 +12,43 @@ interface ConsoleProps {
 
 export default function Console({ output, error, status, onInput }: ConsoleProps) {
     const [input, setInput] = useState("");
+    const inputRef = useRef<HTMLInputElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom when output changes
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [output, error, status]);
+
+    // Focus input when clicking anywhere in the console
+    const handleContainerClick = () => {
+        inputRef.current?.focus();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            onInput?.(input);
+            // Optional: Clear input after sending, or keep it if mimicking a persistent prompt
+            // For now, let's keep it to allow editing, or we could clear it if we were appending to a log.
+            // Since the parent manages state, we might just want to trigger the callback.
+            // If we want to simulate "sending" a command, we might want to clear it here visually
+            // but the parent 'customInput' state is what matters for the run button.
+            // The user request is "mimic VS Code terminal".
+            // In VS Code debug console, you type and hit enter, it evaluates.
+            // Here, the input is PRE-SET for the code execution.
+            // So it's more like setting stdin before running.
+            // But visually, let's make it look like a prompt line.
+        }
+    };
 
     return (
-        <div className="flex h-full flex-col rounded-md border border-gray-700 bg-[#1e1e1e] text-gray-300">
-            <div className="flex items-center justify-between border-b border-gray-700 px-4 py-2">
+        <div
+            className="flex h-full flex-col rounded-md border border-gray-700 bg-[#1e1e1e] text-gray-300 font-mono text-sm"
+            onClick={handleContainerClick}
+        >
+            <div className="flex items-center justify-between border-b border-gray-700 px-4 py-2 bg-[#1e1e1e]">
                 <div className="flex items-center gap-2">
                     <Terminal className="h-4 w-4" />
                     <span className="text-sm font-medium">Console</span>
@@ -28,38 +60,34 @@ export default function Console({ output, error, status, onInput }: ConsoleProps
                 </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-4 font-mono text-sm">
+            <div className="flex-1 overflow-auto p-4 cursor-text" ref={scrollRef}>
+                {/* Output Area */}
                 {output && (
-                    <div className="mb-4 whitespace-pre-wrap text-white">
-                        <span className="text-gray-500">$ Output:</span>
-                        <br />
+                    <div className="whitespace-pre-wrap text-white mb-2">
                         {output}
                     </div>
                 )}
                 {error && (
-                    <div className="mb-4 whitespace-pre-wrap text-red-400">
-                        <span className="text-red-500">$ Error:</span>
-                        <br />
+                    <div className="whitespace-pre-wrap text-red-400 mb-2">
                         {error}
                     </div>
                 )}
-                {status === "idle" && !output && !error && (
-                    <div className="text-gray-500">Run your code to see output here...</div>
-                )}
-            </div>
 
-            <div className="border-t border-gray-700 p-2">
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Input:</span>
+                {/* Input Prompt Line */}
+                <div className="flex items-center gap-2 text-gray-300">
+                    <span className="text-blue-400 font-bold">{">"}</span>
                     <input
+                        ref={inputRef}
                         type="text"
                         value={input}
                         onChange={(e) => {
                             setInput(e.target.value);
                             onInput?.(e.target.value);
                         }}
-                        className="flex-1 bg-transparent text-sm text-white focus:outline-none"
+                        onKeyDown={handleKeyDown}
+                        className="flex-1 bg-transparent border-none outline-none text-white placeholder-gray-600"
                         placeholder="Type input here..."
+                        autoComplete="off"
                     />
                 </div>
             </div>

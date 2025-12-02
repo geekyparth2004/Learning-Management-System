@@ -316,7 +316,7 @@ export default function CoursePlayerPage() {
                         </div>
 
                         <div className={`mb-8 flex-1 overflow-hidden ${showPractice ? "flex gap-4" : ""}`}>
-                            <div className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden ${showPractice ? "w-1/2" : "w-full"}`}>
+                            <div className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden ${showPractice ? "w-[70%]" : "w-full"}`}>
                                 {activeItem.type === "VIDEO" ? (
                                     <div className="h-full w-full bg-black flex items-center justify-center">
                                         {activeItem.content?.includes("cloudinary.com") ? (
@@ -376,7 +376,7 @@ export default function CoursePlayerPage() {
                             </div>
 
                             {showPractice && activeItem.type === "VIDEO" && (
-                                <div className="flex w-1/2 flex-col gap-4">
+                                <div className="flex w-[30%] flex-col gap-4">
                                     <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
                                         <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
                                             <select
