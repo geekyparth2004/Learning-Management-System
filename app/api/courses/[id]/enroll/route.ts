@@ -81,6 +81,10 @@ export async function POST(
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error enrolling:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({
+            error: "Internal Server Error",
+            details: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+        }, { status: 500 });
     }
 }
