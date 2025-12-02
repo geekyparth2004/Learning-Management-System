@@ -159,14 +159,30 @@ export default function CoursePlayerPage() {
         }
     };
 
+    const [isEnrolling, setIsEnrolling] = useState(false);
+
     const handleEnroll = async () => {
+        setIsEnrolling(true);
         try {
             const res = await fetch(`/api/courses/${courseId}/enroll`, { method: "POST" });
+            const data = await res.json();
+
             if (res.ok) {
-                fetchCourseData();
+                if (data.message === "Already enrolled") {
+                    // Just refresh data to be sure
+                    await fetchCourseData();
+                } else {
+                    // Success
+                    await fetchCourseData();
+                }
+            } else {
+                alert(data.error || "Failed to enroll");
             }
         } catch (error) {
             console.error(error);
+            alert("An error occurred while enrolling");
+        } finally {
+            setIsEnrolling(false);
         }
     };
 
@@ -289,9 +305,10 @@ export default function CoursePlayerPage() {
                     <p className="text-gray-400">{course.description}</p>
                     <button
                         onClick={handleEnroll}
-                        className="w-full rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700"
+                        disabled={isEnrolling}
+                        className="w-full rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700 disabled:opacity-50"
                     >
-                        Enroll Now
+                        {isEnrolling ? "Enrolling..." : "Enroll Now"}
                     </button>
                 </div>
             </div>
