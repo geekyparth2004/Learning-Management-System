@@ -494,7 +494,7 @@ export default function CourseBuilderPage() {
                                                                     <option value="ASSIGNMENT">Assignment</option>
                                                                     <option value="AI_INTERVIEW">AI Interview</option>
                                                                     <option value="TEST">Test</option>
-                                                                    <option value="WEB_DEV">Web Development</option>
+                                                                    <option value="WEB_DEV">Coding Assignment (Web Dev)</option>
                                                                 </select>
                                                                 <input
                                                                     type="text"

@@ -15,7 +15,7 @@ import { Language } from "@/types";
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV";
     content?: string;
     assignmentId?: string;
     isCompleted: boolean;
@@ -204,6 +204,23 @@ export default function CoursePlayerPage() {
             }
         } catch (error) {
             console.error(error);
+        }
+    };
+
+    const submitWebDev = async (itemId: string, submission: any) => {
+        try {
+            const res = await fetch(`/api/modules/items/${itemId}/submit-web`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(submission),
+            });
+            if (res.ok) {
+                fetchCourseData();
+                alert("Assignment Submitted Successfully!");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to submit assignment");
         }
     };
 
@@ -421,6 +438,7 @@ export default function CoursePlayerPage() {
                                             }}
                                         />
                                     </div>
+                                ) : activeItem.type === "ASSIGNMENT" ? (
                                     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                                         <FileText className="h-16 w-16 text-gray-600" />
                                         <h2 className="text-xl font-bold">Coding Assignment</h2>
