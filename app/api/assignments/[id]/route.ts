@@ -72,7 +72,7 @@ export async function GET(
             courseId,
             startedAt: startedAt.toISOString(),
             problems: assignment.problems.map((p) => {
-                const hintsRaw = p.hints || [];
+                const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
                 const processedHints = hintsRaw.map((hintContent: string, index: number) => {
                     // Unlock schedule: 5, 10, 15, 20 minutes
                     const unlockThreshold = (index + 1) * 5;

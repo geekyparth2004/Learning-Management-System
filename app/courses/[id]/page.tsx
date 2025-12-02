@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock, Video, Brain, Code, FileText } from "lucide-react";
+import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock, Video, Brain, Code, FileText, Layout } from "lucide-react";
 import Link from "next/link";
 import AIInterviewPlayer from "@/components/AIInterviewPlayer";
 import TestPlayer from "@/components/TestPlayer";
+import WebDevPlayer from "@/components/WebDevPlayer";
 
 import CodeEditor from "@/components/CodeEditor";
 import Console from "@/components/Console";
@@ -25,6 +26,9 @@ interface ModuleItem {
     testDuration?: number;
     testPassingScore?: number;
     testProblems?: any[];
+    webDevInstructions?: string;
+    webDevInitialCode?: any;
+    webDevSubmission?: any;
 }
 
 interface Module {
@@ -307,6 +311,8 @@ export default function CoursePlayerPage() {
                                                 <Brain size={16} className="text-pink-400" />
                                             ) : item.type === "TEST" ? (
                                                 <Code size={16} className="text-yellow-400" />
+                                            ) : item.type === "WEB_DEV" ? (
+                                                <Layout size={16} className="text-orange-400" />
                                             ) : (
                                                 <FileText size={16} className="text-purple-400" />
                                             )}
@@ -415,7 +421,6 @@ export default function CoursePlayerPage() {
                                             }}
                                         />
                                     </div>
-                                ) : (
                                     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                                         <FileText className="h-16 w-16 text-gray-600" />
                                         <h2 className="text-xl font-bold">Coding Assignment</h2>
@@ -429,7 +434,16 @@ export default function CoursePlayerPage() {
                                             Start Assignment
                                         </Link>
                                     </div>
-                                )}
+                                ) : activeItem.type === "WEB_DEV" ? (
+                                    <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                        <WebDevPlayer
+                                            instructions={activeItem.webDevInstructions || ""}
+                                            initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
+                                            savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
+                                            onComplete={(submission) => submitWebDev(activeItem.id, submission)}
+                                        />
+                                    </div>
+                                ) : null}
                             </div>
 
                             {showPractice && activeItem.type === "VIDEO" && (

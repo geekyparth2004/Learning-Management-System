@@ -6,20 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  STUDENT
-  TEACHER
-}
-
-enum ModuleItemType {
-  VIDEO
-  ASSIGNMENT
-  AI_INTERVIEW
-  TEST
 }
 
 model User {
@@ -28,7 +16,7 @@ model User {
   email              String               @unique
   password           String?
   image              String?
-  role               UserRole             @default(STUDENT)
+  role               String               @default("STUDENT") // Was UserRole
   
   // Relations
   courses            Course[]             @relation("TeacherCourses")
@@ -76,7 +64,7 @@ model Module {
 model ModuleItem {
   id           String               @id @default(cuid())
   title        String
-  type         ModuleItemType
+  type         String               // Was ModuleItemType
   content      String?              // Video URL or Assignment ID (for legacy/simple assignment)
   order        Int
   
@@ -93,6 +81,10 @@ model ModuleItem {
   testDuration      Int?            // in minutes
   testPassingScore  Int?            // percentage (e.g. 60)
   testProblems      Problem[]       // Problems specific to this test item
+
+  // Web Dev Fields
+  webDevInstructions String?
+  webDevInitialCode  String?        // Was Json. Store as JSON string.
 
   assignmentId String?
   assignment   Assignment?          @relation(fields: [assignmentId], references: [id])
@@ -129,8 +121,8 @@ model Problem {
   assignment    Assignment?  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   
   // Content
-  defaultCode   Json?        // { "cpp": "...", "python": "..." }
-  hints         String[]
+  defaultCode   String?      // Was Json. Store as JSON string.
+  hints         String?      // Was String[]. Store as JSON string.
   leetcodeUrl   String?
   videoSolution String?
 
@@ -207,8 +199,11 @@ model ModuleItemProgress {
   completedAt  DateTime?
   
   // AI Interview Review
-  aiSubmission Json?      // Store the full transcript/messages
+  aiSubmission String?    // Was Json. Store as JSON string.
   reviewStatus String?    // "PENDING" | "APPROVED" | "REJECTED"
+
+  // Web Dev Submission
+  webDevSubmission String? // Was Json. Store as JSON string.
 
   @@unique([userId, moduleItemId])
 }

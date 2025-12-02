@@ -47,7 +47,7 @@ export async function POST(request: Request) {
                         title: p.title,
                         description: p.description,
                         defaultCode: p.defaultCode,
-                        hints: p.hints || [],
+                        hints: JSON.stringify(p.hints || []),
                         videoSolution: p.videoSolution,
                         leetcodeUrl: p.leetcodeUrl,
                         slug: p.slug,

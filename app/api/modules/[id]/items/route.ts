@@ -49,6 +49,15 @@ export async function POST(
             } catch (e) {
                 return NextResponse.json({ error: "Invalid AI Interview config" }, { status: 400 });
             }
+        } else if (type === "WEB_DEV") {
+            // content is expected to be JSON string: { instructions, initialCode }
+            try {
+                const { instructions, initialCode } = JSON.parse(content);
+                itemData.webDevInstructions = instructions;
+                itemData.webDevInitialCode = JSON.stringify(initialCode);
+            } catch (e) {
+                return NextResponse.json({ error: "Invalid Web Dev config" }, { status: 400 });
+            }
         } else if (type === "TEST") {
             // content is expected to be JSON string: { duration, passingScore, problems }
             // problems is array of { title, description, testCases: [...] }
@@ -64,7 +73,7 @@ export async function POST(
                         create: problems.map((p: any) => ({
                             title: p.title,
                             description: p.description,
-                            defaultCode: p.defaultCode || { cpp: "", python: "" },
+                            defaultCode: JSON.stringify(p.defaultCode || { cpp: "", python: "" }),
                             testCases: {
                                 create: p.testCases.map((tc: any) => ({
                                     input: tc.input,

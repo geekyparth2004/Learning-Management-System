@@ -10,7 +10,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV";
     content?: string;
     assignmentId?: string;
 }
@@ -42,7 +42,7 @@ export default function CourseBuilderPage() {
 
     // New Item State
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
-    const [newItemType, setNewItemType] = useState<"VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST">("VIDEO");
+    const [newItemType, setNewItemType] = useState<"VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV">("VIDEO");
     const [newItemTitle, setNewItemTitle] = useState("");
     const [newItemContent, setNewItemContent] = useState(""); // URL or Assignment ID
     const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -61,6 +61,12 @@ export default function CourseBuilderPage() {
 
     // Assignment State
     const [assignProblems, setAssignProblems] = useState<any[]>([]);
+
+    // Web Dev State
+    const [webDevInstructions, setWebDevInstructions] = useState("");
+    const [webDevHtml, setWebDevHtml] = useState("<!-- Write your HTML here -->");
+    const [webDevCss, setWebDevCss] = useState("/* Write your CSS here */");
+    const [webDevJs, setWebDevJs] = useState("// Write your JS here");
 
     // Problem Builder State
     const [isProblemBuilderOpen, setIsProblemBuilderOpen] = useState(false);
@@ -230,6 +236,15 @@ export default function CourseBuilderPage() {
                     passingScore: testPassingScore,
                     problems: testProblems
                 });
+            } else if (newItemType === "WEB_DEV") {
+                content = JSON.stringify({
+                    instructions: webDevInstructions,
+                    initialCode: {
+                        html: webDevHtml,
+                        css: webDevCss,
+                        js: webDevJs
+                    }
+                });
             } else if (newItemType === "ASSIGNMENT") {
                 const formData = new FormData();
                 formData.append("title", newItemTitle);
@@ -262,6 +277,10 @@ export default function CourseBuilderPage() {
                 setAiTopic("");
                 setAiCount(5);
                 setAiDifficulty("Medium");
+                setWebDevInstructions("");
+                setWebDevHtml("");
+                setWebDevCss("");
+                setWebDevJs("");
                 setTestProblems([]);
                 setAssignProblems([]);
                 setUploadProgress(0);
@@ -475,6 +494,7 @@ export default function CourseBuilderPage() {
                                                                     <option value="ASSIGNMENT">Assignment</option>
                                                                     <option value="AI_INTERVIEW">AI Interview</option>
                                                                     <option value="TEST">Test</option>
+                                                                    <option value="WEB_DEV">Web Development</option>
                                                                 </select>
                                                                 <input
                                                                     type="text"
@@ -604,6 +624,42 @@ export default function CourseBuilderPage() {
                                                                                 <p className="text-xs text-gray-500 truncate">{p.description}</p>
                                                                             </div>
                                                                         ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : newItemType === "WEB_DEV" ? (
+                                                                <div className="space-y-3 rounded border border-gray-800 p-3">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Instructions</label>
+                                                                        <textarea
+                                                                            value={webDevInstructions}
+                                                                            onChange={(e) => setWebDevInstructions(e.target.value)}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm h-24"
+                                                                            placeholder="Enter assignment instructions..."
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Initial HTML</label>
+                                                                        <textarea
+                                                                            value={webDevHtml}
+                                                                            onChange={(e) => setWebDevHtml(e.target.value)}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm font-mono h-20"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Initial CSS</label>
+                                                                        <textarea
+                                                                            value={webDevCss}
+                                                                            onChange={(e) => setWebDevCss(e.target.value)}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm font-mono h-20"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Initial JS</label>
+                                                                        <textarea
+                                                                            value={webDevJs}
+                                                                            onChange={(e) => setWebDevJs(e.target.value)}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm font-mono h-20"
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                             ) : newItemType === "ASSIGNMENT" ? (

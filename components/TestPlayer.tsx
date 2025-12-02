@@ -62,7 +62,26 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     useEffect(() => {
         const initialCodes: any = {};
         problems.forEach(p => {
-            initialCodes[p.id] = p.defaultCode?.[language] || (
+            // Parse defaultCode if string
+            let defaultCode = p.defaultCode;
+            if (typeof defaultCode === 'string') {
+                try {
+                    defaultCode = JSON.parse(defaultCode);
+                } catch (e) {
+                    defaultCode = { python: "", cpp: "", java: "" };
+                }
+            }
+
+            // Parse hints if string
+            if (typeof p.hints === 'string') {
+                try {
+                    p.hints = JSON.parse(p.hints);
+                } catch (e) {
+                    p.hints = [];
+                }
+            }
+
+            initialCodes[p.id] = defaultCode?.[language] || (
                 language === "python" ? "# Write your code here" :
                     language === "cpp" ? "// Write your code here" :
                         "// Write your code here"

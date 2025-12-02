@@ -152,6 +152,25 @@ export default function AssignmentPage() {
                 if (!res.ok) throw new Error("Failed to fetch assignment");
                 const data = await res.json();
                 const problemData: Problem = data.problems[0];
+
+                // Parse defaultCode if string
+                if (typeof problemData.defaultCode === 'string') {
+                    try {
+                        problemData.defaultCode = JSON.parse(problemData.defaultCode);
+                    } catch (e) {
+                        problemData.defaultCode = { python: "", cpp: "", java: "" };
+                    }
+                }
+
+                // Parse hints if string
+                if (typeof problemData.hints === 'string') {
+                    try {
+                        problemData.hints = JSON.parse(problemData.hints);
+                    } catch (e) {
+                        problemData.hints = [];
+                    }
+                }
+
                 // Ensure startedAt is present (it comes from the API now)
                 const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
                 setProblem(fullProblemData);
