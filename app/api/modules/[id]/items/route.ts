@@ -42,9 +42,10 @@ export async function POST(
         } else if (type === "AI_INTERVIEW") {
             // content is expected to be JSON string: { topic, count }
             try {
-                const { topic, count } = JSON.parse(content);
+                const { topic, count, difficulty } = JSON.parse(content);
                 itemData.aiInterviewTopic = topic;
                 itemData.aiQuestionsCount = count;
+                itemData.aiDifficulty = difficulty || "Medium";
             } catch (e) {
                 return NextResponse.json({ error: "Invalid AI Interview config" }, { status: 400 });
             }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, Volume2, Star, Loader2, ArrowRight } from "lucide-react";
+import { Mic, Volume2, Star, Loader2, ArrowRight, Clock } from "lucide-react";
 import { useWhisper } from "@/hooks/use-whisper";
 
 interface Feedback {
@@ -14,10 +14,20 @@ interface Feedback {
 interface AIInterviewPlayerProps {
     topic: string;
     questionCountLimit: number;
+    difficulty?: string;
+    reviewStatus?: string; // "PENDING" | "APPROVED" | "REJECTED" | null
     onComplete: () => void;
+    onSubmitReview: (messages: any[]) => void;
 }
 
-export default function AIInterviewPlayer({ topic, questionCountLimit, onComplete }: AIInterviewPlayerProps) {
+export default function AIInterviewPlayer({
+    topic,
+    questionCountLimit,
+    difficulty = "Medium",
+    reviewStatus,
+    onComplete,
+    onSubmitReview
+}: AIInterviewPlayerProps) {
     // Interview State
     const [hasStarted, setHasStarted] = useState(false);
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
@@ -83,7 +93,8 @@ export default function AIInterviewPlayer({ topic, questionCountLimit, onComplet
                     messages: [],
                     questionCount: 0,
                     type: "custom",
-                    subject: topic
+                    subject: topic,
+                    difficulty: difficulty
                 }),
             });
             const data = await res.json();
@@ -138,7 +149,8 @@ export default function AIInterviewPlayer({ topic, questionCountLimit, onComplet
                     userResponse: transcribedText,
                     questionCount: questionCount,
                     type: "custom",
-                    subject: topic
+                    subject: topic,
+                    difficulty: difficulty
                 }),
             });
             const data = await res.json();
@@ -156,7 +168,7 @@ export default function AIInterviewPlayer({ topic, questionCountLimit, onComplet
 
     const handleNextQuestion = () => {
         if (questionCount >= questionCountLimit) {
-            onComplete();
+            onSubmitReview(messages);
             return;
         }
 
@@ -170,13 +182,57 @@ export default function AIInterviewPlayer({ topic, questionCountLimit, onComplet
         }
     };
 
+    if (reviewStatus === "PENDING") {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+                <div className="mb-6 rounded-full bg-yellow-900/20 p-6">
+                    <Clock className="h-12 w-12 text-yellow-500" />
+                </div>
+                <h2 className="mb-2 text-2xl font-bold">Waiting for Review</h2>
+                <p className="text-gray-400 max-w-md">
+                    Your interview has been submitted to your teacher for manual review.
+                    You will be notified once it has been graded.
+                </p>
+            </div>
+        );
+    }
+
+    if (reviewStatus === "REJECTED") {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+                <div className="mb-6 rounded-full bg-red-900/20 p-6">
+                    <div className="h-12 w-12 text-red-500 font-bold text-3xl flex items-center justify-center">!</div>
+                </div>
+                <h2 className="mb-2 text-2xl font-bold">Interview Rejected</h2>
+                <p className="mb-8 text-gray-400 max-w-md">
+                    Your teacher has reviewed your interview and requested you to try again.
+                </p>
+                <button
+                    onClick={startInterview}
+                    className="rounded-xl bg-indigo-600 px-8 py-3 font-bold text-white hover:bg-indigo-700"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
     if (!hasStarted) {
         return (
             <div className="flex flex-col items-center justify-center p-8 text-center">
                 <h2 className="mb-4 text-2xl font-bold">AI Interview: {topic}</h2>
-                <p className="mb-8 text-gray-400">
-                    You will be asked {questionCountLimit} questions about {topic}.
-                </p>
+                <div className="mb-8 space-y-2">
+                    <p className="text-gray-400">
+                        You will be asked {questionCountLimit} questions about {topic}.
+                    </p>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-gray-800 px-3 py-1 text-sm text-gray-300">
+                        <span>Difficulty:</span>
+                        <span className={`font-bold ${difficulty === "Hard" ? "text-red-400" :
+                            difficulty === "Medium" ? "text-yellow-400" :
+                                "text-green-400"
+                            }`}>{difficulty}</span>
+                    </div>
+                </div>
                 <button
                     onClick={startInterview}
                     className="rounded-xl bg-indigo-600 px-8 py-3 font-bold text-white hover:bg-indigo-700"

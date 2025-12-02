@@ -2,7 +2,7 @@ import TeacherNotifications from "@/components/TeacherNotifications";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, LogOut, MessageSquare } from "lucide-react";
 
 export default async function TeacherLayout({
     children,
@@ -39,6 +39,13 @@ export default async function TeacherLayout({
                     >
                         <LayoutDashboard size={20} />
                         <span>Analytics</span>
+                    </Link>
+                    <Link
+                        href="/teacher/reviews"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1e1e] rounded-lg transition-colors"
+                    >
+                        <MessageSquare size={20} />
+                        <span>Reviews</span>
                     </Link>
                 </nav>
 

@@ -87,6 +87,7 @@ model ModuleItem {
   // AI Interview Fields
   aiInterviewTopic String?
   aiQuestionsCount Int?
+  aiDifficulty     String?          @default("Medium") // "Basic" | "Easy" | "Medium" | "Hard"
 
   // Test Fields
   testDuration      Int?            // in minutes
@@ -204,6 +205,10 @@ model ModuleItemProgress {
   moduleItem   ModuleItem @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
   isCompleted  Boolean    @default(false)
   completedAt  DateTime?
+  
+  // AI Interview Review
+  aiSubmission Json?      // Store the full transcript/messages
+  reviewStatus String?    // "PENDING" | "APPROVED" | "REJECTED"
 
   @@unique([userId, moduleItemId])
 }

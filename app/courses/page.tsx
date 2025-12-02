@@ -38,7 +38,7 @@ export default function CoursesPage() {
             <header className="border-b border-gray-800 bg-[#161616] px-6 py-4">
                 <div className="mx-auto flex max-w-5xl items-center justify-between">
                     <h1 className="text-xl font-bold">Available Courses</h1>
-                    <Link href="/dashboard" className="text-sm text-gray-400 hover:text-white">
+                    <Link href="/" className="text-sm text-gray-400 hover:text-white">
                         Back to Dashboard
                     </Link>
                 </div>

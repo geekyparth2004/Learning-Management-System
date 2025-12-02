@@ -52,6 +52,7 @@ export default function CourseBuilderPage() {
     // AI Interview State
     const [aiTopic, setAiTopic] = useState("");
     const [aiCount, setAiCount] = useState(5);
+    const [aiDifficulty, setAiDifficulty] = useState("Medium");
 
     // Test State
     const [testDuration, setTestDuration] = useState(30);
@@ -222,7 +223,7 @@ export default function CourseBuilderPage() {
                 }
                 setIsUploading(false);
             } else if (newItemType === "AI_INTERVIEW") {
-                content = JSON.stringify({ topic: aiTopic, count: aiCount });
+                content = JSON.stringify({ topic: aiTopic, count: aiCount, difficulty: aiDifficulty });
             } else if (newItemType === "TEST") {
                 content = JSON.stringify({
                     duration: testDuration,
@@ -260,6 +261,7 @@ export default function CourseBuilderPage() {
                 setVideoFile(null);
                 setAiTopic("");
                 setAiCount(5);
+                setAiDifficulty("Medium");
                 setTestProblems([]);
                 setAssignProblems([]);
                 setUploadProgress(0);
@@ -543,13 +545,28 @@ export default function CourseBuilderPage() {
                                                                         className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
                                                                     />
                                                                     <div className="flex items-center gap-2">
-                                                                        <label className="text-sm text-gray-400">Questions:</label>
-                                                                        <input
-                                                                            type="number"
-                                                                            value={aiCount}
-                                                                            onChange={(e) => setAiCount(parseInt(e.target.value))}
-                                                                            className="w-20 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                                        />
+                                                                        <div className="flex-1">
+                                                                            <label className="text-xs text-gray-400 block mb-1">Difficulty</label>
+                                                                            <select
+                                                                                value={aiDifficulty}
+                                                                                onChange={(e) => setAiDifficulty(e.target.value)}
+                                                                                className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                            >
+                                                                                <option value="Basic">Basic</option>
+                                                                                <option value="Easy">Easy</option>
+                                                                                <option value="Medium">Medium</option>
+                                                                                <option value="Hard">Hard</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="text-xs text-gray-400 block mb-1">Questions</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                value={aiCount}
+                                                                                onChange={(e) => setAiCount(parseInt(e.target.value))}
+                                                                                className="w-20 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                            />
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ) : newItemType === "TEST" ? (

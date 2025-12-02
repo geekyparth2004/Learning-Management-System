@@ -20,6 +20,8 @@ interface ModuleItem {
     isCompleted: boolean;
     aiInterviewTopic?: string;
     aiQuestionsCount?: number;
+    aiDifficulty?: string;
+    reviewStatus?: string;
     testDuration?: number;
     testPassingScore?: number;
     testProblems?: any[];
@@ -178,6 +180,21 @@ export default function CoursePlayerPage() {
     const completeItem = async (itemId: string) => {
         try {
             const res = await fetch(`/api/modules/items/${itemId}/complete`, { method: "POST" });
+            if (res.ok) {
+                fetchCourseData();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const submitInterviewReview = async (itemId: string, messages: any[]) => {
+        try {
+            const res = await fetch(`/api/modules/items/${itemId}/review`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messages }),
+            });
             if (res.ok) {
                 fetchCourseData();
             }
@@ -376,7 +393,10 @@ export default function CoursePlayerPage() {
                                         <AIInterviewPlayer
                                             topic={activeItem.aiInterviewTopic || "General"}
                                             questionCountLimit={activeItem.aiQuestionsCount || 5}
+                                            difficulty={activeItem.aiDifficulty}
+                                            reviewStatus={activeItem.reviewStatus}
                                             onComplete={() => completeItem(activeItem.id)}
+                                            onSubmitReview={(messages) => submitInterviewReview(activeItem.id, messages)}
                                         />
                                     </div>
                                 ) : activeItem.type === "TEST" ? (
