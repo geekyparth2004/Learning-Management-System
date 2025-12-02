@@ -285,11 +285,15 @@ export default function CourseBuilderPage() {
                 setAssignProblems([]);
                 setUploadProgress(0);
                 fetchCourse();
+            } else {
+                const data = await res.json();
+                throw new Error(data.details || data.error || "Failed to add item");
             }
         } catch (error) {
             console.error(error);
             setIsUploading(false);
-            alert("Failed to add item");
+            // @ts-ignore
+            alert(error.message || "Failed to add item");
         }
     };
 
