@@ -273,7 +273,7 @@ export default function CoursePlayerPage() {
             )}
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-8">
+            <main className={`flex-1 overflow-y-auto ${showPractice ? "p-0" : "p-8"}`}>
                 {activeModule && activeModule.status === "LOCKED" ? (
                     <div className="flex h-full flex-col items-center justify-center text-center">
                         <Lock size={48} className="mb-4 text-gray-600" />
@@ -292,7 +292,7 @@ export default function CoursePlayerPage() {
                         </button>
                     </div>
                 ) : activeItem ? (
-                    <div className="mx-auto max-w-4xl h-full flex flex-col">
+                    <div className={`mx-auto h-full flex flex-col ${showPractice ? "max-w-full p-4" : "max-w-4xl"}`}>
                         <div className="mb-6 flex items-center justify-between">
                             <h1 className="text-2xl font-bold">{activeItem.title}</h1>
                             <div className="flex items-center gap-4">
