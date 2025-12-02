@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, Volume2, Loader2, ArrowRight, Clock } from "lucide-react";
+import { Mic, Volume2, Loader2, ArrowRight, Clock, CheckCircle } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 import { useWhisper } from "@/hooks/use-whisper";
 
 interface AIInterviewPlayerProps {
@@ -172,17 +173,26 @@ export default function AIInterviewPlayer({
         }
     };
 
+    const router = useRouter();
+    const params = useParams();
+    const courseId = params.id;
+
     if (reviewStatus === "PENDING") {
         return (
             <div className="flex flex-col items-center justify-center p-8 text-center h-full">
-                <div className="mb-6 rounded-full bg-yellow-900/20 p-6">
-                    <Clock className="h-12 w-12 text-yellow-500" />
+                <div className="mb-6 rounded-full bg-green-900/20 p-6">
+                    <CheckCircle className="h-12 w-12 text-green-500" />
                 </div>
-                <h2 className="mb-2 text-2xl font-bold">Waiting for Review</h2>
-                <p className="text-gray-400 max-w-md">
-                    Your interview has been submitted to your teacher for manual review.
-                    You will be notified once it has been graded.
+                <h2 className="mb-2 text-2xl font-bold">Thank You for Attending</h2>
+                <p className="text-gray-400 max-w-md mb-8">
+                    The teacher will look over your answer and authenticate.
                 </p>
+                <button
+                    onClick={() => router.push(`/courses/${courseId}`)}
+                    className="rounded-xl bg-gray-800 px-8 py-3 font-bold text-white hover:bg-gray-700 border border-gray-700"
+                >
+                    Go to Modules
+                </button>
             </div>
         );
     }
