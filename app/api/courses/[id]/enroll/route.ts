@@ -21,6 +21,20 @@ export async function POST(
         });
 
         if (existing) {
+            // Even if enrolled, check/create GitHub repo
+            try {
+                const user = await db.user.findUnique({ where: { id: userId } });
+                if (user?.githubAccessToken) {
+                    const course = await db.course.findUnique({ where: { id } });
+                    if (course) {
+                        const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${userId.slice(-4)}`;
+                        const { createRepository } = await import("@/lib/github");
+                        await createRepository(user.githubAccessToken, repoName);
+                    }
+                }
+            } catch (error) {
+                console.error("Error ensuring GitHub repo:", error);
+            }
             return NextResponse.json({ message: "Already enrolled" });
         }
 

@@ -36,6 +36,21 @@ export const createOrUpdateFile = async (
     const octokit = new Octokit({ auth: accessToken });
     try {
         const owner = (await octokit.rest.users.getAuthenticated()).data.login;
+
+        // Ensure repo exists
+        try {
+            await octokit.rest.repos.get({ owner, repo: repoName });
+        } catch (e) {
+            // Repo doesn't exist, create it
+            await octokit.rest.repos.createForAuthenticatedUser({
+                name: repoName,
+                private: true,
+                auto_init: true,
+            });
+            // Wait a bit for initialization
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
         let sha: string | undefined;
 
         try {
