@@ -17,6 +17,13 @@ export async function GET(
                 problems: {
                     include: { testCases: true },
                 },
+                moduleItems: {
+                    include: {
+                        module: {
+                            select: { courseId: true }
+                        }
+                    }
+                }
             },
         });
 
@@ -59,8 +66,10 @@ export async function GET(
         const minutesElapsed = (now.getTime() - startedAt.getTime()) / 1000 / 60;
 
         // Transform data
+        const courseId = assignment.moduleItems[0]?.module?.courseId;
         const transformedAssignment = {
             ...assignment,
+            courseId,
             startedAt: startedAt.toISOString(),
             problems: assignment.problems.map((p) => {
                 const hintsRaw = p.hints || [];

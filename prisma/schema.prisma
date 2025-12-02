@@ -37,6 +37,7 @@ model User {
   moduleItemProgress ModuleItemProgress[]
   submissions        Submission[]
   assignmentProgress AssignmentProgress[]
+  notifications      Notification[]
   
   createdAt          DateTime             @default(now())
   updatedAt          DateTime?            @updatedAt
@@ -126,18 +127,18 @@ model Problem {
   assignmentId  String?
   assignment    Assignment?  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   
-  moduleItemId  String?
-  moduleItem    ModuleItem?  @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
-
-  testCases     TestCase[]
-  submissions   Submission[]
-  
   // Content
   defaultCode   Json?        // { "cpp": "...", "python": "..." }
   hints         String[]
   leetcodeUrl   String?
   videoSolution String?
 
+  moduleItemId  String?
+  moduleItem    ModuleItem?  @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
+
+  testCases     TestCase[]
+  submissions   Submission[]
+  
   createdAt     DateTime     @default(now())
   updatedAt     DateTime?    @updatedAt
 
@@ -216,4 +217,16 @@ model AssignmentProgress {
   startedAt    DateTime   @default(now())
 
   @@unique([userId, assignmentId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String   // Teacher ID
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  type        String   // "VIDEO_COMPLETED" | "ASSIGNMENT_SUBMITTED"
+  link        String?  // URL to view submission
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }

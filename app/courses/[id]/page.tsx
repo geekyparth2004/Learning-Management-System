@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock, Video, Brain, Code, FileText } from "lucide-react";
 import Link from "next/link";
@@ -61,6 +61,38 @@ export default function CoursePlayerPage() {
     const [customInput, setCustomInput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
     const [runStatus, setRunStatus] = useState<"idle" | "running" | "success" | "error">("idle");
+
+    // Split View State
+    const [splitRatio, setSplitRatio] = useState(65); // Default 65% for video
+    const [isResizing, setIsResizing] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const startResizing = () => setIsResizing(true);
+    const stopResizing = () => setIsResizing(false);
+
+    const resize = (e: MouseEvent) => {
+        if (isResizing && containerRef.current) {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const newRatio = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            if (newRatio > 20 && newRatio < 80) { // Min/Max constraints
+                setSplitRatio(newRatio);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (isResizing) {
+            window.addEventListener("mousemove", resize);
+            window.addEventListener("mouseup", stopResizing);
+        } else {
+            window.removeEventListener("mousemove", resize);
+            window.removeEventListener("mouseup", stopResizing);
+        }
+        return () => {
+            window.removeEventListener("mousemove", resize);
+            window.removeEventListener("mouseup", stopResizing);
+        };
+    }, [isResizing]);
 
     useEffect(() => {
         fetchCourseData();
@@ -145,9 +177,8 @@ export default function CoursePlayerPage() {
 
     const completeItem = async (itemId: string) => {
         try {
-            const res = await fetch(`/api/items/${itemId}/complete`, { method: "POST" });
+            const res = await fetch(`/api/modules/items/${itemId}/complete`, { method: "POST" });
             if (res.ok) {
-                // Refresh data to check for module completion/unlocks
                 fetchCourseData();
             }
         } catch (error) {
@@ -315,8 +346,14 @@ export default function CoursePlayerPage() {
                             </div>
                         </div>
 
-                        <div className={`mb-8 flex-1 overflow-hidden ${showPractice ? "flex gap-4" : ""}`}>
-                            <div className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden ${showPractice ? "w-[70%]" : "w-full"}`}>
+                        <div
+                            ref={containerRef}
+                            className={`mb-8 flex-1 overflow-hidden ${showPractice ? "flex gap-4" : ""}`}
+                        >
+                            <div
+                                className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden`}
+                                style={{ width: showPractice ? `${splitRatio}%` : "100%" }}
+                            >
                                 {activeItem.type === "VIDEO" ? (
                                     <div className="h-full w-full bg-black flex items-center justify-center">
                                         {activeItem.content?.includes("cloudinary.com") ? (
@@ -376,42 +413,53 @@ export default function CoursePlayerPage() {
                             </div>
 
                             {showPractice && activeItem.type === "VIDEO" && (
-                                <div className="flex w-[30%] flex-col gap-4">
-                                    <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
-                                        <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
-                                            <select
-                                                value={practiceLanguage}
-                                                onChange={(e) => setPracticeLanguage(e.target.value as Language)}
-                                                className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none"
-                                            >
-                                                <option value="python">Python</option>
-                                                <option value="cpp">C++</option>
-                                                <option value="java">Java</option>
-                                            </select>
-                                            <button
-                                                onClick={runPracticeCode}
-                                                disabled={isRunning}
-                                                className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
-                                            >
-                                                {isRunning ? "Running..." : "Run Code"}
-                                            </button>
+                                <>
+                                    {/* Drag Handle */}
+                                    <div
+                                        className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors rounded"
+                                        onMouseDown={startResizing}
+                                    />
+
+                                    <div
+                                        className="flex flex-col gap-4"
+                                        style={{ width: `calc(${100 - splitRatio}% - 1rem)` }} // Subtract gap
+                                    >
+                                        <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
+                                            <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
+                                                <select
+                                                    value={practiceLanguage}
+                                                    onChange={(e) => setPracticeLanguage(e.target.value as Language)}
+                                                    className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none"
+                                                >
+                                                    <option value="python">Python</option>
+                                                    <option value="cpp">C++</option>
+                                                    <option value="java">Java</option>
+                                                </select>
+                                                <button
+                                                    onClick={runPracticeCode}
+                                                    disabled={isRunning}
+                                                    className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
+                                                >
+                                                    {isRunning ? "Running..." : "Run Code"}
+                                                </button>
+                                            </div>
+                                            <div className="h-[calc(100%-40px)]">
+                                                <CodeEditor
+                                                    language={practiceLanguage}
+                                                    code={practiceCode}
+                                                    onChange={(val) => setPracticeCode(val || "")}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="h-[calc(100%-40px)]">
-                                            <CodeEditor
-                                                language={practiceLanguage}
-                                                code={practiceCode}
-                                                onChange={(val) => setPracticeCode(val || "")}
+                                        <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
+                                            <Console
+                                                output={practiceOutput}
+                                                status={runStatus}
+                                                onInput={setCustomInput}
                                             />
                                         </div>
                                     </div>
-                                    <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
-                                        <Console
-                                            output={practiceOutput}
-                                            status={runStatus}
-                                            onInput={setCustomInput}
-                                        />
-                                    </div>
-                                </div>
+                                </>
                             )}
                         </div>
 

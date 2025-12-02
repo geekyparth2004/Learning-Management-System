@@ -38,6 +38,7 @@ interface Problem {
     hints: Hint[];
     leetcodeUrl?: string;
     slug?: string;
+    courseId?: string;
 }
 
 interface TestCaseResult {
@@ -152,7 +153,7 @@ export default function AssignmentPage() {
                 const data = await res.json();
                 const problemData: Problem = data.problems[0];
                 // Ensure startedAt is present (it comes from the API now)
-                const fullProblemData = { ...problemData, startedAt: data.startedAt };
+                const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
                 setProblem(fullProblemData);
                 setCode(problemData.defaultCode[language]);
             } catch (e) {
@@ -322,7 +323,12 @@ export default function AssignmentPage() {
             });
 
             alert("Assignment Completed! Redirecting...");
-            router.push("/");
+            alert("Assignment Completed! Redirecting...");
+            if (problem.courseId) {
+                router.push(`/courses/${problem.courseId}`);
+            } else {
+                router.push("/");
+            }
         } catch (e) {
             console.error("Submission failed:", e);
             alert("Failed to submit");
@@ -353,7 +359,11 @@ export default function AssignmentPage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
                 });
-                router.push("/");
+                if (problem.courseId) {
+                    router.push(`/courses/${problem.courseId}`);
+                } else {
+                    router.push("/");
+                }
             } else {
                 alert(`Verification Failed: ${data.message}`);
             }

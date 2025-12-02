@@ -193,6 +193,24 @@ export async function POST(
                     }
                 }
             }
+
+            // Trigger notification for teacher
+            const course = await db.course.findFirst({
+                where: { modules: { some: { items: { some: { assignmentId: assignmentId } } } } },
+                select: { teacherId: true, id: true }
+            });
+
+            if (course && course.teacherId) {
+                await db.notification.create({
+                    data: {
+                        userId: course.teacherId,
+                        title: "Assignment Submitted",
+                        message: `Student submitted assignment: ${assignment.title}`,
+                        type: "ASSIGNMENT_SUBMITTED",
+                        link: `/teacher/courses/${course.id}/assignments/${assignmentId}/submissions`,
+                    },
+                });
+            }
         }
 
         return NextResponse.json({
