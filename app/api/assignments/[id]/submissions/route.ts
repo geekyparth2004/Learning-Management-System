@@ -213,6 +213,50 @@ export async function POST(
             }
         }
 
+        // Push to GitHub
+        try {
+            const user = await db.user.findUnique({ where: { id: session.user.id } });
+            if (user?.githubAccessToken) {
+                const moduleItem = await db.moduleItem.findFirst({
+                    where: { assignmentId: assignmentId },
+                    include: { module: { include: { course: true } } }
+                });
+
+                if (moduleItem?.module?.course) {
+                    const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
+                    const { createOrUpdateFile } = await import("@/lib/github");
+
+                    // Determine file extension
+                    const extensionMap: Record<string, string> = {
+                        "javascript": "js",
+                        "python": "py",
+                        "java": "java",
+                        "cpp": "cpp",
+                        "c": "c",
+                        "typescript": "ts",
+                        "go": "go",
+                        "rust": "rs",
+                    };
+                    const ext = extensionMap[language.toLowerCase()] || "txt";
+
+                    // Use problem title for filename
+                    const problem = assignment.problems[0];
+                    const moduleTitle = moduleItem.module.title.replace(/\s+/g, "-");
+                    const filename = `${moduleTitle}/${problem.title.replace(/\s+/g, "-")}.${ext}`;
+
+                    await createOrUpdateFile(
+                        user.githubAccessToken,
+                        repoName,
+                        filename,
+                        code,
+                        `Solved ${problem.title}`
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("Error pushing to GitHub:", error);
+        }
+
         return NextResponse.json({
             success: true,
             submission,

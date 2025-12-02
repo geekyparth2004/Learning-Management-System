@@ -37,6 +37,55 @@ export async function POST(
             },
         });
 
+        // Create/Update File in GitHub
+        try {
+            const user = await db.user.findUnique({ where: { id: session.user.id } });
+            if (user?.githubAccessToken) {
+                // Find course title to construct repo name
+                const moduleItem = await db.moduleItem.findUnique({
+                    where: { id },
+                    include: { module: { include: { course: true } } },
+                });
+
+                if (moduleItem?.module?.course) {
+                    const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
+                    const { createOrUpdateFile } = await import("@/lib/github");
+
+                    const moduleTitle = moduleItem.module.title.replace(/\s+/g, "-");
+                    const itemTitle = moduleItem.title.replace(/\s+/g, "-");
+
+                    // Create HTML file
+                    await createOrUpdateFile(
+                        user.githubAccessToken,
+                        repoName,
+                        `${moduleTitle}/${itemTitle}/index.html`,
+                        html,
+                        `Update ${moduleItem.title} - HTML`
+                    );
+
+                    // Create CSS file
+                    await createOrUpdateFile(
+                        user.githubAccessToken,
+                        repoName,
+                        `${moduleTitle}/${itemTitle}/styles.css`,
+                        css,
+                        `Update ${moduleItem.title} - CSS`
+                    );
+
+                    // Create JS file
+                    await createOrUpdateFile(
+                        user.githubAccessToken,
+                        repoName,
+                        `${moduleTitle}/${itemTitle}/script.js`,
+                        js,
+                        `Update ${moduleItem.title} - JS`
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("Error pushing to GitHub:", error);
+        }
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error submitting web dev assignment:", error);

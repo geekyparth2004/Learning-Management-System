@@ -254,6 +254,30 @@ export default function CoursePlayerPage() {
         }
     };
 
+    const savePracticeCode = async () => {
+        if (!activeModuleId) return;
+        try {
+            const res = await fetch(`/api/courses/${courseId}/modules/${activeModuleId}/practice-save`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code: practiceCode,
+                    language: practiceLanguage,
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Code saved to GitHub!");
+                setPracticeCode(""); // Reset code
+            } else {
+                alert(data.error || "Failed to save code");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to save code");
+        }
+    };
+
     if (isLoading) return <div className="p-8 text-white">Loading...</div>;
     if (!course) return <div className="p-8 text-white">Course not found</div>;
 
@@ -493,6 +517,12 @@ export default function CoursePlayerPage() {
                                                     className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
                                                 >
                                                     {isRunning ? "Running..." : "Run Code"}
+                                                </button>
+                                                <button
+                                                    onClick={savePracticeCode}
+                                                    className="ml-2 rounded bg-purple-600 px-3 py-1 text-xs font-bold hover:bg-purple-700"
+                                                >
+                                                    Save
                                                 </button>
                                             </div>
                                             <div className="h-[calc(100%-40px)]">

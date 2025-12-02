@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { BookOpen, GraduationCap, LogIn, LogOut, User } from "lucide-react";
 import { auth, signOut } from "@/auth";
+import GitHubConnect from "@/components/GitHubConnect";
 
 export default async function Home() {
   const session = await auth();
@@ -22,6 +23,7 @@ export default async function Home() {
                   <User className="h-4 w-4" />
                   <span>{session.user?.name} ({session.user?.role})</span>
                 </div>
+                <GitHubConnect isConnected={!!session.user?.githubAccessToken} />
                 <form
                   action={async () => {
                     "use server";

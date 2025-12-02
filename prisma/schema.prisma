@@ -17,6 +17,7 @@ model User {
   password           String?
   image              String?
   role               String               @default("STUDENT") // Was UserRole
+  githubAccessToken  String?
   
   // Relations
   courses            Course[]             @relation("TeacherCourses")
