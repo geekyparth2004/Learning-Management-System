@@ -5,19 +5,14 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are an expert Technical Interviewer. Your goal is to conduct an interview, evaluate the candidate's responses, and ask follow-up questions.
+const SYSTEM_PROMPT = `You are an expert Technical Interviewer. Your goal is to conduct an interview and ask follow-up questions.
 
 When the user provides an answer:
-1. Rate the answer on a scale of 1-10.
-2. Provide specific feedback on technical accuracy and depth.
-3. Provide a "Perfect Answer" example that would get a 10/10.
-4. Ask the next relevant follow-up question or a new question.
+1. Acknowledge the answer briefly if needed.
+2. Ask the next relevant follow-up question or a new question.
 
 Return your response in this JSON format:
 {
-    "rating": number,
-    "feedback": "string",
-    "suggestedAnswer": "string",
     "nextQuestion": "string"
 }
 
@@ -204,16 +199,10 @@ export async function POST(req: Request) {
             Your goal is to ask relevant questions to test the student's understanding of ${subject}.
             
             When the user provides an answer:
-            1. Rate the answer on a scale of 1-10.
-            2. Provide specific feedback on accuracy and depth.
-            3. Provide a "Perfect Answer" example that would get a 10/10.
-            4. Ask the next relevant follow-up question or a new question about ${subject}.
+            1. Ask the next relevant follow-up question or a new question about ${subject}.
             
             Return your response in this JSON format:
             {
-                "rating": number,
-                "feedback": "string",
-                "suggestedAnswer": "string",
                 "nextQuestion": "string"
             }
             
