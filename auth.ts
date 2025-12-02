@@ -6,7 +6,11 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
+import { PrismaAdapter } from "@auth/prisma-adapter";
+
 export const { auth, signIn, signOut, handlers } = NextAuth({
+    adapter: PrismaAdapter(db),
+    session: { strategy: "jwt" },
     ...authConfig,
     providers: [
         GitHub({
