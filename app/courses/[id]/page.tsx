@@ -6,6 +6,8 @@ import { Lock, Unlock, CheckCircle, PlayCircle, FileCode, Clock, Video, Brain, C
 import Link from "next/link";
 import AIInterviewPlayer from "@/components/AIInterviewPlayer";
 import TestPlayer from "@/components/TestPlayer";
+import CodeEditor from "@/components/CodeEditor";
+import { Language } from "@/types";
 
 interface ModuleItem {
     id: string;
@@ -48,6 +50,13 @@ export default function CoursePlayerPage() {
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
     const [activeItemId, setActiveItemId] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>("");
+
+    // Practice Mode State
+    const [showPractice, setShowPractice] = useState(false);
+    const [practiceCode, setPracticeCode] = useState("");
+    const [practiceLanguage, setPracticeLanguage] = useState<Language>("python");
+    const [practiceOutput, setPracticeOutput] = useState("");
+    const [isRunning, setIsRunning] = useState(false);
 
     useEffect(() => {
         fetchCourseData();
@@ -139,6 +148,27 @@ export default function CoursePlayerPage() {
             }
         } catch (error) {
             console.error(error);
+        }
+    };
+
+    const runPracticeCode = async () => {
+        setIsRunning(true);
+        setPracticeOutput("Running...");
+        try {
+            const res = await fetch("/api/compile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code: practiceCode,
+                    language: practiceLanguage,
+                }),
+            });
+            const data = await res.json();
+            setPracticeOutput(data.output || data.error || "No output");
+        } catch (error) {
+            setPracticeOutput("Failed to run code");
+        } finally {
+            setIsRunning(false);
         }
     };
 
@@ -250,69 +280,123 @@ export default function CoursePlayerPage() {
                     <div className="mx-auto max-w-4xl h-full flex flex-col">
                         <div className="mb-6 flex items-center justify-between">
                             <h1 className="text-2xl font-bold">{activeItem.title}</h1>
-                            {timeLeft && (
-                                <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
-                                    <Clock size={16} />
-                                    <span className="font-mono font-bold">{timeLeft}</span>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-4">
+                                {activeItem.type === "VIDEO" && (
+                                    <button
+                                        onClick={() => setShowPractice(!showPractice)}
+                                        className={`flex items-center gap-2 rounded px-3 py-1 text-sm font-medium transition-colors ${showPractice ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                                            }`}
+                                    >
+                                        <Code size={16} />
+                                        {showPractice ? "Hide Practice" : "Practice Mode"}
+                                    </button>
+                                )}
+                                {timeLeft && (
+                                    <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
+                                        <Clock size={16} />
+                                        <span className="font-mono font-bold">{timeLeft}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="mb-8 flex-1 rounded-lg border border-gray-800 bg-[#111111] overflow-hidden">
-                            {activeItem.type === "VIDEO" ? (
-                                <div className="h-full w-full bg-black flex items-center justify-center">
-                                    {activeItem.content?.includes("cloudinary.com") ? (
-                                        <video
-                                            src={activeItem.content}
-                                            controls
-                                            playsInline
-                                            className="max-h-full max-w-full object-contain"
+                        <div className={`mb-8 flex-1 overflow-hidden ${showPractice ? "flex gap-4" : ""}`}>
+                            <div className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden ${showPractice ? "w-1/2" : "w-full"}`}>
+                                {activeItem.type === "VIDEO" ? (
+                                    <div className="h-full w-full bg-black flex items-center justify-center">
+                                        {activeItem.content?.includes("cloudinary.com") ? (
+                                            <video
+                                                src={activeItem.content}
+                                                controls
+                                                playsInline
+                                                className="max-h-full max-w-full object-contain"
+                                            />
+                                        ) : (
+                                            <iframe
+                                                src={activeItem.content?.replace("watch?v=", "embed/")}
+                                                className="h-full w-full"
+                                                allowFullScreen
+                                            />
+                                        )}
+                                    </div>
+                                ) : activeItem.type === "AI_INTERVIEW" ? (
+                                    <div className="h-full w-full overflow-y-auto bg-[#0e0e0e]">
+                                        <AIInterviewPlayer
+                                            topic={activeItem.aiInterviewTopic || "General"}
+                                            questionCountLimit={activeItem.aiQuestionsCount || 5}
+                                            onComplete={() => completeItem(activeItem.id)}
                                         />
-                                    ) : (
-                                        <iframe
-                                            src={activeItem.content?.replace("watch?v=", "embed/")}
-                                            className="h-full w-full"
-                                            allowFullScreen
+                                    </div>
+                                ) : activeItem.type === "TEST" ? (
+                                    <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                        <TestPlayer
+                                            duration={activeItem.testDuration || 30}
+                                            passingScore={activeItem.testPassingScore || 60}
+                                            problems={activeItem.testProblems || []}
+                                            onComplete={(passed, score) => {
+                                                if (passed) {
+                                                    alert(`Test Passed! Score: ${score.toFixed(1)}%`);
+                                                    completeItem(activeItem.id);
+                                                } else {
+                                                    alert(`Test Failed. Score: ${score.toFixed(1)}%. You need ${activeItem.testPassingScore}% to pass.`);
+                                                }
+                                            }}
                                         />
-                                    )}
-                                </div>
-                            ) : activeItem.type === "AI_INTERVIEW" ? (
-                                <div className="h-full w-full overflow-y-auto bg-[#0e0e0e]">
-                                    <AIInterviewPlayer
-                                        topic={activeItem.aiInterviewTopic || "General"}
-                                        questionCountLimit={activeItem.aiQuestionsCount || 5}
-                                        onComplete={() => completeItem(activeItem.id)}
-                                    />
-                                </div>
-                            ) : activeItem.type === "TEST" ? (
-                                <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
-                                    <TestPlayer
-                                        duration={activeItem.testDuration || 30}
-                                        passingScore={activeItem.testPassingScore || 60}
-                                        problems={activeItem.testProblems || []}
-                                        onComplete={(passed, score) => {
-                                            if (passed) {
-                                                alert(`Test Passed! Score: ${score.toFixed(1)}%`);
-                                                completeItem(activeItem.id);
-                                            } else {
-                                                alert(`Test Failed. Score: ${score.toFixed(1)}%. You need ${activeItem.testPassingScore}% to pass.`);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                                    <FileText className="h-16 w-16 text-gray-600" />
-                                    <h2 className="text-xl font-bold">Coding Assignment</h2>
-                                    <p className="text-gray-400">
-                                        This module contains a coding assignment. Click below to start.
-                                    </p>
-                                    <Link
-                                        href={`/assignment/${activeItem.assignmentId}`}
-                                        className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
-                                    >
-                                        Start Assignment
-                                    </Link>
+                                    </div>
+                                ) : (
+                                    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                        <FileText className="h-16 w-16 text-gray-600" />
+                                        <h2 className="text-xl font-bold">Coding Assignment</h2>
+                                        <p className="text-gray-400">
+                                            This module contains a coding assignment. Click below to start.
+                                        </p>
+                                        <Link
+                                            href={`/assignment/${activeItem.assignmentId}`}
+                                            className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                        >
+                                            Start Assignment
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+
+                            {showPractice && activeItem.type === "VIDEO" && (
+                                <div className="flex w-1/2 flex-col gap-4">
+                                    <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
+                                        <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
+                                            <select
+                                                value={practiceLanguage}
+                                                onChange={(e) => setPracticeLanguage(e.target.value as Language)}
+                                                className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none"
+                                            >
+                                                <option value="python">Python</option>
+                                                <option value="cpp">C++</option>
+                                                <option value="java">Java</option>
+                                            </select>
+                                            <button
+                                                onClick={runPracticeCode}
+                                                disabled={isRunning}
+                                                className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
+                                            >
+                                                {isRunning ? "Running..." : "Run Code"}
+                                            </button>
+                                        </div>
+                                        <div className="h-[calc(100%-40px)]">
+                                            <CodeEditor
+                                                language={practiceLanguage}
+                                                code={practiceCode}
+                                                onChange={(val) => setPracticeCode(val || "")}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
+                                        <div className="border-b border-gray-800 bg-[#161616] px-4 py-2 text-xs font-bold text-gray-400">
+                                            Output
+                                        </div>
+                                        <pre className="h-full overflow-auto p-4 text-sm font-mono text-gray-300">
+                                            {practiceOutput || "Run code to see output..."}
+                                        </pre>
+                                    </div>
                                 </div>
                             )}
                         </div>
