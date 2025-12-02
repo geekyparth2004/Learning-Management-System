@@ -176,7 +176,7 @@ export default function CoursePlayerPage() {
                     await fetchCourseData();
                 }
             } else {
-                alert(data.error || "Failed to enroll");
+                alert(data.details || data.error || "Failed to enroll");
             }
         } catch (error) {
             console.error(error);
