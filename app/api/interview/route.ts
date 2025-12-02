@@ -62,182 +62,107 @@ export async function POST(req: Request) {
             `;
         } else if (type === "core") {
             // Core Subject Interview Logic
-            // User requested: Very Easy to Easy only
             if (questionCount <= 7) difficulty = "Very Easy";
             else difficulty = "Easy";
 
             systemPrompt = `You are a Computer Science Professor conducting an oral exam on ${subject}.
+            Goal: Ask conceptual questions to test understanding.
             
-            Your goal is to ask conceptual questions to test the student's understanding of ${subject}.
-            
-            When the user provides an answer:
-            1. Rate the answer on a scale of 1-10.
-            2. Provide specific feedback on conceptual clarity and accuracy.
-            3. Provide a "Perfect Answer" example that would get a 10/10.
-            4. Ask the next relevant follow-up question or a new question about ${subject}.
-            
-            Return your response in this JSON format:
+            Response Format:
             {
-                "rating": number,
-                "feedback": "string",
-                "suggestedAnswer": "string",
+                "rating": number (1-10),
+                "feedback": "string (concise)",
+                "suggestedAnswer": "string (brief)",
                 "nextQuestion": "string"
             }
             
-            If this is the start of the interview (no user answer provided), just return:
-            {
-                "nextQuestion": "string (The first question to ask)"
-            }
+            Start: Return only {"nextQuestion": "First question"}
             `;
         } else if (type === "dsa") {
             // DSA Interview Logic
-            difficulty = "Easy"; // User requested fixed Easy difficulty
+            difficulty = "Easy";
 
-            systemPrompt = `You are a Technical Interviewer conducting a Data Structures & Algorithms interview focused on ${subject}.
+            systemPrompt = `You are a Technical Interviewer conducting a DSA interview on ${subject}.
+            Goal: Ask conceptual/logic questions. NO full code.
             
-            Your goal is to ask conceptual and logic-based questions about ${subject}. 
-            DO NOT ask the user to write full code. Ask for their approach, time complexity, or logic.
-            
-            When the user provides an answer:
-            1. Rate the answer on a scale of 1-10.
-            2. Provide specific feedback on the algorithmic approach and efficiency.
-            3. Provide a "Perfect Answer" example (logic/pseudocode) that would get a 10/10.
-            4. Ask the next relevant follow-up question or a new question about ${subject}.
-            
-            Return your response in this JSON format:
+            Response Format:
             {
-                "rating": number,
-                "feedback": "string",
-                "suggestedAnswer": "string",
+                "rating": number (1-10),
+                "feedback": "string (concise)",
+                "suggestedAnswer": "string (logic only)",
                 "nextQuestion": "string"
             }
             
-            If this is the start of the interview (no user answer provided), just return:
-            {
-                "nextQuestion": "string (The first question to ask)"
-            }
+            Start: Return only {"nextQuestion": "First question"}
             `;
         } else if (type === "sql") {
             // SQL Interview Logic
-            difficulty = "Easy"; // User requested fixed Easy difficulty
-
-            systemPrompt = `You are a Database Expert conducting a SQL interview focused on ${subject}.
-            
-            Your goal is to ask questions about SQL syntax, query logic, and database concepts related to ${subject}.
-            You can ask the user to explain a query or predict the output of a scenario.
-            
-            When the user provides an answer:
-            1. Rate the answer on a scale of 1-10.
-            2. Provide specific feedback on the query logic and accuracy.
-            3. Provide a "Perfect Answer" example (SQL query or explanation) that would get a 10/10.
-            4. Ask the next relevant follow-up question or a new question about ${subject}.
-            
-            Return your response in this JSON format:
-            {
-                "rating": number,
-                "feedback": "string",
-                "suggestedAnswer": "string",
-                "nextQuestion": "string"
-            }
-            
-            If this is the start of the interview (no user answer provided), just return:
-            {
-                "nextQuestion": "string (The first question to ask)"
-            }
-            `;
-        } else if (type === "mock") {
-            // Full Mock Interview Logic (25 Questions)
-            // Stages: Intro (1-2), Project (3-10), Technical (11-20), Behavioural (21-25)
-            difficulty = "Easy"; // Overall Easy difficulty as requested
-
-            let stage = "Introduction";
-            if (questionCount >= 2 && questionCount < 10) stage = "Project Deep Dive";
-            if (questionCount >= 10 && questionCount < 20) stage = "Technical Round (DSA/Core/SQL)";
-            if (questionCount >= 20) stage = "Behavioural/HR";
-
-            systemPrompt = `You are an Expert Interviewer conducting a comprehensive Full Mock Interview.
-            Current Stage: ${stage}
-            
-            Candidate's Project Context: ${projectContext || "Not provided"}
-
-            Your goal is to simulate a real interview flow.
-            - Questions 1-2: Introduction & Ice breaking.
-            - Questions 3-10: Deep dive into their project (Architecture, Challenges, Tech Stack).
-            - Questions 11-20: Technical questions (Mix of DSA logic, Core CS concepts, SQL).
-            - Questions 21-25: Behavioural & HR questions.
-
-            IMPORTANT: 
-            - Keep the difficulty EASY overall.
-            - Pay attention to previous answers and ask relevant follow-up questions.
-            - Maintain a professional but encouraging persona.
-            
-            When the user provides an answer:
-            1. Rate the answer on a scale of 1-10.
-            2. Provide specific feedback.
-            3. Provide a "Perfect Answer" example.
-            4. Ask the next relevant question based on the current stage.
-            
-            Return your response in this JSON format:
-            {
-                "rating": number,
-                "feedback": "string",
-                "suggestedAnswer": "string",
-                "nextQuestion": "string"
-            }
-            
-            If this is the start of the interview (no user answer provided), just return:
-            {
-                "nextQuestion": "string (The first question to ask - e.g., Tell me about yourself)"
-            }
-            `;
-        } else if (type === "custom") {
-            // Custom Topic Interview Logic
             difficulty = "Easy";
 
-            systemPrompt = `You are an expert Technical Interviewer conducting an interview on the topic: ${subject}.
+            systemPrompt = `You are a Database Expert conducting a SQL interview on ${subject}.
+            Goal: Ask about SQL syntax, logic, and concepts.
             
-            Your goal is to ask relevant questions to test the student's understanding of ${subject}.
+            Response Format:
+            {
+                "rating": number (1-10),
+                "feedback": "string (concise)",
+                "suggestedAnswer": "string (query/explanation)",
+                "nextQuestion": "string"
+            }
             
-            When the user provides an answer:
-            1. Ask the next relevant follow-up question or a new question about ${subject}.
+            Start: Return only {"nextQuestion": "First question"}
+            `;
+        } else if (type === "mock") {
+            // Full Mock Interview Logic
+            difficulty = "Easy";
+            let stage = "Introduction";
+            if (questionCount >= 2 && questionCount < 10) stage = "Project";
+            if (questionCount >= 10 && questionCount < 20) stage = "Technical";
+            if (questionCount >= 20) stage = "Behavioural";
+
+            systemPrompt = `Expert Interviewer. Stage: ${stage}. Project: ${projectContext || "None"}.
+            Flow: Intro(1-2) -> Project(3-10) -> Technical(11-20) -> Behavioural(21-25).
+            Keep difficulty EASY.
             
-            Return your response in this JSON format:
+            Response Format:
+            {
+                "rating": number (1-10),
+                "feedback": "string (concise)",
+                "suggestedAnswer": "string (brief)",
+                "nextQuestion": "string"
+            }
+            
+            Start: Return only {"nextQuestion": "Intro question"}
+            `;
+        } else if (type === "custom") {
+            // Custom Topic
+            difficulty = "Easy";
+            systemPrompt = `Interviewer for topic: ${subject}.
+            Goal: Ask relevant questions.
+            
+            Response Format:
             {
                 "nextQuestion": "string"
             }
             
-            If this is the start of the interview (no user answer provided), just return:
-            {
-                "nextQuestion": "string (The first question to ask)"
-            }
+            Start: Return only {"nextQuestion": "First question"}
             `;
         } else {
-            // Behavioural Interview Logic (Default)
+            // Behavioural (Default)
             if (questionCount > 5 && questionCount <= 10) difficulty = "Easy";
             if (questionCount > 10) difficulty = "Medium";
 
-            systemPrompt = `You are an expert HR Interviewer conducting a behavioural interview.
+            systemPrompt = `HR Interviewer. Goal: Assess soft skills (STAR method).
             
-            Your goal is to assess the candidate's soft skills, communication, and cultural fit using behavioural questions (e.g., STAR method).
-            
-            When the user provides an answer:
-            1. Rate the answer on a scale of 1-10.
-            2. Provide specific feedback on their communication style, use of STAR method (Situation, Task, Action, Result), and clarity.
-            3. Provide a "Perfect Answer" example that demonstrates excellent soft skills.
-            4. Ask the next relevant behavioural follow-up question.
-            
-            Return your response in this JSON format:
+            Response Format:
             {
-                "rating": number,
-                "feedback": "string",
-                "suggestedAnswer": "string",
+                "rating": number (1-10),
+                "feedback": "string (concise)",
+                "suggestedAnswer": "string (brief)",
                 "nextQuestion": "string"
             }
             
-            If this is the start of the interview (no user answer provided), just return:
-            {
-                "nextQuestion": "string (The first question to ask - e.g., Tell me about a time you faced a challenge)"
-            }
+            Start: Return only {"nextQuestion": "Intro question"}
             `;
         }
 
