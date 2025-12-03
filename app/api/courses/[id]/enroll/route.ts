@@ -65,13 +65,20 @@ export async function POST(
         // Create GitHub Repository
         try {
             const user = await db.user.findUnique({ where: { id: userId } });
+            console.log("Enrollment: User GitHub Token exists?", !!user?.githubAccessToken);
+
             if (user?.githubAccessToken) {
                 const course = await db.course.findUnique({ where: { id } });
                 if (course) {
                     const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${userId.slice(-4)}`;
+                    console.log("Enrollment: Attempting to create repo:", repoName);
+
                     const { createRepository } = await import("@/lib/github");
-                    await createRepository(user.githubAccessToken, repoName);
+                    const result = await createRepository(user.githubAccessToken, repoName);
+                    console.log("Enrollment: Repo creation result:", result);
                 }
+            } else {
+                console.log("Enrollment: Skipping GitHub repo creation (no token)");
             }
         } catch (error) {
             console.error("Error creating GitHub repo:", error);

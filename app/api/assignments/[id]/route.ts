@@ -66,12 +66,11 @@ export async function GET(
         const minutesElapsed = (now.getTime() - startedAt.getTime()) / 1000 / 60;
 
         // Transform data
+        console.log("Transforming assignment data...");
         const courseId = assignment.moduleItems[0]?.module?.courseId;
-        const transformedAssignment = {
-            ...assignment,
-            courseId,
-            startedAt: startedAt.toISOString(),
-            problems: assignment.problems.map((p) => {
+
+        const problems = assignment.problems.map((p) => {
+            try {
                 const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
                 const processedHints = hintsRaw.map((hintContent: string, index: number) => {
                     // Unlock schedule: 5, 10, 15, 20 minutes
@@ -88,24 +87,30 @@ export async function GET(
                     };
                 });
 
-                // If there's a video solution but less than 4 hints, we might need to handle it.
-                // But the plan assumes 4 hints max. The 4th one is the video if uploaded.
-                // If the teacher didn't provide 4 hints, we just show what's there.
-                // If video exists, it should be the last hint.
-
                 return {
                     ...p,
                     defaultCode: p.defaultCode,
                     hints: processedHints,
                 };
-            }),
+            } catch (err) {
+                console.error(`Error processing problem ${p.id}:`, err);
+                return p; // Return raw problem if processing fails
+            }
+        });
+
+        const transformedAssignment = {
+            ...assignment,
+            courseId,
+            startedAt: startedAt.toISOString(),
+            problems,
         };
 
+        console.log("Assignment data transformed successfully");
         return NextResponse.json(transformedAssignment);
     } catch (error) {
         console.error("Error fetching assignment:", error);
         return NextResponse.json(
-            { error: "Failed to fetch assignment" },
+            { error: "Failed to fetch assignment", details: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         );
     }

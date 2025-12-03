@@ -139,10 +139,21 @@ export default function CoursePlayerPage() {
     }, [course, activeModuleId]);
 
     const fetchCourseData = async () => {
+        if (!courseId) {
+            console.log("No courseId, skipping fetch");
+            return;
+        }
+        console.log("Fetching course data for:", courseId);
         try {
             const res = await fetch(`/api/courses/${courseId}/player`);
-            if (!res.ok) throw new Error("Failed to fetch course");
+            console.log("Fetch response status:", res.status);
+            if (!res.ok) {
+                const text = await res.text();
+                console.error("Fetch failed:", text);
+                throw new Error("Failed to fetch course");
+            }
             const data = await res.json();
+            console.log("Course data received:", data);
             setCourse(data);
 
             // Set active module/item if enrolled
@@ -160,7 +171,7 @@ export default function CoursePlayerPage() {
                 }
             }
         } catch (error) {
-            console.error(error);
+            console.error("Error in fetchCourseData:", error);
         } finally {
             setIsLoading(false);
         }
