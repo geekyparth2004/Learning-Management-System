@@ -113,34 +113,34 @@ export default function CourseBuilderPage() {
         setIsProblemBuilderOpen(false);
     };
 
-    const uploadToCloudinary = async (file: File) => {
-        let sigData;
+    const uploadToS3 = async (file: File) => {
+        let presignedData;
         try {
-            const sigRes = await fetch("/api/upload/video", { method: "POST" });
-            if (!sigRes.ok) throw new Error("Failed to get signature");
-            sigData = await sigRes.json();
+            const res = await fetch("/api/upload/presigned-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type
+                })
+            });
+            if (!res.ok) throw new Error("Failed to get upload URL");
+            presignedData = await res.json();
         } catch (err: any) {
             throw new Error(`Failed to setup upload: ${err.message}`);
         }
 
-        const { signature, timestamp, cloudName, apiKey, folder } = sigData;
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("api_key", apiKey);
-        formData.append("timestamp", timestamp.toString());
-        formData.append("signature", signature);
-        formData.append("folder", folder);
+        const { uploadUrl, publicUrl } = presignedData;
 
         return new Promise<string>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
+            xhr.open("PUT", uploadUrl);
+            xhr.setRequestHeader("Content-Type", file.type);
 
             let lastProgress = 0;
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
                     const percent = Math.round((event.loaded / event.total) * 100);
-                    // Throttle updates to every 5% or when complete to prevent flickering
                     if (percent === 0 || percent === 100 || percent >= lastProgress + 5) {
                         setUploadProgress(percent);
                         lastProgress = percent;
@@ -150,24 +150,18 @@ export default function CourseBuilderPage() {
 
             xhr.onload = () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    const data = JSON.parse(xhr.responseText);
-                    resolve(data.secure_url);
+                    resolve(publicUrl);
                 } else {
-                    console.error("Cloudinary Upload Error:", xhr.responseText);
-                    try {
-                        const errorData = JSON.parse(xhr.responseText);
-                        reject(new Error(errorData.error?.message || "Upload failed"));
-                    } catch (e) {
-                        reject(new Error(`Upload failed with status ${xhr.status}`));
-                    }
+                    console.error("S3 Upload Error:", xhr.responseText);
+                    reject(new Error(`Upload failed with status ${xhr.status}`));
                 }
             };
 
             xhr.onerror = () => {
-                console.error("Cloudinary Network Error");
+                console.error("S3 Network Error");
                 reject(new Error("Network error during upload"));
             };
-            xhr.send(formData);
+            xhr.send(file);
         });
     };
 
@@ -238,7 +232,7 @@ export default function CourseBuilderPage() {
                 }
                 setIsUploading(true);
                 try {
-                    content = await uploadToCloudinary(videoFile);
+                    content = await uploadToS3(videoFile);
                 } catch (error: any) {
                     console.error("Upload failed:", error);
                     setIsUploading(false);
@@ -406,7 +400,7 @@ export default function CourseBuilderPage() {
                 <ProblemBuilder
                     onSave={handleSaveProblem}
                     onCancel={() => setIsProblemBuilderOpen(false)}
-                    uploadVideo={uploadToCloudinary}
+                    uploadVideo={uploadToS3}
                     isUploading={isUploading}
                 />
             )}
