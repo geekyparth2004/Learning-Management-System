@@ -88,7 +88,8 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 hints = p.hints;
             } else if (typeof p.hints === 'string') {
                 try {
-                    hints = JSON.parse(p.hints);
+                    const parsed = JSON.parse(p.hints);
+                    hints = Array.isArray(parsed) ? parsed : [];
                 } catch (e) {
                     hints = [];
                 }

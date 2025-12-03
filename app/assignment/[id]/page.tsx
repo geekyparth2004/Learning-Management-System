@@ -168,7 +168,8 @@ export default function AssignmentPage() {
                     hints = problemData.hints;
                 } else if (typeof problemData.hints === 'string') {
                     try {
-                        hints = JSON.parse(problemData.hints);
+                        const parsed = JSON.parse(problemData.hints);
+                        hints = Array.isArray(parsed) ? parsed : [];
                     } catch (e) {
                         hints = [];
                     }
