@@ -439,16 +439,6 @@ export default function CoursePlayerPage() {
                     </div>
                 ) : activeItem ? (
                     <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen || isTestFullScreen ? "max-w-full" : "max-w-4xl"}`}>
-                        {/* GLOBAL DEBUG BANNER */}
-                        <div className="bg-red-900/80 p-4 mb-4 rounded border border-red-500 text-white text-xs font-mono overflow-auto max-h-40">
-                            <strong>DEBUGGER:</strong>
-                            <div>Type: {activeItem.type}</div>
-                            <div>Has Assignment: {activeItem.assignment ? "YES" : "NO"}</div>
-                            <div>Problems: {activeItem.assignment?.problems?.length || 0}</div>
-                            <div>First Problem URL: {activeItem.assignment?.problems?.[0]?.leetcodeUrl || "N/A"}</div>
-                            <div>Raw Problems: {JSON.stringify(activeItem.assignment?.problems || [])}</div>
-                        </div>
-
                         {!isWebDevFullScreen && !isTestFullScreen && (
                             <div className="mb-6 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold">{activeItem.title}</h1>
