@@ -46,7 +46,7 @@ export async function GET() {
                             "http://localhost:3000"
                         ],
                         allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
-                        allowedHeaders: ["*"],
+                        allowedHeaders: ["authorization", "content-type", "x-amz-date", "x-amz-content-sha256", "x-amz-user-agent"],
                         exposeHeaders: ["ETag"],
                         maxAgeSeconds: 3600
                     }
