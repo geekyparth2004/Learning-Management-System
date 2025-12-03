@@ -137,7 +137,7 @@ model Problem {
   title         String
   description   String
   difficulty    String       @default("Medium")
-  slug          String?      @unique
+  slug          String?
   
   // Relations
   assignmentId  String?
@@ -220,6 +220,7 @@ model ModuleItemProgress {
   moduleItem   ModuleItem @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
   isCompleted  Boolean    @default(false)
   completedAt  DateTime?
+  startedAt    DateTime?
   
   // AI Interview Review
   aiSubmission String?    // Was Json. Store as JSON string.

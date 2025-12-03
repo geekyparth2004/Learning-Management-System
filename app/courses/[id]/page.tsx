@@ -20,6 +20,7 @@ interface ModuleItem {
     content?: string;
     assignmentId?: string;
     isCompleted: boolean;
+    startedAt?: string;
     aiInterviewTopic?: string;
     aiQuestionsCount?: number;
     aiDifficulty?: string;
@@ -33,11 +34,13 @@ interface ModuleItem {
     leetcodeUrl?: string;
     assignment?: {
         problems: {
-            leetcodeUrl?: string;
-            slug?: string;
-        }[];
-    };
-}
+            problems: {
+                leetcodeUrl?: string;
+                slug?: string;
+                videoSolution?: string;
+            }[];
+        };
+    }
 
 interface Module {
     id: string;
@@ -143,6 +146,13 @@ export default function CoursePlayerPage() {
 
         return () => clearInterval(interval);
     }, [course, activeModuleId]);
+
+    // Force update for LeetCode timer
+    const [_, setTick] = useState(0);
+    useEffect(() => {
+        const interval = setInterval(() => setTick(t => t + 1), 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const fetchCourseData = async () => {
         if (!courseId) {
@@ -671,9 +681,13 @@ export default function CoursePlayerPage() {
 
                                         <div className="flex flex-col gap-4 w-full max-w-sm">
                                             <a
-                                                href={activeItem.leetcodeUrl || activeItem.content || "#"}
+                                                href={activeItem.assignment?.problems?.[0]?.leetcodeUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
+                                                onClick={() => {
+                                                    fetch(`/api/modules/items/${activeItem.id}/start`, { method: "POST" })
+                                                        .then(() => fetchCourseData());
+                                                }}
                                                 className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
                                             >
                                                 Solve on LeetCode <Unlock size={16} />
@@ -689,9 +703,60 @@ export default function CoursePlayerPage() {
                                             </div>
 
                                             <LeetCodeVerifier
-                                                problemSlug={(activeItem.leetcodeUrl || activeItem.content)?.split("/problems/")[1]?.split("/")[0] || ""}
+                                                problemSlug={activeItem.assignment?.problems?.[0]?.slug || activeItem.assignment?.problems?.[0]?.leetcodeUrl?.split("/problems/")[1]?.split("/")[0] || ""}
                                                 onVerified={() => completeItem(activeItem.id)}
                                             />
+
+                                            {activeItem.assignment?.problems?.[0]?.videoSolution && (
+                                                <div className="mt-4 border-t border-gray-800 pt-4">
+                                                    {!activeItem.startedAt ? (
+                                                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                                            <Lock size={14} />
+                                                            <span>Solution video unlocks 20m after starting</span>
+                                                        </div>
+                                                    ) : (
+                                                        (() => {
+                                                            const startTime = new Date(activeItem.startedAt!).getTime();
+                                                            const unlockTime = startTime + 20 * 60 * 1000;
+                                                            const now = new Date().getTime();
+                                                            const isUnlocked = now >= unlockTime;
+
+                                                            if (isUnlocked) {
+                                                                return (
+                                                                    <div className="space-y-2">
+                                                                        <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
+                                                                        <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                                                            {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") ? (
+                                                                                <video
+                                                                                    src={activeItem.assignment.problems[0].videoSolution}
+                                                                                    controls
+                                                                                    className="h-full w-full object-contain"
+                                                                                />
+                                                                            ) : (
+                                                                                <iframe
+                                                                                    src={activeItem.assignment?.problems?.[0]?.videoSolution?.replace("watch?v=", "embed/")}
+                                                                                    className="h-full w-full"
+                                                                                    allowFullScreen
+                                                                                />
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            } else {
+                                                                const diff = unlockTime - now;
+                                                                const minutes = Math.floor(diff / (1000 * 60));
+                                                                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                                                                return (
+                                                                    <div className="flex items-center justify-center gap-2 rounded bg-[#1a1a1a] p-3 text-sm text-yellow-500">
+                                                                        <Clock size={16} />
+                                                                        <span>Solution unlocks in {minutes}m {seconds}s</span>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                        })()
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ) : null}
@@ -707,7 +772,7 @@ export default function CoursePlayerPage() {
 
                                     <div
                                         className="flex flex-col gap-4"
-                                        style={{ width: `calc(${100 - splitRatio}% - 1rem)` }} // Subtract gap
+                                        style={{ width: `calc(${100 - splitRatio}% - 1rem)` }}
                                     >
                                         <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
                                             <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">

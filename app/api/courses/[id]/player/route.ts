@@ -95,7 +95,11 @@ export async function GET(
                     // Map items
                     const items = m.items.map(i => {
                         const ip = itemProgress.find(p => p.moduleItemId === i.id);
-                        return { ...i, isCompleted: ip?.isCompleted || false };
+                        return {
+                            ...i,
+                            isCompleted: ip?.isCompleted || false,
+                            startedAt: ip?.startedAt || null
+                        };
                     });
 
                     return {

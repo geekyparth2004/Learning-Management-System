@@ -199,6 +199,28 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                     <p className="text-xs text-gray-500">
                                         Paste the full URL of the LeetCode problem. Students will be redirected there to solve it.
                                     </p>
+
+                                    <div className="pt-4">
+                                        <label className="text-sm font-medium text-gray-300">Solution Video (Optional)</label>
+                                        <div className="mt-2 flex items-center gap-4 rounded border border-gray-700 bg-[#1e1e1e] p-3">
+                                            <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
+                                                <Upload size={16} />
+                                                Choose file
+                                                <input
+                                                    type="file"
+                                                    accept="video/*"
+                                                    onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            <span className="text-sm text-gray-400">
+                                                {videoFile ? videoFile.name : "No file chosen"}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Upload a video solution. It will be unlocked for students 20 minutes after they start the problem.
+                                        </p>
+                                    </div>
                                 </div>
                             ) : problemType === "CODING" ? (
                                 <>
