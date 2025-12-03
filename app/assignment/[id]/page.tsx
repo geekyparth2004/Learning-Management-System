@@ -9,6 +9,7 @@ import CodeEditor from "@/components/CodeEditor";
 import Console from "@/components/Console";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
 import ProblemLayout from "@/components/ProblemLayout";
+import LeetCodeVerifier from "@/components/LeetCodeVerifier";
 import { cn } from "@/lib/utils";
 
 import { Language } from "@/types";
@@ -525,32 +526,7 @@ export default function AssignmentPage() {
                     <span className="text-sm text-gray-400">{problem.difficulty}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    {problem.leetcodeUrl ? (
-                        <>
-                            <input
-                                type="text"
-                                placeholder="LeetCode Username"
-                                value={leetcodeUsername}
-                                onChange={(e) => setLeetcodeUsername(e.target.value)}
-                                className="rounded border border-gray-700 bg-[#1e1e1e] px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                            />
-                            <a
-                                href={problem.leetcodeUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rounded bg-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-600"
-                            >
-                                Solve on LeetCode
-                            </a>
-                            <button
-                                onClick={handleVerify}
-                                disabled={isVerifying}
-                                className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-                            >
-                                {isVerifying ? "Verifying..." : "Verify Submission"}
-                            </button>
-                        </>
-                    ) : (
+                    {!problem.leetcodeUrl && (
                         <>
                             <select
                                 value={language}
@@ -710,60 +686,113 @@ export default function AssignmentPage() {
                     style={{ width: `${100 - leftWidth}%` }}
                 >
                     {/* Tabs */}
-                    <div className="flex border-b border-gray-800 bg-[#161616]">
-                        <button
-                            onClick={() => setActiveTab("editor")}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium transition-colors",
-                                activeTab === "editor" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                            )}
-                        >
-                            Editor
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("console")}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium transition-colors",
-                                activeTab === "console" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                            )}
-                        >
-                            Console
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("results")}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium transition-colors",
-                                activeTab === "results" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                            )}
-                        >
-                            Test Results
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("ask-ai")}
-                            className={cn(
-                                "px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2",
-                                activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                            )}
-                        >
-                            Ask AI
-                            {!canAskAi && <Lock size={12} />}
-                        </button>
-                    </div>
+                    {!problem.leetcodeUrl && (
+                        <div className="flex border-b border-gray-800 bg-[#161616]">
+                            <button
+                                onClick={() => setActiveTab("editor")}
+                                className={cn(
+                                    "px-6 py-3 text-sm font-medium transition-colors",
+                                    activeTab === "editor" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                )}
+                            >
+                                Editor
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("console")}
+                                className={cn(
+                                    "px-6 py-3 text-sm font-medium transition-colors",
+                                    activeTab === "console" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                )}
+                            >
+                                Console
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("results")}
+                                className={cn(
+                                    "px-6 py-3 text-sm font-medium transition-colors",
+                                    activeTab === "results" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                )}
+                            >
+                                Test Results
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("ask-ai")}
+                                className={cn(
+                                    "px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2",
+                                    activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                )}
+                            >
+                                Ask AI
+                                {!canAskAi && <Lock size={12} />}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Tab Content */}
                     <div className="flex-1 overflow-hidden relative">
-                        <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
-                            <CodeEditor
-                                language={language}
-                                code={code}
-                                onChange={(value) => {
-                                    setCode(value || "");
-                                    setTestCaseResults([]); // Reset results on code change
-                                }}
-                                errorLine={errorLine}
-                                errorMessage={status === "error" ? output : null}
-                            />
-                        </div>
+                        {problem.leetcodeUrl ? (
+                            <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
+                                <div className="max-w-md space-y-6">
+                                    <div className="space-y-2">
+                                        <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
+                                        <p className="text-gray-400">
+                                            This problem must be solved on LeetCode. Once you've submitted your solution there, come back here to verify it.
+                                        </p>
+                                    </div>
+
+                                    <a
+                                        href={problem.leetcodeUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-4 text-lg font-bold hover:bg-[#333] transition-colors"
+                                    >
+                                        Open Problem on LeetCode <LogOut size={20} />
+                                    </a>
+
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <span className="w-full border-t border-gray-800" />
+                                        </div>
+                                        <div className="relative flex justify-center text-xs uppercase">
+                                            <span className="bg-[#111111] px-2 text-gray-500">Then</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
+                                        <h3 className="mb-4 font-semibold">Verify Submission</h3>
+                                        <LeetCodeVerifier
+                                            problemSlug={problem.slug || ""}
+                                            onVerified={async () => {
+                                                alert("Verification Successful! Assignment Completed. ✅");
+                                                await fetch(`/api/assignments/${assignmentId}/submissions`, {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
+                                                });
+                                                if (problem.courseId) {
+                                                    router.push(`/courses/${problem.courseId}`);
+                                                } else {
+                                                    router.push("/");
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
+                                <CodeEditor
+                                    language={language}
+                                    code={code}
+                                    onChange={(value) => {
+                                        setCode(value || "");
+                                        setTestCaseResults([]); // Reset results on code change
+                                    }}
+                                    errorLine={errorLine}
+                                    errorMessage={status === "error" ? output : null}
+                                />
+                            </div>
+                        )}
 
                         {activeTab === "console" && (
                             <div className="h-full p-4">
