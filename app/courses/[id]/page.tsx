@@ -34,13 +34,12 @@ interface ModuleItem {
     leetcodeUrl?: string;
     assignment?: {
         problems: {
-            problems: {
-                leetcodeUrl?: string;
-                slug?: string;
-                videoSolution?: string;
-            }[];
-        };
+            leetcodeUrl?: string;
+            slug?: string;
+            videoSolution?: string;
+        }[];
     }
+}
 
 interface Module {
     id: string;
@@ -728,7 +727,7 @@ export default function CoursePlayerPage() {
                                                                         <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
                                                                             {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") ? (
                                                                                 <video
-                                                                                    src={activeItem.assignment.problems[0].videoSolution}
+                                                                                    src={activeItem.assignment?.problems?.[0]?.videoSolution}
                                                                                     controls
                                                                                     className="h-full w-full object-contain"
                                                                                 />

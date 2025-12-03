@@ -187,22 +187,10 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                             </div>
 
                             {problemType === "LEETCODE" ? (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-300">LeetCode URL</label>
-                                    <input
-                                        type="text"
-                                        placeholder="https://leetcode.com/problems/two-sum/"
-                                        value={description} // Using description field to store URL for simplicity in UI state
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
-                                    />
-                                    <p className="text-xs text-gray-500">
-                                        Paste the full URL of the LeetCode problem. Students will be redirected there to solve it.
-                                    </p>
-
-                                    <div className="pt-4">
+                                <div className="space-y-6">
+                                    <div className="rounded border border-gray-700 bg-[#1e1e1e] p-4">
                                         <label className="text-sm font-medium text-gray-300">Solution Video (Optional)</label>
-                                        <div className="mt-2 flex items-center gap-4 rounded border border-gray-700 bg-[#1e1e1e] p-3">
+                                        <div className="mt-2 flex items-center gap-4 rounded border border-gray-700 bg-[#111111] p-3">
                                             <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
                                                 <Upload size={16} />
                                                 Choose file
@@ -219,6 +207,20 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                         </div>
                                         <p className="mt-1 text-xs text-gray-500">
                                             Upload a video solution. It will be unlocked for students 20 minutes after they start the problem.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-300">LeetCode URL</label>
+                                        <input
+                                            type="text"
+                                            placeholder="https://leetcode.com/problems/two-sum/"
+                                            value={description} // Using description field to store URL for simplicity in UI state
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            className="w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                        />
+                                        <p className="text-xs text-gray-500">
+                                            Paste the full URL of the LeetCode problem. Students will be redirected there to solve it.
                                         </p>
                                     </div>
                                 </div>
