@@ -31,30 +31,17 @@ async function fixCorsNative() {
         headers: {
             "Authorization": accountAuthToken,
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            bucketId: bucketId,
-            corsRules: [
-                {
-                    corsRuleName: "allow-all",
-                    allowedOrigins: ["*"],
-                    allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
-                    allowedHeaders: ["*"],
-                    exposeHeaders: ["ETag"],
-                    maxAgeSeconds: 3600
-                }
-            ]
         })
-    });
+});
 
-    if (!updateRes.ok) {
-        console.error("Update Failed:", await updateRes.text());
-        return;
-    }
+if (!updateRes.ok) {
+    console.error("Update Failed:", await updateRes.text());
+    return;
+}
 
-    const updateData = await updateRes.json();
-    console.log("✅ CORS Updated Successfully via Native API!");
-    console.log("New Rules:", JSON.stringify(updateData.corsRules, null, 2));
+const updateData = await updateRes.json();
+console.log("✅ CORS Updated Successfully via Native API!");
+console.log("New Rules:", JSON.stringify(updateData.corsRules, null, 2));
 }
 
 fixCorsNative();
