@@ -67,6 +67,7 @@ export default function CoursePlayerPage() {
     const [customInput, setCustomInput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
     const [runStatus, setRunStatus] = useState<"idle" | "running" | "success" | "error">("idle");
+    const [isWebDevFullScreen, setIsWebDevFullScreen] = useState(false);
 
     // Split View State
     const [splitRatio, setSplitRatio] = useState(65); // Default 65% for video
@@ -150,6 +151,7 @@ export default function CoursePlayerPage() {
                 setActiveModuleId(currentModule.id);
                 if (currentModule.items.length > 0) {
                     setActiveItemId(currentModule.items[0].id);
+                    setIsWebDevFullScreen(false);
                 }
             }
         } catch (error) {
@@ -321,7 +323,7 @@ export default function CoursePlayerPage() {
     return (
         <div className="flex h-screen bg-[#0e0e0e] text-white">
             {/* Sidebar */}
-            {!showPractice && activeItem?.type !== "WEB_DEV" && (
+            {!showPractice && !isWebDevFullScreen && (
                 <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
                     <div className="border-b border-gray-800 p-4">
                         <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
@@ -353,6 +355,7 @@ export default function CoursePlayerPage() {
                                                 if (module.status !== "LOCKED") {
                                                     setActiveModuleId(module.id);
                                                     setActiveItemId(item.id);
+                                                    setIsWebDevFullScreen(false);
                                                 }
                                             }}
                                             disabled={module.status === "LOCKED"}
@@ -385,7 +388,7 @@ export default function CoursePlayerPage() {
             )}
 
             {/* Main Content */}
-            <main className={`flex-1 overflow-y-auto ${showPractice || activeItem?.type === "WEB_DEV" ? "p-0" : "p-8"}`}>
+            <main className={`flex-1 overflow-y-auto ${showPractice || isWebDevFullScreen ? "p-0" : "p-8"}`}>
                 {activeModule && activeModule.status === "LOCKED" ? (
                     <div className="flex h-full flex-col items-center justify-center text-center">
                         <Lock size={48} className="mb-4 text-gray-600" />
@@ -404,8 +407,8 @@ export default function CoursePlayerPage() {
                         </button>
                     </div>
                 ) : activeItem ? (
-                    <div className={`mx-auto h-full flex flex-col ${showPractice || activeItem.type === "WEB_DEV" ? "max-w-full" : "max-w-4xl"}`}>
-                        {activeItem.type !== "WEB_DEV" && (
+                    <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen ? "max-w-full" : "max-w-4xl"}`}>
+                        {!isWebDevFullScreen && (
                             <div className="mb-6 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold">{activeItem.title}</h1>
                                 <div className="flex items-center gap-4">
@@ -431,10 +434,10 @@ export default function CoursePlayerPage() {
 
                         <div
                             ref={containerRef}
-                            className={`flex-1 overflow-hidden ${activeItem.type !== "WEB_DEV" ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
+                            className={`flex-1 overflow-hidden ${!isWebDevFullScreen ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
                         >
                             <div
-                                className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden`}
+                                className={`overflow-hidden bg-[#111111] ${isWebDevFullScreen ? "h-full border-0 rounded-none" : "h-full rounded-lg border border-gray-800"}`}
                                 style={{ width: showPractice ? `${splitRatio}%` : "100%" }}
                             >
                                 {activeItem.type === "VIDEO" ? (
@@ -496,15 +499,31 @@ export default function CoursePlayerPage() {
                                         </Link>
                                     </div>
                                 ) : activeItem.type === "WEB_DEV" ? (
-                                    <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
-                                        <WebDevPlayer
-                                            instructions={activeItem.webDevInstructions || ""}
-                                            initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
-                                            savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
-                                            onComplete={(submission) => submitWebDev(activeItem.id, submission)}
-                                            onBack={() => setActiveItemId(null)}
-                                        />
-                                    </div>
+                                    !isWebDevFullScreen ? (
+                                        <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                            <Layout className="h-16 w-16 text-gray-600" />
+                                            <h2 className="text-xl font-bold">Web Development Project</h2>
+                                            <p className="text-gray-400">
+                                                This module contains a web development assignment. Click below to start.
+                                            </p>
+                                            <button
+                                                onClick={() => setIsWebDevFullScreen(true)}
+                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                            >
+                                                Start Assignment
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                            <WebDevPlayer
+                                                instructions={activeItem.webDevInstructions || ""}
+                                                initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
+                                                savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
+                                                onComplete={(submission) => submitWebDev(activeItem.id, submission)}
+                                                onBack={() => setIsWebDevFullScreen(false)}
+                                            />
+                                        </div>
+                                    )
                                 ) : null}
                             </div>
 

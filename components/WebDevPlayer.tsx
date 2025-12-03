@@ -64,7 +64,10 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
         <!DOCTYPE html>
         <html>
         <head>
-            <style>${css}</style>
+            <style>
+                html, body { height: 100%; margin: 0; }
+                ${css}
+            </style>
         </head>
         <body>
             ${html}
