@@ -321,7 +321,7 @@ export default function CoursePlayerPage() {
     return (
         <div className="flex h-screen bg-[#0e0e0e] text-white">
             {/* Sidebar */}
-            {!showPractice && (
+            {!showPractice && activeItem?.type !== "WEB_DEV" && (
                 <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
                     <div className="border-b border-gray-800 p-4">
                         <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
@@ -385,7 +385,7 @@ export default function CoursePlayerPage() {
             )}
 
             {/* Main Content */}
-            <main className={`flex-1 overflow-y-auto ${showPractice ? "p-0" : "p-8"}`}>
+            <main className={`flex-1 overflow-y-auto ${showPractice || activeItem?.type === "WEB_DEV" ? "p-0" : "p-8"}`}>
                 {activeModule && activeModule.status === "LOCKED" ? (
                     <div className="flex h-full flex-col items-center justify-center text-center">
                         <Lock size={48} className="mb-4 text-gray-600" />
@@ -500,6 +500,7 @@ export default function CoursePlayerPage() {
                                             initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
                                             savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
                                             onComplete={(submission) => submitWebDev(activeItem.id, submission)}
+                                            onBack={() => setActiveItemId(null)}
                                         />
                                     </div>
                                 ) : null}

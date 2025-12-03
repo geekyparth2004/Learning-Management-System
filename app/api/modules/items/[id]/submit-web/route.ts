@@ -15,6 +15,18 @@ export async function POST(
         const { id } = await params;
         const { html, css, js } = await req.json();
 
+        // Check if this is the first submission (by checking if we already had a submission)
+        const existingProgress = await db.moduleItemProgress.findUnique({
+            where: {
+                userId_moduleItemId: {
+                    userId: session.user.id,
+                    moduleItemId: id,
+                },
+            },
+        });
+
+        const isFirstSubmission = !existingProgress || !existingProgress.webDevSubmission;
+
         // Update ModuleItemProgress
         await db.moduleItemProgress.upsert({
             where: {
@@ -37,53 +49,55 @@ export async function POST(
             },
         });
 
-        // Create/Update File in GitHub
-        try {
-            const user = await db.user.findUnique({ where: { id: session.user.id } });
-            if (user?.githubAccessToken) {
-                // Find course title to construct repo name
-                const moduleItem = await db.moduleItem.findUnique({
-                    where: { id },
-                    include: { module: { include: { course: true } } },
-                });
+        // Create/Update File in GitHub ONLY if it's the first submission
+        if (isFirstSubmission) {
+            try {
+                const user = await db.user.findUnique({ where: { id: session.user.id } });
+                if (user?.githubAccessToken) {
+                    // Find course title to construct repo name
+                    const moduleItem = await db.moduleItem.findUnique({
+                        where: { id },
+                        include: { module: { include: { course: true } } },
+                    });
 
-                if (moduleItem?.module?.course) {
-                    const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
-                    const { createOrUpdateFile } = await import("@/lib/github");
+                    if (moduleItem?.module?.course) {
+                        const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
+                        const { createOrUpdateFile } = await import("@/lib/github");
 
-                    const moduleTitle = moduleItem.module.title.replace(/\s+/g, "-");
-                    const itemTitle = moduleItem.title.replace(/\s+/g, "-");
+                        const moduleTitle = moduleItem.module.title.replace(/\s+/g, "-");
+                        const itemTitle = moduleItem.title.replace(/\s+/g, "-");
 
-                    // Create HTML file
-                    await createOrUpdateFile(
-                        user.githubAccessToken,
-                        repoName,
-                        `${moduleTitle}/${itemTitle}/index.html`,
-                        html,
-                        `Update ${moduleItem.title} - HTML`
-                    );
+                        // Create HTML file
+                        await createOrUpdateFile(
+                            user.githubAccessToken,
+                            repoName,
+                            `${moduleTitle}/${itemTitle}/index.html`,
+                            html,
+                            `Update ${moduleItem.title} - HTML`
+                        );
 
-                    // Create CSS file
-                    await createOrUpdateFile(
-                        user.githubAccessToken,
-                        repoName,
-                        `${moduleTitle}/${itemTitle}/styles.css`,
-                        css,
-                        `Update ${moduleItem.title} - CSS`
-                    );
+                        // Create CSS file
+                        await createOrUpdateFile(
+                            user.githubAccessToken,
+                            repoName,
+                            `${moduleTitle}/${itemTitle}/styles.css`,
+                            css,
+                            `Update ${moduleItem.title} - CSS`
+                        );
 
-                    // Create JS file
-                    await createOrUpdateFile(
-                        user.githubAccessToken,
-                        repoName,
-                        `${moduleTitle}/${itemTitle}/script.js`,
-                        js,
-                        `Update ${moduleItem.title} - JS`
-                    );
+                        // Create JS file
+                        await createOrUpdateFile(
+                            user.githubAccessToken,
+                            repoName,
+                            `${moduleTitle}/${itemTitle}/script.js`,
+                            js,
+                            `Update ${moduleItem.title} - JS`
+                        );
+                    }
                 }
+            } catch (error) {
+                console.error("Error pushing to GitHub:", error);
             }
-        } catch (error) {
-            console.error("Error pushing to GitHub:", error);
         }
 
         return NextResponse.json({ success: true });

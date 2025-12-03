@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Save, CheckCircle, RefreshCw, Layout, Code, Eye } from "lucide-react";
+import { Play, Save, CheckCircle, RefreshCw, Layout, Code, Eye, ArrowLeft } from "lucide-react";
+import Editor from "@monaco-editor/react";
 
 interface WebDevPlayerProps {
     instructions: string;
@@ -16,9 +17,10 @@ interface WebDevPlayerProps {
         js: string;
     };
     onComplete: (submission: any) => void;
+    onBack?: () => void;
 }
 
-export default function WebDevPlayer({ instructions, initialCode, savedSubmission, onComplete }: WebDevPlayerProps) {
+export default function WebDevPlayer({ instructions, initialCode, savedSubmission, onComplete, onBack }: WebDevPlayerProps) {
     const [html, setHtml] = useState(savedSubmission?.html || initialCode?.html || "");
     const [css, setCss] = useState(savedSubmission?.css || initialCode?.css || "");
     const [js, setJs] = useState(savedSubmission?.js || initialCode?.js || "");
@@ -87,9 +89,16 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
         <div className="flex h-full flex-col bg-[#0e0e0e] text-white overflow-hidden" ref={containerRef}>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-4 py-2">
-                <div className="flex items-center gap-2">
-                    <Layout className="text-blue-400" size={20} />
-                    <span className="font-bold">Development Assignment</span>
+                <div className="flex items-center gap-4">
+                    {onBack && (
+                        <button onClick={onBack} className="text-gray-400 hover:text-white">
+                            <ArrowLeft size={20} />
+                        </button>
+                    )}
+                    <div className="flex items-center gap-2">
+                        <Layout className="text-blue-400" size={20} />
+                        <span className="font-bold">Development Assignment</span>
+                    </div>
                 </div>
                 <button
                     onClick={handleSubmit}
@@ -172,27 +181,51 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
 
                     <div className="flex-1 relative">
                         {activeTab === "html" && (
-                            <textarea
+                            <Editor
+                                height="100%"
+                                defaultLanguage="html"
                                 value={html}
-                                onChange={(e) => setHtml(e.target.value)}
-                                className="absolute inset-0 w-full h-full resize-none bg-[#1e1e1e] p-4 font-mono text-sm text-gray-300 focus:outline-none"
-                                spellCheck={false}
+                                onChange={(value) => setHtml(value || "")}
+                                theme="vs-dark"
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    wordWrap: "on",
+                                    automaticLayout: true,
+                                    padding: { top: 16 },
+                                }}
                             />
                         )}
                         {activeTab === "css" && (
-                            <textarea
+                            <Editor
+                                height="100%"
+                                defaultLanguage="css"
                                 value={css}
-                                onChange={(e) => setCss(e.target.value)}
-                                className="absolute inset-0 w-full h-full resize-none bg-[#1e1e1e] p-4 font-mono text-sm text-gray-300 focus:outline-none"
-                                spellCheck={false}
+                                onChange={(value) => setCss(value || "")}
+                                theme="vs-dark"
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    wordWrap: "on",
+                                    automaticLayout: true,
+                                    padding: { top: 16 },
+                                }}
                             />
                         )}
                         {activeTab === "js" && (
-                            <textarea
+                            <Editor
+                                height="100%"
+                                defaultLanguage="javascript"
                                 value={js}
-                                onChange={(e) => setJs(e.target.value)}
-                                className="absolute inset-0 w-full h-full resize-none bg-[#1e1e1e] p-4 font-mono text-sm text-gray-300 focus:outline-none"
-                                spellCheck={false}
+                                onChange={(value) => setJs(value || "")}
+                                theme="vs-dark"
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    wordWrap: "on",
+                                    automaticLayout: true,
+                                    padding: { top: 16 },
+                                }}
                             />
                         )}
                     </div>
