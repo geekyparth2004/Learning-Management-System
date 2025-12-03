@@ -7,6 +7,7 @@ import Link from "next/link";
 import AIInterviewPlayer from "@/components/AIInterviewPlayer";
 import TestPlayer from "@/components/TestPlayer";
 import WebDevPlayer from "@/components/WebDevPlayer";
+import LeetCodeVerifier from "@/components/LeetCodeVerifier";
 
 import CodeEditor from "@/components/CodeEditor";
 import Console from "@/components/Console";
@@ -15,7 +16,7 @@ import { Language } from "@/types";
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE";
     content?: string;
     assignmentId?: string;
     isCompleted: boolean;
@@ -29,6 +30,7 @@ interface ModuleItem {
     webDevInstructions?: string;
     webDevInitialCode?: any;
     webDevSubmission?: any;
+    leetcodeUrl?: string;
 }
 
 interface Module {
@@ -378,6 +380,8 @@ export default function CoursePlayerPage() {
                                                 <Code size={16} className="text-yellow-400" />
                                             ) : item.type === "WEB_DEV" ? (
                                                 <Layout size={16} className="text-orange-400" />
+                                            ) : item.type === "LEETCODE" ? (
+                                                <Code size={16} className="text-green-400" />
                                             ) : (
                                                 <FileText size={16} className="text-purple-400" />
                                             )}
@@ -577,6 +581,44 @@ export default function CoursePlayerPage() {
                                             />
                                         </div>
                                     )
+                                ) : activeItem.type === "LEETCODE" ? (
+                                    <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
+                                            <Code className="h-10 w-10 text-yellow-500" />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <h2 className="text-2xl font-bold">{activeItem.title}</h2>
+                                            <p className="text-gray-400 max-w-md mx-auto">
+                                                Solve this problem on LeetCode and verify your submission here.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-col gap-4 w-full max-w-sm">
+                                            <a
+                                                href={activeItem.leetcodeUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
+                                            >
+                                                Solve on LeetCode <Unlock size={16} />
+                                            </a>
+
+                                            <div className="relative">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <span className="w-full border-t border-gray-800" />
+                                                </div>
+                                                <div className="relative flex justify-center text-xs uppercase">
+                                                    <span className="bg-[#0e0e0e] px-2 text-gray-500">Then</span>
+                                                </div>
+                                            </div>
+
+                                            <LeetCodeVerifier
+                                                problemSlug={activeItem.leetcodeUrl?.split("/problems/")[1]?.split("/")[0] || ""}
+                                                onVerified={() => completeItem(activeItem.id)}
+                                            />
+                                        </div>
+                                    </div>
                                 ) : null}
                             </div>
 

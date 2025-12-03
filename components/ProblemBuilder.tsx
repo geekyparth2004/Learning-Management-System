@@ -14,13 +14,14 @@ interface ProblemData {
     testCases: TestCase[];
     hints: string[];
     videoSolution?: string;
-    type: "CODING" | "WEB_DEV";
+    type: "CODING" | "WEB_DEV" | "LEETCODE";
     webDevInstructions?: string;
     webDevInitialCode?: {
         html: string;
         css: string;
         js: string;
     };
+    leetcodeUrl?: string;
 }
 
 interface ProblemBuilderProps {
@@ -40,7 +41,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     const [hints, setHints] = useState<string[]>([]);
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState("");
-    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV">("CODING");
+    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE">("CODING");
     const [webDevInstructions, setWebDevInstructions] = useState("");
     const [webDevHtml, setWebDevHtml] = useState("<!-- Write your HTML here -->");
     const [webDevCss, setWebDevCss] = useState("/* Write your CSS here */");
@@ -105,11 +106,12 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
 
         onSave({
             title,
-            description: problemType === "CODING" ? description : webDevInstructions, // Use instructions as description for Web Dev
+            description: problemType === "CODING" ? description : problemType === "WEB_DEV" ? webDevInstructions : "",
             testCases: problemType === "CODING" ? testCases : [],
             hints,
             videoSolution: finalVideoUrl || undefined,
             type: problemType,
+            leetcodeUrl: problemType === "LEETCODE" ? description : undefined, // Using description state for URL
             webDevInstructions: problemType === "WEB_DEV" ? webDevInstructions : undefined,
             webDevInitialCode: problemType === "WEB_DEV" ? {
                 html: webDevHtml,
@@ -167,6 +169,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                         >
                             <option value="CODING">Coding Problem</option>
                             <option value="WEB_DEV">Web Development</option>
+                            <option value="LEETCODE">LeetCode Problem</option>
                         </select>
                     </div>
 
@@ -183,7 +186,21 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                 />
                             </div>
 
-                            {problemType === "CODING" ? (
+                            {problemType === "LEETCODE" ? (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-300">LeetCode URL</label>
+                                    <input
+                                        type="text"
+                                        placeholder="https://leetcode.com/problems/two-sum/"
+                                        value={description} // Using description field to store URL for simplicity in UI state
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                    />
+                                    <p className="text-xs text-gray-500">
+                                        Paste the full URL of the LeetCode problem. Students will be redirected there to solve it.
+                                    </p>
+                                </div>
+                            ) : problemType === "CODING" ? (
                                 <>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-gray-300">Problem Description</label>
