@@ -404,32 +404,34 @@ export default function CoursePlayerPage() {
                         </button>
                     </div>
                 ) : activeItem ? (
-                    <div className={`mx-auto h-full flex flex-col ${showPractice ? "max-w-full p-4" : "max-w-4xl"}`}>
-                        <div className="mb-6 flex items-center justify-between">
-                            <h1 className="text-2xl font-bold">{activeItem.title}</h1>
-                            <div className="flex items-center gap-4">
-                                {activeItem.type === "VIDEO" && (
-                                    <button
-                                        onClick={() => setShowPractice(!showPractice)}
-                                        className={`flex items-center gap-2 rounded px-3 py-1 text-sm font-medium transition-colors ${showPractice ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
-                                            }`}
-                                    >
-                                        <Code size={16} />
-                                        {showPractice ? "Hide Practice" : "Practice Mode"}
-                                    </button>
-                                )}
-                                {timeLeft && (
-                                    <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
-                                        <Clock size={16} />
-                                        <span className="font-mono font-bold">{timeLeft}</span>
-                                    </div>
-                                )}
+                    <div className={`mx-auto h-full flex flex-col ${showPractice || activeItem.type === "WEB_DEV" ? "max-w-full" : "max-w-4xl"}`}>
+                        {activeItem.type !== "WEB_DEV" && (
+                            <div className="mb-6 flex items-center justify-between">
+                                <h1 className="text-2xl font-bold">{activeItem.title}</h1>
+                                <div className="flex items-center gap-4">
+                                    {activeItem.type === "VIDEO" && (
+                                        <button
+                                            onClick={() => setShowPractice(!showPractice)}
+                                            className={`flex items-center gap-2 rounded px-3 py-1 text-sm font-medium transition-colors ${showPractice ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                                                }`}
+                                        >
+                                            <Code size={16} />
+                                            {showPractice ? "Hide Practice" : "Practice Mode"}
+                                        </button>
+                                    )}
+                                    {timeLeft && (
+                                        <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
+                                            <Clock size={16} />
+                                            <span className="font-mono font-bold">{timeLeft}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div
                             ref={containerRef}
-                            className={`mb-8 flex-1 overflow-hidden ${showPractice ? "flex gap-4" : ""}`}
+                            className={`flex-1 overflow-hidden ${activeItem.type !== "WEB_DEV" ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
                         >
                             <div
                                 className={`rounded-lg border border-gray-800 bg-[#111111] overflow-hidden`}
