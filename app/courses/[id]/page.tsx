@@ -68,6 +68,7 @@ export default function CoursePlayerPage() {
     const [isRunning, setIsRunning] = useState(false);
     const [runStatus, setRunStatus] = useState<"idle" | "running" | "success" | "error">("idle");
     const [isWebDevFullScreen, setIsWebDevFullScreen] = useState(false);
+    const [isTestFullScreen, setIsTestFullScreen] = useState(false);
 
     // Split View State
     const [splitRatio, setSplitRatio] = useState(65); // Default 65% for video
@@ -152,6 +153,7 @@ export default function CoursePlayerPage() {
                 if (currentModule.items.length > 0) {
                     setActiveItemId(currentModule.items[0].id);
                     setIsWebDevFullScreen(false);
+                    setIsTestFullScreen(false);
                 }
             }
         } catch (error) {
@@ -323,7 +325,7 @@ export default function CoursePlayerPage() {
     return (
         <div className="flex h-screen bg-[#0e0e0e] text-white">
             {/* Sidebar */}
-            {!showPractice && !isWebDevFullScreen && (
+            {!showPractice && !isWebDevFullScreen && !isTestFullScreen && (
                 <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
                     <div className="border-b border-gray-800 p-4">
                         <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
@@ -356,6 +358,7 @@ export default function CoursePlayerPage() {
                                                     setActiveModuleId(module.id);
                                                     setActiveItemId(item.id);
                                                     setIsWebDevFullScreen(false);
+                                                    setIsTestFullScreen(false);
                                                 }
                                             }}
                                             disabled={module.status === "LOCKED"}
@@ -388,7 +391,7 @@ export default function CoursePlayerPage() {
             )}
 
             {/* Main Content */}
-            <main className={`flex-1 overflow-y-auto ${showPractice || isWebDevFullScreen ? "p-0" : "p-8"}`}>
+            <main className={`flex-1 overflow-y-auto ${showPractice || isWebDevFullScreen || isTestFullScreen ? "p-0" : "p-8"}`}>
                 {activeModule && activeModule.status === "LOCKED" ? (
                     <div className="flex h-full flex-col items-center justify-center text-center">
                         <Lock size={48} className="mb-4 text-gray-600" />
@@ -407,8 +410,8 @@ export default function CoursePlayerPage() {
                         </button>
                     </div>
                 ) : activeItem ? (
-                    <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen ? "max-w-full" : "max-w-4xl"}`}>
-                        {!isWebDevFullScreen && (
+                    <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen || isTestFullScreen ? "max-w-full" : "max-w-4xl"}`}>
+                        {!isWebDevFullScreen && !isTestFullScreen && (
                             <div className="mb-6 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold">{activeItem.title}</h1>
                                 <div className="flex items-center gap-4">
@@ -434,10 +437,10 @@ export default function CoursePlayerPage() {
 
                         <div
                             ref={containerRef}
-                            className={`flex-1 overflow-hidden ${!isWebDevFullScreen ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
+                            className={`flex-1 overflow-hidden ${!isWebDevFullScreen && !isTestFullScreen ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
                         >
                             <div
-                                className={`overflow-hidden bg-[#111111] ${isWebDevFullScreen ? "h-full border-0 rounded-none" : "h-full rounded-lg border border-gray-800"}`}
+                                className={`overflow-hidden bg-[#111111] ${isWebDevFullScreen || isTestFullScreen ? "h-full border-0 rounded-none" : "h-full rounded-lg border border-gray-800"}`}
                                 style={{ width: showPractice ? `${splitRatio}%` : "100%" }}
                             >
                                 {activeItem.type === "VIDEO" ? (
@@ -469,21 +472,46 @@ export default function CoursePlayerPage() {
                                         />
                                     </div>
                                 ) : activeItem.type === "TEST" ? (
-                                    <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
-                                        <TestPlayer
-                                            duration={activeItem.testDuration || 30}
-                                            passingScore={activeItem.testPassingScore || 60}
-                                            problems={activeItem.testProblems || []}
-                                            onComplete={(passed, score) => {
-                                                if (passed) {
-                                                    alert(`Test Passed! Score: ${score.toFixed(1)}%`);
-                                                    completeItem(activeItem.id);
-                                                } else {
-                                                    alert(`Test Failed. Score: ${score.toFixed(1)}%. You need ${activeItem.testPassingScore}% to pass.`);
-                                                }
-                                            }}
-                                        />
-                                    </div>
+                                    !isTestFullScreen ? (
+                                        <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                            <Code className="h-16 w-16 text-yellow-400" />
+                                            <h2 className="text-xl font-bold">Coding Test</h2>
+                                            <p className="text-gray-400">
+                                                You have {activeItem.testDuration || 30} minutes to complete this test.
+                                                <br />
+                                                Passing Score: {activeItem.testPassingScore || 60}%
+                                            </p>
+                                            <button
+                                                onClick={() => {
+                                                    setIsTestFullScreen(true);
+                                                    document.documentElement.requestFullscreen().catch(err => console.error(err));
+                                                }}
+                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                            >
+                                                Start Test
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                            <TestPlayer
+                                                duration={activeItem.testDuration || 30}
+                                                passingScore={activeItem.testPassingScore || 60}
+                                                problems={activeItem.testProblems || []}
+                                                onComplete={(passed, score) => {
+                                                    if (document.fullscreenElement) {
+                                                        document.exitFullscreen().catch(err => console.error(err));
+                                                    }
+                                                    setIsTestFullScreen(false);
+                                                    if (passed) {
+                                                        alert(`Test Passed! Score: ${score.toFixed(1)}%`);
+                                                        completeItem(activeItem.id);
+                                                    } else {
+                                                        alert(`Test Failed. Score: ${score.toFixed(1)}%. You need ${activeItem.testPassingScore}% to pass.`);
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    )
                                 ) : activeItem.type === "ASSIGNMENT" ? (
                                     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                                         <FileText className="h-16 w-16 text-gray-600" />

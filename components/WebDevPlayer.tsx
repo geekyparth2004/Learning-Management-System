@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Save, CheckCircle, RefreshCw, Layout, Code, Eye, ArrowLeft } from "lucide-react";
-import Editor from "@monaco-editor/react";
+import WebDevEditor from "./WebDevEditor";
 
 interface WebDevPlayerProps {
     instructions: string;
@@ -123,7 +123,7 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
     const activeFile = files.find(f => f.name === activeFileName);
 
     return (
-        <div className="flex h-full flex-col bg-[#0e0e0e] text-white overflow-hidden" ref={containerRef}>
+        <div className="flex h-full flex-col bg-[#0e0e0e] text-white overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-4 py-2">
                 <div className="flex items-center gap-4">
@@ -148,93 +148,13 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
             </div>
 
             {/* Main Content */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Left Panel */}
-                <div className="flex flex-col border-r border-gray-800 bg-[#111111]" style={{ width: `${splitRatio}%` }}>
-                    <div className="flex border-b border-gray-800">
-                        <button
-                            onClick={() => setLeftPanelTab("problem")}
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "problem" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
-                        >
-                            Problem Statement
-                        </button>
-                        <button
-                            onClick={() => setLeftPanelTab("preview")}
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "preview" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
-                        >
-                            Live Preview
-                        </button>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto">
-                        {leftPanelTab === "problem" ? (
-                            <div className="p-6 prose prose-invert max-w-none text-sm">
-                                <h3 className="text-lg font-bold mb-4">Instructions</h3>
-                                <div className="whitespace-pre-wrap text-gray-300">{instructions}</div>
-                            </div>
-                        ) : (
-                            <div className="h-full w-full bg-white">
-                                <iframe
-                                    srcDoc={srcDoc}
-                                    title="preview"
-                                    sandbox="allow-scripts"
-                                    className="h-full w-full border-0"
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Resizer */}
-                <div
-                    className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors"
-                    onMouseDown={startResizing}
-                />
-
-                {/* Right Panel (Editors) */}
-                <div className="flex flex-col bg-[#1e1e1e]" style={{ width: `calc(${100 - splitRatio}% - 4px)` }}>
-                    <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] overflow-x-auto">
-                        <div className="flex">
-                            {files.map(file => (
-                                <button
-                                    key={file.name}
-                                    onClick={() => setActiveFileName(file.name)}
-                                    className={`px-6 py-2 text-sm font-medium transition-colors border-r border-gray-800 whitespace-nowrap ${activeFileName === file.name ? "bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-400" : "bg-[#111111] text-gray-400 hover:text-white"}`}
-                                >
-                                    {file.name}
-                                </button>
-                            ))}
-                            <button
-                                onClick={handleAddFile}
-                                className="px-4 py-2 text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors"
-                                title="Add File"
-                            >
-                                +
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 relative">
-                        {activeFile && (
-                            <Editor
-                                key={activeFile.name} // Force re-mount on file change to ensure correct language/content
-                                height="100%"
-                                language={activeFile.language}
-                                value={activeFile.content}
-                                onChange={(value) => updateFileContent(value || "")}
-                                theme="vs-dark"
-                                options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                    wordWrap: "on",
-                                    automaticLayout: true,
-                                    padding: { top: 16 },
-                                }}
-                            />
-                        )}
-                    </div>
-                </div>
-            </div>
+            <WebDevEditor
+                files={files}
+                setFiles={setFiles}
+                instructions={instructions}
+                activeFileName={activeFileName}
+                setActiveFileName={setActiveFileName}
+            />
         </div>
     );
 }

@@ -1,0 +1,185 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { Layout, Code, Eye, RefreshCw, CheckCircle, ArrowLeft } from "lucide-react";
+import Editor from "@monaco-editor/react";
+
+interface File {
+    name: string;
+    language: string;
+    content: string;
+}
+
+interface WebDevEditorProps {
+    files: File[];
+    setFiles: (files: File[]) => void;
+    instructions: string;
+    activeFileName: string;
+    setActiveFileName: (name: string) => void;
+}
+
+export default function WebDevEditor({ files, setFiles, instructions, activeFileName, setActiveFileName }: WebDevEditorProps) {
+    const [leftPanelTab, setLeftPanelTab] = useState<"problem" | "preview">("problem");
+    const [splitRatio, setSplitRatio] = useState(40);
+    const [isResizing, setIsResizing] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const startResizing = () => setIsResizing(true);
+    const stopResizing = () => setIsResizing(false);
+
+    const resize = (e: MouseEvent) => {
+        if (isResizing && containerRef.current) {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const newRatio = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            if (newRatio > 20 && newRatio < 80) {
+                setSplitRatio(newRatio);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (isResizing) {
+            window.addEventListener("mousemove", resize);
+            window.addEventListener("mouseup", stopResizing);
+        } else {
+            window.removeEventListener("mousemove", resize);
+            window.removeEventListener("mouseup", stopResizing);
+        }
+        return () => {
+            window.removeEventListener("mousemove", resize);
+            window.removeEventListener("mouseup", stopResizing);
+        };
+    }, [isResizing]);
+
+    const srcDoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                html, body { height: 100%; margin: 0; }
+                ${files.filter(f => f.language === "css").map(f => f.content).join("\n")}
+            </style>
+        </head>
+        <body>
+            ${files.find(f => f.name === "index.html")?.content || ""}
+            <script>
+                ${files.filter(f => f.language === "javascript").map(f => f.content).join("\n")}
+            </script>
+        </body>
+        </html>
+    `;
+
+    const handleAddFile = () => {
+        const fileName = window.prompt("Enter file name (e.g., about.html, style2.css):");
+        if (!fileName) return;
+
+        if (files.some(f => f.name === fileName)) {
+            alert("File already exists!");
+            return;
+        }
+
+        let language = "plaintext";
+        if (fileName.endsWith(".html")) language = "html";
+        else if (fileName.endsWith(".css")) language = "css";
+        else if (fileName.endsWith(".js")) language = "javascript";
+
+        setFiles([...files, { name: fileName, language, content: "" }]);
+        setActiveFileName(fileName);
+    };
+
+    const updateFileContent = (value: string) => {
+        setFiles(files.map(f => f.name === activeFileName ? { ...f, content: value } : f));
+    };
+
+    const activeFile = files.find(f => f.name === activeFileName);
+
+    return (
+        <div className="flex flex-1 overflow-hidden h-full" ref={containerRef}>
+            {/* Left Panel */}
+            <div className="flex flex-col border-r border-gray-800 bg-[#111111]" style={{ width: `${splitRatio}%` }}>
+                <div className="flex border-b border-gray-800">
+                    <button
+                        onClick={() => setLeftPanelTab("problem")}
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "problem" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
+                    >
+                        Problem Statement
+                    </button>
+                    <button
+                        onClick={() => setLeftPanelTab("preview")}
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "preview" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
+                    >
+                        Live Preview
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                    {leftPanelTab === "problem" ? (
+                        <div className="p-6 prose prose-invert max-w-none text-sm">
+                            <h3 className="text-lg font-bold mb-4">Instructions</h3>
+                            <div className="whitespace-pre-wrap text-gray-300">{instructions}</div>
+                        </div>
+                    ) : (
+                        <div className="h-full w-full bg-white">
+                            <iframe
+                                srcDoc={srcDoc}
+                                title="preview"
+                                sandbox="allow-scripts"
+                                className="h-full w-full border-0"
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Resizer */}
+            <div
+                className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors"
+                onMouseDown={startResizing}
+            />
+
+            {/* Right Panel (Editors) */}
+            <div className="flex flex-col bg-[#1e1e1e]" style={{ width: `calc(${100 - splitRatio}% - 4px)` }}>
+                <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] overflow-x-auto">
+                    <div className="flex">
+                        {files.map(file => (
+                            <button
+                                key={file.name}
+                                onClick={() => setActiveFileName(file.name)}
+                                className={`px-6 py-2 text-sm font-medium transition-colors border-r border-gray-800 whitespace-nowrap ${activeFileName === file.name ? "bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-400" : "bg-[#111111] text-gray-400 hover:text-white"}`}
+                            >
+                                {file.name}
+                            </button>
+                        ))}
+                        <button
+                            onClick={handleAddFile}
+                            className="px-4 py-2 text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors"
+                            title="Add File"
+                        >
+                            +
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex-1 relative">
+                    {activeFile && (
+                        <Editor
+                            key={activeFile.name} // Force re-mount on file change to ensure correct language/content
+                            height="100%"
+                            language={activeFile.language}
+                            value={activeFile.content}
+                            onChange={(value) => updateFileContent(value || "")}
+                            theme="vs-dark"
+                            options={{
+                                minimap: { enabled: false },
+                                fontSize: 14,
+                                wordWrap: "on",
+                                automaticLayout: true,
+                                padding: { top: 16 },
+                            }}
+                        />
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

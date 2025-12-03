@@ -78,13 +78,29 @@ export default function CourseBuilderPage() {
     };
 
     const handleSaveProblem = (problem: any) => {
-        const newProblem = {
-            ...problem,
-            defaultCode: {
+        let defaultCode = {};
+        if (problem.type === "CODING") {
+            defaultCode = {
                 python: "# Write your code here",
                 cpp: "// Write your code here",
                 java: "// Write your code here"
-            }
+            };
+        } else {
+            defaultCode = {
+                isWebDev: true,
+                html: problem.webDevInitialCode?.html || "",
+                css: problem.webDevInitialCode?.css || "",
+                js: problem.webDevInitialCode?.js || ""
+            };
+        }
+
+        const newProblem = {
+            title: problem.title,
+            description: problem.description, // For Web Dev, this contains instructions
+            testCases: problem.testCases,
+            hints: JSON.stringify(problem.hints), // Ensure hints are stringified
+            defaultCode: JSON.stringify(defaultCode),
+            videoSolution: problem.videoSolution
         };
 
         if (problemBuilderType === "TEST") {

@@ -1,11 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Clock, CheckCircle, XCircle, Play, Save } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Play, Save, ChevronDown, Lock, Video } from "lucide-react";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
 import CodeEditor from "@/components/CodeEditor";
-import { ChevronDown, Lock, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import WebDevEditor from "./WebDevEditor";
+
+interface File {
+    name: string;
+    language: string;
+    content: string;
+}
 
 interface TestCase {
     input: string;
@@ -20,6 +26,13 @@ interface Problem {
     defaultCode: any; // { python: string, cpp: string }
     testCases: TestCase[];
     hints: string[];
+    type?: "CODING" | "WEB_DEV";
+    webDevInstructions?: string;
+    webDevInitialCode?: {
+        html: string;
+        css: string;
+        js: string;
+    };
 }
 
 interface TestPlayerProps {
@@ -35,7 +48,8 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [language, setLanguage] = useState<"python" | "cpp" | "java">("java");
 
     // Store code for each problem
-    const [userCodes, setUserCodes] = useState<{ [key: string]: string }>({});
+    const [userCodes, setUserCodes] = useState<{ [key: string]: string | File[] }>({});
+    const [activeFileName, setActiveFileName] = useState("index.html");
 
     // Store results for each problem
     const [results, setResults] = useState<{ [key: string]: boolean }>({});
@@ -56,14 +70,12 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     // Hints State
     const [expandedHints, setExpandedHints] = useState<number[]>([]);
 
-    const activeProblem = problems[activeProblemIndex];
+    const processedProblems = React.useMemo(() => {
+        return problems.map(p => {
+            let defaultCode: any = p.defaultCode;
+            let type: "CODING" | "WEB_DEV" = "CODING";
+            let webDevInitialCode = undefined;
 
-    // Initialize code
-    useEffect(() => {
-        const initialCodes: any = {};
-        problems.forEach(p => {
-            // Parse defaultCode if string
-            let defaultCode = p.defaultCode;
             if (typeof defaultCode === 'string') {
                 try {
                     defaultCode = JSON.parse(defaultCode);
@@ -72,30 +84,65 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 }
             }
 
-            // Parse hints if string
-            if (typeof p.hints === 'string') {
+            if (defaultCode?.isWebDev) {
+                type = "WEB_DEV";
+                webDevInitialCode = {
+                    html: defaultCode.html,
+                    css: defaultCode.css,
+                    js: defaultCode.js
+                };
+            }
+
+            let hints = p.hints;
+            if (typeof hints === 'string') {
                 try {
-                    p.hints = JSON.parse(p.hints);
+                    hints = JSON.parse(hints);
                 } catch (e) {
-                    p.hints = [];
+                    hints = [];
                 }
             }
 
-            initialCodes[p.id] = defaultCode?.[language] || (
-                language === "python" ? "# Write your code here" :
-                    language === "cpp" ? "// Write your code here" :
-                        "// Write your code here"
-            );
+            return {
+                ...p,
+                type,
+                defaultCode,
+                webDevInitialCode,
+                hints: hints as string[]
+            };
         });
-        setUserCodes(initialCodes);
     }, [problems]);
 
-    // Update code when language changes
+    const activeProblem = processedProblems[activeProblemIndex];
+
+    // Initialize code
     useEffect(() => {
-        setUserCodes(prev => ({
-            ...prev,
-            [activeProblem.id]: activeProblem.defaultCode?.[language] || prev[activeProblem.id]
-        }));
+        const initialCodes: any = {};
+        processedProblems.forEach(p => {
+            if (p.type === "WEB_DEV") {
+                initialCodes[p.id] = [
+                    { name: "index.html", language: "html", content: p.webDevInitialCode?.html || "" },
+                    { name: "styles.css", language: "css", content: p.webDevInitialCode?.css || "" },
+                    { name: "script.js", language: "javascript", content: p.webDevInitialCode?.js || "" }
+                ];
+            } else {
+                initialCodes[p.id] = p.defaultCode?.[language] || (
+                    language === "python" ? "# Write your code here" :
+                        language === "cpp" ? "// Write your code here" :
+                            "// Write your code here"
+                );
+            }
+        });
+        setUserCodes(initialCodes);
+    }, [processedProblems]);
+
+    // Update code when language changes (only for coding problems)
+    useEffect(() => {
+        if (activeProblem.type !== "WEB_DEV") {
+            setUserCodes(prev => ({
+                ...prev,
+                [activeProblem.id]: activeProblem.defaultCode?.[language] || prev[activeProblem.id]
+            }));
+        }
     }, [language, activeProblem]);
 
     // Timer
@@ -117,7 +164,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     useEffect(() => {
         const code = userCodes[activeProblem.id];
         const interval = setInterval(async () => {
-            if (!code) return;
+            if (!code || activeProblem.type === "WEB_DEV") return;
             setIsAnalyzing(true);
             try {
                 const res = await fetch("/api/analyze", {
@@ -146,6 +193,10 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         setUserCodes(prev => ({ ...prev, [activeProblem.id]: value || "" }));
     };
 
+    const handleWebDevFilesChange = (files: File[]) => {
+        setUserCodes(prev => ({ ...prev, [activeProblem.id]: files }));
+    };
+
     const toggleHint = (index: number) => {
         setExpandedHints(prev =>
             prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
@@ -153,6 +204,8 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     };
 
     const handleRun = async () => {
+        if (activeProblem.type === "WEB_DEV") return;
+
         setIsRunning(true);
         setStatus("running");
         setOutput("Running test cases...");
@@ -299,30 +352,54 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                     </div>
 
                     {/* Editor & Console */}
-                    <div className="flex flex-1">
-                        <div className="w-1/2 border-r border-gray-800 relative">
-                            <CodeEditor
-                                language={language}
-                                code={userCodes[activeProblem.id] || ""}
-                                onChange={handleCodeChange}
-                            />
-                            <button
-                                onClick={handleRun}
-                                disabled={isRunning}
-                                className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50"
-                            >
-                                <Play size={16} /> Run
-                            </button>
-                        </div>
-                        <div className="w-1/2 bg-[#111111] p-4 font-mono text-sm">
-                            <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Output</div>
-                            <pre className={cn(
-                                "whitespace-pre-wrap",
-                                status === "error" ? "text-red-400" : "text-gray-300"
-                            )}>
-                                {output || "Run code to see output..."}
-                            </pre>
-                        </div>
+                    <div className="flex flex-1 overflow-hidden">
+                        {activeProblem.type === "WEB_DEV" ? (
+                            <div className="w-full h-full flex flex-col">
+                                <div className="flex-1 overflow-hidden">
+                                    <WebDevEditor
+                                        files={userCodes[activeProblem.id] as File[] || []}
+                                        setFiles={handleWebDevFilesChange}
+                                        instructions={activeProblem.webDevInstructions || ""}
+                                        activeFileName={activeFileName}
+                                        setActiveFileName={setActiveFileName}
+                                    />
+                                </div>
+                                <div className="border-t border-gray-800 bg-[#161616] p-2 flex justify-end">
+                                    <button
+                                        onClick={() => setResults(prev => ({ ...prev, [activeProblem.id]: true }))}
+                                        className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-bold hover:bg-blue-700"
+                                    >
+                                        <CheckCircle size={16} /> Mark as Completed
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="w-1/2 border-r border-gray-800 relative">
+                                    <CodeEditor
+                                        language={language}
+                                        code={userCodes[activeProblem.id] as string || ""}
+                                        onChange={handleCodeChange}
+                                    />
+                                    <button
+                                        onClick={handleRun}
+                                        disabled={isRunning}
+                                        className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        <Play size={16} /> Run
+                                    </button>
+                                </div>
+                                <div className="w-1/2 bg-[#111111] p-4 font-mono text-sm">
+                                    <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Output</div>
+                                    <pre className={cn(
+                                        "whitespace-pre-wrap",
+                                        status === "error" ? "text-red-400" : "text-gray-300"
+                                    )}>
+                                        {output || "Run code to see output..."}
+                                    </pre>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
