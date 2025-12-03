@@ -83,11 +83,23 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 };
             }
 
+            let hints: string[] = [];
+            if (Array.isArray(p.hints)) {
+                hints = p.hints;
+            } else if (typeof p.hints === 'string') {
+                try {
+                    hints = JSON.parse(p.hints);
+                } catch (e) {
+                    hints = [];
+                }
+            }
+
             return {
                 ...p,
                 type,
                 defaultCode,
                 webDevInitialCode,
+                hints,
             };
         });
     }, [problems]);
