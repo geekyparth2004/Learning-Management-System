@@ -41,34 +41,35 @@ export async function GET() {
                 corsRules: [
                     {
                         corsRuleName: "allow-all",
-                        "https://technical-interview-practice.vercel.app",
-                        "http://localhost:3000"
+                        allowedOrigins: [
+                            "https://technical-interview-practice.vercel.app",
+                            "http://localhost:3000"
                         ],
-                allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
-                allowedHeaders: ["*"],
-                exposeHeaders: ["ETag"],
-                maxAgeSeconds: 3600
-            }
+                        allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
+                        allowedHeaders: ["*"],
+                        exposeHeaders: ["ETag"],
+                        maxAgeSeconds: 3600
+                    }
                 ]
-    })
-});
+            })
+        });
 
-if (!updateRes.ok) {
-    const errorText = await updateRes.text();
-    console.error("Update Failed:", errorText);
-    return NextResponse.json({ success: false, error: "Update Failed", details: errorText }, { status: 500 });
-}
+        if (!updateRes.ok) {
+            const errorText = await updateRes.text();
+            console.error("Update Failed:", errorText);
+            return NextResponse.json({ success: false, error: "Update Failed", details: errorText }, { status: 500 });
+        }
 
-const updateData = await updateRes.json();
+        const updateData = await updateRes.json();
 
-return NextResponse.json({
-    success: true,
-    message: "CORS Updated Successfully via Native API!",
-    rules: updateData.corsRules
-});
+        return NextResponse.json({
+            success: true,
+            message: "CORS Updated Successfully via Native API!",
+            rules: updateData.corsRules
+        });
 
     } catch (error: any) {
-    console.error("CORS Fix Failed:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-}
+        console.error("CORS Fix Failed:", error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
 }
