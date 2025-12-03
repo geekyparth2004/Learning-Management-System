@@ -162,14 +162,18 @@ export default function AssignmentPage() {
                     }
                 }
 
-                // Parse hints if string
-                if (typeof problemData.hints === 'string') {
+                // Parse hints if string or null
+                let hints: Hint[] = [];
+                if (Array.isArray(problemData.hints)) {
+                    hints = problemData.hints;
+                } else if (typeof problemData.hints === 'string') {
                     try {
-                        problemData.hints = JSON.parse(problemData.hints);
+                        hints = JSON.parse(problemData.hints);
                     } catch (e) {
-                        problemData.hints = [];
+                        hints = [];
                     }
                 }
+                problemData.hints = hints;
 
                 // Ensure startedAt is present (it comes from the API now)
                 const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
