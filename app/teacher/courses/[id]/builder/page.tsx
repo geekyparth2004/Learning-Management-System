@@ -10,7 +10,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE";
     content?: string;
     assignmentId?: string;
 }
@@ -485,6 +485,10 @@ export default function CourseBuilderPage() {
                                                                                     <GripVertical className="text-gray-600 cursor-grab" size={16} />
                                                                                     {item.type === "VIDEO" ? (
                                                                                         <Video size={16} className="text-blue-400" />
+                                                                                    ) : item.type === "WEB_DEV" ? (
+                                                                                        <FileCode size={16} className="text-orange-400" />
+                                                                                    ) : item.type === "LEETCODE" ? (
+                                                                                        <FileCode size={16} className="text-green-400" />
                                                                                     ) : (
                                                                                         <FileCode size={16} className="text-purple-400" />
                                                                                     )}
@@ -518,6 +522,7 @@ export default function CourseBuilderPage() {
                                                                     <option value="AI_INTERVIEW">AI Interview</option>
                                                                     <option value="TEST">Test</option>
                                                                     <option value="WEB_DEV">Coding Assignment (Web Dev)</option>
+                                                                    <option value="LEETCODE">LeetCode Problem</option>
                                                                 </select>
                                                                 <input
                                                                     type="text"
@@ -709,6 +714,22 @@ export default function CourseBuilderPage() {
                                                                                 <p className="text-xs text-gray-500 truncate">{p.description}</p>
                                                                             </div>
                                                                         ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : newItemType === "LEETCODE" ? (
+                                                                <div className="space-y-3 rounded border border-gray-800 p-3">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">LeetCode Problem URL</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="https://leetcode.com/problems/..."
+                                                                            value={newItemContent}
+                                                                            onChange={(e) => setNewItemContent(e.target.value)}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm"
+                                                                        />
+                                                                        <p className="text-xs text-gray-500">
+                                                                            Paste the full URL of the LeetCode problem.
+                                                                        </p>
                                                                     </div>
                                                                 </div>
                                                             ) : null}

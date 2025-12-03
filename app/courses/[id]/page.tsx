@@ -596,7 +596,7 @@ export default function CoursePlayerPage() {
 
                                         <div className="flex flex-col gap-4 w-full max-w-sm">
                                             <a
-                                                href={activeItem.leetcodeUrl}
+                                                href={activeItem.leetcodeUrl || activeItem.content || "#"}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
@@ -614,7 +614,7 @@ export default function CoursePlayerPage() {
                                             </div>
 
                                             <LeetCodeVerifier
-                                                problemSlug={activeItem.leetcodeUrl?.split("/problems/")[1]?.split("/")[0] || ""}
+                                                problemSlug={(activeItem.leetcodeUrl || activeItem.content)?.split("/problems/")[1]?.split("/")[0] || ""}
                                                 onVerified={() => completeItem(activeItem.id)}
                                             />
                                         </div>

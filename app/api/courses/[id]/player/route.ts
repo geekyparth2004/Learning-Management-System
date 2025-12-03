@@ -24,6 +24,15 @@ export async function GET(
                                     include: {
                                         testCases: true
                                     }
+                                },
+                                assignment: {
+                                    include: {
+                                        problems: {
+                                            include: {
+                                                testCases: true
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },

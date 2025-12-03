@@ -34,7 +34,7 @@ export async function POST(
             order: newOrder,
         };
 
-        if (type === "VIDEO") {
+        if (type === "VIDEO" || type === "LEETCODE") {
             itemData.content = content;
         } else if (type === "ASSIGNMENT") {
             // content is expected to be assignmentId
