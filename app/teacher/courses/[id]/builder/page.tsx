@@ -100,7 +100,9 @@ export default function CourseBuilderPage() {
             testCases: problem.testCases,
             hints: JSON.stringify(problem.hints), // Ensure hints are stringified
             defaultCode: JSON.stringify(defaultCode),
-            videoSolution: problem.videoSolution
+            videoSolution: problem.videoSolution,
+            leetcodeUrl: problem.leetcodeUrl,
+            slug: problem.leetcodeUrl ? problem.leetcodeUrl.split("/problems/")[1]?.split("/")[0] : undefined
         };
 
         if (problemBuilderType === "TEST") {

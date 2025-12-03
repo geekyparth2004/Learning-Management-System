@@ -342,6 +342,12 @@ export default function CoursePlayerPage() {
     const activeModule = course.modules.find(m => m.id === activeModuleId);
     const activeItem = activeModule?.items.find(i => i.id === activeItemId);
 
+    console.log("Active Item:", activeItem);
+    if (activeItem?.type === "ASSIGNMENT") {
+        console.log("Assignment Problems:", activeItem.assignment?.problems);
+        console.log("LeetCode URL:", activeItem.assignment?.problems?.[0]?.leetcodeUrl);
+    }
+
     return (
         <div className="flex h-screen bg-[#0e0e0e] text-white">
             {/* Sidebar */}
