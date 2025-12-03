@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Clock, CheckCircle, XCircle, Play, Save, ChevronDown, Lock, Video } from "lucide-react";
-import ComplexityAnalysis from "@/components/ComplexityAnalysis";
+import React, { useState, useEffect } from "react";
+import { Clock, CheckCircle, ChevronDown } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import WebDevEditor from "./WebDevEditor";
@@ -58,17 +57,8 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [output, setOutput] = useState("");
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
 
-    // AI Analysis State
-    const [analysis, setAnalysis] = useState<{
-        timeComplexity: string;
-        spaceComplexity: string;
-        reason: string;
-        suggestion: string;
-    } | null>(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-    // Hints State
-    const [expandedHints, setExpandedHints] = useState<number[]>([]);
+    // Tabs State
+    const [activeTab, setActiveTab] = useState<"editor" | "console" | "results">("editor");
 
     const processedProblems = React.useMemo(() => {
         return problems.map(p => {
@@ -93,21 +83,11 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 };
             }
 
-            let hints = p.hints;
-            if (typeof hints === 'string') {
-                try {
-                    hints = JSON.parse(hints);
-                } catch (e) {
-                    hints = [];
-                }
-            }
-
             return {
                 ...p,
                 type,
                 defaultCode,
                 webDevInitialCode,
-                hints: hints as string[]
             };
         });
     }, [problems]);
@@ -160,29 +140,6 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         return () => clearInterval(timer);
     }, []);
 
-    // AI Analysis Effect
-    useEffect(() => {
-        const code = userCodes[activeProblem.id];
-        const interval = setInterval(async () => {
-            if (!code || activeProblem.type === "WEB_DEV") return;
-            setIsAnalyzing(true);
-            try {
-                const res = await fetch("/api/analyze", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ code, language }),
-                });
-                const data = await res.json();
-                setAnalysis(data);
-            } catch (e) {
-                console.error("Analysis failed", e);
-            } finally {
-                setIsAnalyzing(false);
-            }
-        }, 3000);
-        return () => clearInterval(interval);
-    }, [userCodes[activeProblem.id], language, activeProblem.id]);
-
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -197,18 +154,13 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         setUserCodes(prev => ({ ...prev, [activeProblem.id]: files }));
     };
 
-    const toggleHint = (index: number) => {
-        setExpandedHints(prev =>
-            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
-        );
-    };
-
     const handleRun = async () => {
         if (activeProblem.type === "WEB_DEV") return;
 
         setIsRunning(true);
         setStatus("running");
         setOutput("Running test cases...");
+        setActiveTab("results"); // Switch to results tab
 
         const code = userCodes[activeProblem.id];
         let allPassed = true;
@@ -259,149 +211,218 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         onComplete(passed, score);
     };
 
+    const nextProblem = () => {
+        if (activeProblemIndex < problems.length - 1) {
+            setActiveProblemIndex(prev => prev + 1);
+        }
+    };
+
+    const prevProblem = () => {
+        if (activeProblemIndex > 0) {
+            setActiveProblemIndex(prev => prev - 1);
+        }
+    };
+
     return (
         <div className="flex h-screen flex-col bg-[#0e0e0e] text-white">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-6 py-4">
+                <div className="flex items-center gap-6">
+                    <div>
+                        <h1 className="text-xl font-bold">{activeProblem.title}</h1>
+                        <p className="text-xs text-gray-400">Medium</p>
+                    </div>
+
+                    {/* Navigation */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={prevProblem}
+                            disabled={activeProblemIndex === 0}
+                            className="rounded p-1 hover:bg-gray-800 disabled:opacity-30"
+                        >
+                            <ChevronDown className="rotate-90" size={20} />
+                        </button>
+                        <span className="text-sm font-medium text-gray-400">
+                            Problem {activeProblemIndex + 1}/{problems.length}
+                        </span>
+                        <button
+                            onClick={nextProblem}
+                            disabled={activeProblemIndex === problems.length - 1}
+                            className="rounded p-1 hover:bg-gray-800 disabled:opacity-30"
+                        >
+                            <ChevronDown className="-rotate-90" size={20} />
+                        </button>
+                    </div>
+                </div>
+
                 <div className="flex items-center gap-4">
-                    <h1 className="text-xl font-bold">Coding Test</h1>
                     <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-1 text-sm font-medium text-yellow-400">
                         <Clock size={16} />
                         {formatTime(timeLeft)}
                     </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <select
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value as any)}
-                        className="rounded border border-gray-700 bg-[#1e1e1e] px-3 py-1 text-sm"
-                    >
-                        <option value="java">Java</option>
-                        <option value="python">Python</option>
-                        <option value="cpp">C++</option>
-                    </select>
+
+                    {activeProblem.type !== "WEB_DEV" && (
+                        <select
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value as any)}
+                            className="rounded border border-gray-700 bg-[#1e1e1e] px-3 py-1 text-sm"
+                        >
+                            <option value="java">Java</option>
+                            <option value="python">Python</option>
+                            <option value="cpp">C++</option>
+                        </select>
+                    )}
+
+                    {activeProblem.type !== "WEB_DEV" && (
+                        <button
+                            onClick={handleRun}
+                            disabled={isRunning}
+                            className="rounded bg-blue-600 px-6 py-2 text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            {isRunning ? "Running..." : "Run"}
+                        </button>
+                    )}
+
                     <button
                         onClick={() => handleSubmitTest(false)}
-                        className="rounded bg-green-600 px-4 py-2 text-sm font-bold hover:bg-green-700"
+                        className="rounded bg-green-600 px-6 py-2 text-sm font-bold hover:bg-green-700"
                     >
                         Submit Test
                     </button>
                 </div>
             </div>
 
+            {/* Main Content */}
             <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar: Problems */}
-                <div className="w-64 border-r border-gray-800 bg-[#111111] p-4">
-                    <h3 className="mb-4 font-semibold text-gray-400">Problems</h3>
-                    <div className="space-y-2">
-                        {problems.map((p, idx) => (
+                {activeProblem.type === "WEB_DEV" ? (
+                    <div className="w-full h-full flex flex-col">
+                        <div className="flex-1 overflow-hidden">
+                            <WebDevEditor
+                                files={userCodes[activeProblem.id] as File[] || []}
+                                setFiles={handleWebDevFilesChange}
+                                instructions={activeProblem.webDevInstructions || ""}
+                                activeFileName={activeFileName}
+                                setActiveFileName={setActiveFileName}
+                            />
+                        </div>
+                        <div className="border-t border-gray-800 bg-[#161616] p-2 flex justify-end">
                             <button
-                                key={p.id}
-                                onClick={() => setActiveProblemIndex(idx)}
-                                className={cn(
-                                    "flex w-full items-center justify-between rounded px-3 py-2 text-sm transition-colors",
-                                    activeProblemIndex === idx ? "bg-blue-900/30 text-blue-400" : "text-gray-400 hover:bg-[#1e1e1e]",
-                                    results[p.id] && "text-green-400"
-                                )}
+                                onClick={() => setResults(prev => ({ ...prev, [activeProblem.id]: true }))}
+                                className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-bold hover:bg-blue-700"
                             >
-                                <span>{idx + 1}. {p.title}</span>
-                                {results[p.id] && <CheckCircle size={14} />}
+                                <CheckCircle size={16} /> Mark as Completed
                             </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="flex flex-1 flex-col">
-                    {/* Problem Desc & Hints */}
-                    <div className="h-1/3 overflow-y-auto border-b border-gray-800 p-6">
-                        <div className="space-y-6">
-                            <div>
-                                <h2 className="mb-2 text-xl font-bold">{activeProblem.title}</h2>
-                                <p className="text-gray-300 whitespace-pre-wrap">{activeProblem.description}</p>
-                            </div>
-
-                            {/* AI Analysis */}
-                            <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
-
-                            {/* Hints */}
-                            {activeProblem.hints && activeProblem.hints.length > 0 && (
-                                <div>
-                                    <h3 className="mb-3 text-lg font-semibold">Hints</h3>
-                                    <div className="space-y-2">
-                                        {activeProblem.hints.map((hint, idx) => (
-                                            <div key={idx} className="overflow-hidden rounded-lg border border-gray-800 bg-[#161616]">
-                                                <button
-                                                    onClick={() => toggleHint(idx)}
-                                                    className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-[#1e1e1e]"
-                                                >
-                                                    <span className="text-sm font-medium text-gray-300">Hint {idx + 1}</span>
-                                                    <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
-                                                </button>
-                                                {expandedHints.includes(idx) && (
-                                                    <div className="border-t border-gray-800 bg-[#111111] p-3 text-sm text-gray-300">
-                                                        {hint}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
+                ) : (
+                    <>
+                        {/* Left Panel: Description & Test Cases */}
+                        <div className="w-1/2 flex flex-col border-r border-gray-800">
+                            <div className="flex-1 overflow-y-auto p-6">
+                                <h2 className="mb-4 text-lg font-bold">Problem Description</h2>
+                                <p className="mb-8 text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                    {activeProblem.description}
+                                </p>
 
-                    {/* Editor & Console */}
-                    <div className="flex flex-1 overflow-hidden">
-                        {activeProblem.type === "WEB_DEV" ? (
-                            <div className="w-full h-full flex flex-col">
-                                <div className="flex-1 overflow-hidden">
-                                    <WebDevEditor
-                                        files={userCodes[activeProblem.id] as File[] || []}
-                                        setFiles={handleWebDevFilesChange}
-                                        instructions={activeProblem.webDevInstructions || ""}
-                                        activeFileName={activeFileName}
-                                        setActiveFileName={setActiveFileName}
-                                    />
-                                </div>
-                                <div className="border-t border-gray-800 bg-[#161616] p-2 flex justify-end">
-                                    <button
-                                        onClick={() => setResults(prev => ({ ...prev, [activeProblem.id]: true }))}
-                                        className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-bold hover:bg-blue-700"
-                                    >
-                                        <CheckCircle size={16} /> Mark as Completed
-                                    </button>
+                                <h2 className="mb-4 text-lg font-bold">Test Cases</h2>
+                                <div className="space-y-4">
+                                    {activeProblem.testCases.map((tc, idx) => (
+                                        <div key={idx} className="rounded-lg border border-gray-800 bg-[#161616] p-4">
+                                            <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Case {idx + 1}</div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <div className="text-xs text-gray-500 mb-1">Input:</div>
+                                                    <div className="rounded bg-[#111111] p-2 font-mono text-sm text-gray-300">
+                                                        {tc.input}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-gray-500 mb-1">Expected Output:</div>
+                                                    <div className="rounded bg-[#111111] p-2 font-mono text-sm text-gray-300">
+                                                        {tc.expectedOutput}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ) : (
-                            <>
-                                <div className="w-1/2 border-r border-gray-800 relative">
+                        </div>
+
+                        {/* Right Panel: Editor & Console */}
+                        <div className="w-1/2 flex flex-col bg-[#111111]">
+                            {/* Tabs */}
+                            <div className="flex border-b border-gray-800 bg-[#161616]">
+                                <button
+                                    onClick={() => setActiveTab("editor")}
+                                    className={cn(
+                                        "px-6 py-3 text-sm font-medium transition-colors border-b-2",
+                                        activeTab === "editor" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Editor
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("console")}
+                                    className={cn(
+                                        "px-6 py-3 text-sm font-medium transition-colors border-b-2",
+                                        activeTab === "console" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Console
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("results")}
+                                    className={cn(
+                                        "px-6 py-3 text-sm font-medium transition-colors border-b-2",
+                                        activeTab === "results" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
+                                    )}
+                                >
+                                    Test Results
+                                </button>
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="flex-1 overflow-hidden relative">
+                                <div className={cn("h-full w-full", activeTab === "editor" ? "block" : "hidden")}>
                                     <CodeEditor
                                         language={language}
                                         code={userCodes[activeProblem.id] as string || ""}
                                         onChange={handleCodeChange}
                                     />
-                                    <button
-                                        onClick={handleRun}
-                                        disabled={isRunning}
-                                        className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50"
-                                    >
-                                        <Play size={16} /> Run
-                                    </button>
                                 </div>
-                                <div className="w-1/2 bg-[#111111] p-4 font-mono text-sm">
-                                    <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Output</div>
-                                    <pre className={cn(
-                                        "whitespace-pre-wrap",
-                                        status === "error" ? "text-red-400" : "text-gray-300"
-                                    )}>
+
+                                <div className={cn("h-full w-full p-4 overflow-y-auto", activeTab === "console" ? "block" : "hidden")}>
+                                    <div className="font-mono text-sm text-gray-300 whitespace-pre-wrap">
                                         {output || "Run code to see output..."}
-                                    </pre>
+                                    </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+
+                                <div className={cn("h-full w-full p-4 overflow-y-auto", activeTab === "results" ? "block" : "hidden")}>
+                                    {status === "idle" && (
+                                        <div className="text-gray-500 text-center mt-10">Run your code to see results</div>
+                                    )}
+                                    {status !== "idle" && (
+                                        <div className="space-y-2">
+                                            <div className={cn(
+                                                "p-3 rounded border mb-4",
+                                                status === "success" ? "border-green-900 bg-green-900/20 text-green-400" :
+                                                    status === "error" ? "border-red-900 bg-red-900/20 text-red-400" :
+                                                        "border-blue-900 bg-blue-900/20 text-blue-400"
+                                            )}>
+                                                {status === "running" ? "Running Tests..." :
+                                                    status === "success" ? "All Test Cases Passed!" : "Some Test Cases Failed"}
+                                            </div>
+                                            <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-[#0e0e0e] p-4 rounded border border-gray-800">
+                                                {output}
+                                            </pre>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
