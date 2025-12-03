@@ -615,20 +615,26 @@ export default function CourseBuilderPage() {
                                                             ) : newItemType === "TEST" ? (
                                                                 <div className="space-y-3 rounded border border-gray-800 p-3">
                                                                     <div className="flex gap-2">
-                                                                        <input
-                                                                            type="number"
-                                                                            placeholder="Duration (mins)"
-                                                                            value={testDuration}
-                                                                            onChange={(e) => setTestDuration(parseInt(e.target.value))}
-                                                                            className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                                        />
-                                                                        <input
-                                                                            type="number"
-                                                                            placeholder="Pass %"
-                                                                            value={testPassingScore}
-                                                                            onChange={(e) => setTestPassingScore(parseInt(e.target.value))}
-                                                                            className="w-1/2 rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                                        />
+                                                                        <div className="w-1/2 space-y-1">
+                                                                            <label className="text-xs text-gray-400">Duration (mins)</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                placeholder="Duration (mins)"
+                                                                                value={testDuration}
+                                                                                onChange={(e) => setTestDuration(parseInt(e.target.value))}
+                                                                                className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="w-1/2 space-y-1">
+                                                                            <label className="text-xs text-gray-400">Passing Score (%)</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                placeholder="Pass %"
+                                                                                value={testPassingScore}
+                                                                                onChange={(e) => setTestPassingScore(parseInt(e.target.value))}
+                                                                                className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
+                                                                            />
+                                                                        </div>
                                                                     </div>
 
                                                                     <div className="border-t border-gray-800 pt-2">

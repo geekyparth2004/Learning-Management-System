@@ -10,6 +10,7 @@ interface CodeEditorProps {
     onChange: (value: string | undefined) => void;
     errorLine?: number | null;
     errorMessage?: string | null;
+    readOnly?: boolean;
 }
 
 export default function CodeEditor({
@@ -18,6 +19,7 @@ export default function CodeEditor({
     onChange,
     errorLine,
     errorMessage,
+    readOnly = false,
 }: CodeEditorProps) {
     const editorRef = React.useRef<any>(null);
     const monacoRef = React.useRef<any>(null);
@@ -64,6 +66,7 @@ export default function CodeEditor({
                     scrollBeyondLastLine: false,
                     automaticLayout: true,
                     padding: { top: 16, bottom: 16 },
+                    readOnly: readOnly,
                 }}
             />
         </div>

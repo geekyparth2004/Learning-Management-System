@@ -69,6 +69,7 @@ export default function CoursePlayerPage() {
     const [runStatus, setRunStatus] = useState<"idle" | "running" | "success" | "error">("idle");
     const [isWebDevFullScreen, setIsWebDevFullScreen] = useState(false);
     const [isTestFullScreen, setIsTestFullScreen] = useState(false);
+    const [lastTestResult, setLastTestResult] = useState<{ passed: boolean; score: number } | null>(null);
 
     // Split View State
     const [splitRatio, setSplitRatio] = useState(65); // Default 65% for video
@@ -476,6 +477,22 @@ export default function CoursePlayerPage() {
                                         <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                                             <Code className="h-16 w-16 text-yellow-400" />
                                             <h2 className="text-xl font-bold">Coding Test</h2>
+
+                                            {lastTestResult && (
+                                                <div className={`mb-2 rounded-lg border px-6 py-3 ${lastTestResult.passed
+                                                    ? "border-green-900 bg-green-900/20 text-green-400"
+                                                    : "border-red-900 bg-red-900/20 text-red-400"
+                                                    }`}>
+                                                    <p className="font-bold text-lg">{lastTestResult.passed ? "Test Passed!" : "Test Failed"}</p>
+                                                    <p>Score: {lastTestResult.score.toFixed(1)}%</p>
+                                                    {!lastTestResult.passed && (
+                                                        <p className="text-sm opacity-80 mt-1">
+                                                            Required: {activeItem.testPassingScore || 60}%
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             <p className="text-gray-400">
                                                 You have {activeItem.testDuration || 30} minutes to complete this test.
                                                 <br />
@@ -486,9 +503,9 @@ export default function CoursePlayerPage() {
                                                     setIsTestFullScreen(true);
                                                     document.documentElement.requestFullscreen().catch(err => console.error(err));
                                                 }}
-                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700 transition-colors"
                                             >
-                                                Start Test
+                                                {lastTestResult && !lastTestResult.passed ? "Try Again" : "Start Test"}
                                             </button>
                                         </div>
                                     ) : (
@@ -502,11 +519,9 @@ export default function CoursePlayerPage() {
                                                         document.exitFullscreen().catch(err => console.error(err));
                                                     }
                                                     setIsTestFullScreen(false);
+                                                    setLastTestResult({ passed, score });
                                                     if (passed) {
-                                                        alert(`Test Passed! Score: ${score.toFixed(1)}%`);
                                                         completeItem(activeItem.id);
-                                                    } else {
-                                                        alert(`Test Failed. Score: ${score.toFixed(1)}%. You need ${activeItem.testPassingScore}% to pass.`);
                                                     }
                                                 }}
                                             />
