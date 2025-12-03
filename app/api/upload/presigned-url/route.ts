@@ -12,6 +12,7 @@ const s3Client = new S3Client({
     },
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
+    forcePathStyle: true,
 });
 
 console.log("S3 Config:", {
