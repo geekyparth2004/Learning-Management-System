@@ -507,7 +507,12 @@ export default function CoursePlayerPage() {
                                                 This module contains a web development assignment. Click below to start.
                                             </p>
                                             <button
-                                                onClick={() => setIsWebDevFullScreen(true)}
+                                                onClick={() => {
+                                                    setIsWebDevFullScreen(true);
+                                                    document.documentElement.requestFullscreen().catch(err => {
+                                                        console.error("Error entering fullscreen:", err);
+                                                    });
+                                                }}
                                                 className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
                                             >
                                                 Start Assignment
@@ -520,7 +525,12 @@ export default function CoursePlayerPage() {
                                                 initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
                                                 savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
                                                 onComplete={(submission) => submitWebDev(activeItem.id, submission)}
-                                                onBack={() => setIsWebDevFullScreen(false)}
+                                                onBack={() => {
+                                                    setIsWebDevFullScreen(false);
+                                                    if (document.fullscreenElement) {
+                                                        document.exitFullscreen().catch(err => console.error(err));
+                                                    }
+                                                }}
                                             />
                                         </div>
                                     )
