@@ -439,6 +439,16 @@ export default function CoursePlayerPage() {
                     </div>
                 ) : activeItem ? (
                     <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen || isTestFullScreen ? "max-w-full" : "max-w-4xl"}`}>
+                        {/* GLOBAL DEBUG BANNER */}
+                        <div className="bg-red-900/80 p-4 mb-4 rounded border border-red-500 text-white text-xs font-mono overflow-auto max-h-40">
+                            <strong>DEBUGGER:</strong>
+                            <div>Type: {activeItem.type}</div>
+                            <div>Has Assignment: {activeItem.assignment ? "YES" : "NO"}</div>
+                            <div>Problems: {activeItem.assignment?.problems?.length || 0}</div>
+                            <div>First Problem URL: {activeItem.assignment?.problems?.[0]?.leetcodeUrl || "N/A"}</div>
+                            <div>Raw Problems: {JSON.stringify(activeItem.assignment?.problems || [])}</div>
+                        </div>
+
                         {!isWebDevFullScreen && !isTestFullScreen && (
                             <div className="mb-6 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold">{activeItem.title}</h1>
@@ -557,6 +567,7 @@ export default function CoursePlayerPage() {
                                 ) : activeItem.type === "ASSIGNMENT" ? (
                                     activeItem.assignment?.problems?.[0]?.leetcodeUrl ? (
                                         <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+                                            {/* ... LeetCode UI ... */}
                                             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
                                                 <Code className="h-10 w-10 text-yellow-500" />
                                             </div>
@@ -606,6 +617,17 @@ export default function CoursePlayerPage() {
                                             >
                                                 Start Assignment
                                             </Link>
+
+                                            {/* DEBUG INFO */}
+                                            <div className="mt-8 p-4 bg-gray-900 rounded text-left text-xs font-mono text-gray-500 overflow-auto max-w-lg max-h-40">
+                                                <p className="font-bold text-red-500 mb-2">DEBUG INFO (Send screenshot if LeetCode button is missing):</p>
+                                                <pre>{JSON.stringify({
+                                                    type: activeItem.type,
+                                                    hasAssignment: !!activeItem.assignment,
+                                                    problemsCount: activeItem.assignment?.problems?.length,
+                                                    firstProblem: activeItem.assignment?.problems?.[0]
+                                                }, null, 2)}</pre>
+                                            </div>
                                         </div>
                                     )
                                 ) : activeItem.type === "WEB_DEV" ? (
