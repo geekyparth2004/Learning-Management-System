@@ -21,15 +21,17 @@ interface WebDevPlayerProps {
 }
 
 export default function WebDevPlayer({ instructions, initialCode, savedSubmission, onComplete, onBack }: WebDevPlayerProps) {
-    const [html, setHtml] = useState(savedSubmission?.html || initialCode?.html || "");
-    const [css, setCss] = useState(savedSubmission?.css || initialCode?.css || "");
-    const [js, setJs] = useState(savedSubmission?.js || initialCode?.js || "");
-    const [activeTab, setActiveTab] = useState<"html" | "css" | "js">("html");
+    const [files, setFiles] = useState<{ name: string; language: string; content: string }[]>([
+        { name: "index.html", language: "html", content: savedSubmission?.html || initialCode?.html || "" },
+        { name: "styles.css", language: "css", content: savedSubmission?.css || initialCode?.css || "" },
+        { name: "script.js", language: "javascript", content: savedSubmission?.js || initialCode?.js || "" }
+    ]);
+    const [activeFileName, setActiveFileName] = useState("index.html");
     const [leftPanelTab, setLeftPanelTab] = useState<"problem" | "preview">("problem");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Split View State
-    const [splitRatio, setSplitRatio] = useState(40); // 40% left, 60% right
+    const [splitRatio, setSplitRatio] = useState(40);
     const [isResizing, setIsResizing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -66,20 +68,50 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
         <head>
             <style>
                 html, body { height: 100%; margin: 0; }
-                ${css}
+                ${files.filter(f => f.language === "css").map(f => f.content).join("\n")}
             </style>
         </head>
         <body>
-            ${html}
-            <script>${js}</script>
+            ${files.find(f => f.name === "index.html")?.content || ""}
+            <script>
+                ${files.filter(f => f.language === "javascript").map(f => f.content).join("\n")}
+            </script>
         </body>
         </html>
     `;
 
+    const handleAddFile = () => {
+        const fileName = window.prompt("Enter file name (e.g., about.html, style2.css):");
+        if (!fileName) return;
+
+        if (files.some(f => f.name === fileName)) {
+            alert("File already exists!");
+            return;
+        }
+
+        let language = "plaintext";
+        if (fileName.endsWith(".html")) language = "html";
+        else if (fileName.endsWith(".css")) language = "css";
+        else if (fileName.endsWith(".js")) language = "javascript";
+
+        setFiles([...files, { name: fileName, language, content: "" }]);
+        setActiveFileName(fileName);
+    };
+
+    const updateFileContent = (value: string) => {
+        setFiles(files.map(f => f.name === activeFileName ? { ...f, content: value } : f));
+    };
+
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            await onComplete({ html, css, js });
+            // Map back to expected format for backward compatibility
+            const submission = {
+                html: files.find(f => f.name === "index.html")?.content || "",
+                css: files.find(f => f.name === "styles.css")?.content || "",
+                js: files.find(f => f.name === "script.js")?.content || ""
+            };
+            await onComplete(submission);
         } catch (error) {
             console.error(error);
             alert("Failed to submit");
@@ -87,6 +119,8 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
             setIsSubmitting(false);
         }
     };
+
+    const activeFile = files.find(f => f.name === activeFileName);
 
     return (
         <div className="flex h-full flex-col bg-[#0e0e0e] text-white overflow-hidden" ref={containerRef}>
@@ -159,68 +193,35 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
 
                 {/* Right Panel (Editors) */}
                 <div className="flex flex-col bg-[#1e1e1e]" style={{ width: `calc(${100 - splitRatio}% - 4px)` }}>
-                    <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616]">
+                    <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] overflow-x-auto">
                         <div className="flex">
+                            {files.map(file => (
+                                <button
+                                    key={file.name}
+                                    onClick={() => setActiveFileName(file.name)}
+                                    className={`px-6 py-2 text-sm font-medium transition-colors border-r border-gray-800 whitespace-nowrap ${activeFileName === file.name ? "bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-400" : "bg-[#111111] text-gray-400 hover:text-white"}`}
+                                >
+                                    {file.name}
+                                </button>
+                            ))}
                             <button
-                                onClick={() => setActiveTab("html")}
-                                className={`px-6 py-2 text-sm font-medium transition-colors border-r border-gray-800 ${activeTab === "html" ? "bg-[#1e1e1e] text-orange-400 border-t-2 border-t-orange-400" : "bg-[#111111] text-gray-400 hover:text-white"}`}
+                                onClick={handleAddFile}
+                                className="px-4 py-2 text-gray-400 hover:text-white hover:bg-[#1e1e1e] transition-colors"
+                                title="Add File"
                             >
-                                index.html
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("css")}
-                                className={`px-6 py-2 text-sm font-medium transition-colors border-r border-gray-800 ${activeTab === "css" ? "bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-400" : "bg-[#111111] text-gray-400 hover:text-white"}`}
-                            >
-                                styles.css
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("js")}
-                                className={`px-6 py-2 text-sm font-medium transition-colors border-r border-gray-800 ${activeTab === "js" ? "bg-[#1e1e1e] text-yellow-400 border-t-2 border-t-yellow-400" : "bg-[#111111] text-gray-400 hover:text-white"}`}
-                            >
-                                script.js
+                                +
                             </button>
                         </div>
                     </div>
 
                     <div className="flex-1 relative">
-                        {activeTab === "html" && (
+                        {activeFile && (
                             <Editor
+                                key={activeFile.name} // Force re-mount on file change to ensure correct language/content
                                 height="100%"
-                                defaultLanguage="html"
-                                value={html}
-                                onChange={(value) => setHtml(value || "")}
-                                theme="vs-dark"
-                                options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                    wordWrap: "on",
-                                    automaticLayout: true,
-                                    padding: { top: 16 },
-                                }}
-                            />
-                        )}
-                        {activeTab === "css" && (
-                            <Editor
-                                height="100%"
-                                defaultLanguage="css"
-                                value={css}
-                                onChange={(value) => setCss(value || "")}
-                                theme="vs-dark"
-                                options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                    wordWrap: "on",
-                                    automaticLayout: true,
-                                    padding: { top: 16 },
-                                }}
-                            />
-                        )}
-                        {activeTab === "js" && (
-                            <Editor
-                                height="100%"
-                                defaultLanguage="javascript"
-                                value={js}
-                                onChange={(value) => setJs(value || "")}
+                                language={activeFile.language}
+                                value={activeFile.content}
+                                onChange={(value) => updateFileContent(value || "")}
                                 theme="vs-dark"
                                 options={{
                                     minimap: { enabled: false },
