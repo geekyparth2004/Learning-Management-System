@@ -23,6 +23,7 @@ async function fixCorsNative() {
     const authData = await authRes.json();
     const apiUrl = authData.apiUrl;
     const accountAuthToken = authData.authorizationToken;
+    const accountId = authData.accountId;
     console.log("✅ Authenticated!");
 
     console.log("Updating Bucket CORS...");
@@ -33,14 +34,14 @@ async function fixCorsNative() {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
+            accountId: accountId,
             bucketId: bucketId,
             corsRules: [
                 {
                     corsRuleName: "allow-all",
                     allowedOrigins: [
                         "https://technical-interview-practice.vercel.app",
-                        "http://localhost:3000",
-                        "*"
+                        "http://localhost:3000"
                     ],
                     allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
                     allowedHeaders: ["*"],
