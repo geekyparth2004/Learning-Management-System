@@ -12,6 +12,14 @@ const s3Client = new S3Client({
     },
 });
 
+console.log("S3 Config:", {
+    region: process.env.AWS_REGION,
+    endpoint: process.env.AWS_ENDPOINT,
+    bucket: process.env.AWS_BUCKET_NAME,
+    hasKey: !!process.env.AWS_ACCESS_KEY_ID,
+    hasSecret: !!process.env.AWS_SECRET_ACCESS_KEY
+});
+
 export async function POST(request: Request) {
     try {
         const session = await auth();
