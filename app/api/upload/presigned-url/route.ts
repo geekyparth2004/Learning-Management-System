@@ -30,7 +30,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { filename, contentType } = await request.json();
+        const { filename, contentType, contentLength } = await request.json();
 
         // Create unique key
         const key = `videos/${Date.now()}-${filename.replace(/\s+/g, "-")}`;
@@ -39,6 +39,7 @@ export async function POST(request: Request) {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: key,
             ContentType: contentType,
+            ContentLength: contentLength,
         });
 
         const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });

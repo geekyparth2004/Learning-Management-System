@@ -113,7 +113,7 @@ export default function CourseBuilderPage() {
         setIsProblemBuilderOpen(false);
     };
 
-    const uploadToS3 = async (file: File) => {
+    const uploadToS3 = async (file: File, retries = 3): Promise<string> => {
         let presignedData;
         try {
             const res = await fetch("/api/upload/presigned-url", {
@@ -121,7 +121,8 @@ export default function CourseBuilderPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     filename: file.name,
-                    contentType: file.type
+                    contentType: file.type,
+                    contentLength: file.size
                 })
             });
             if (!res.ok) throw new Error("Failed to get upload URL");
@@ -133,35 +134,50 @@ export default function CourseBuilderPage() {
         const { uploadUrl, publicUrl } = presignedData;
 
         return new Promise<string>((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("PUT", uploadUrl);
-            xhr.setRequestHeader("Content-Type", file.type);
+            const attemptUpload = (retryCount: number) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("PUT", uploadUrl);
+                xhr.setRequestHeader("Content-Type", file.type);
 
-            let lastProgress = 0;
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    const percent = Math.round((event.loaded / event.total) * 100);
-                    if (percent === 0 || percent === 100 || percent >= lastProgress + 5) {
-                        setUploadProgress(percent);
-                        lastProgress = percent;
+                let lastProgress = 0;
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percent = Math.round((event.loaded / event.total) * 100);
+                        if (percent === 0 || percent === 100 || percent >= lastProgress + 5) {
+                            setUploadProgress(percent);
+                            lastProgress = percent;
+                        }
                     }
-                }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(publicUrl);
+                    } else {
+                        console.error("S3 Upload Error:", xhr.responseText);
+                        if (retryCount > 0) {
+                            console.log(`Retrying upload... (${retryCount} attempts left)`);
+                            setTimeout(() => attemptUpload(retryCount - 1), 1000);
+                        } else {
+                            reject(new Error(`Upload failed with status ${xhr.status}`));
+                        }
+                    }
+                };
+
+                xhr.onerror = () => {
+                    console.error("S3 Network Error");
+                    if (retryCount > 0) {
+                        console.log(`Retrying upload... (${retryCount} attempts left)`);
+                        setTimeout(() => attemptUpload(retryCount - 1), 1000);
+                    } else {
+                        reject(new Error("Network error during upload"));
+                    }
+                };
+
+                xhr.send(file);
             };
 
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    resolve(publicUrl);
-                } else {
-                    console.error("S3 Upload Error:", xhr.responseText);
-                    reject(new Error(`Upload failed with status ${xhr.status}`));
-                }
-            };
-
-            xhr.onerror = () => {
-                console.error("S3 Network Error");
-                reject(new Error("Network error during upload"));
-            };
-            xhr.send(file);
+            attemptUpload(retries);
         });
     };
 
