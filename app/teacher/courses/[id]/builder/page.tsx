@@ -154,12 +154,12 @@ export default function CourseBuilderPage() {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         resolve(publicUrl);
                     } else {
-                        console.error("S3 Upload Error:", xhr.responseText);
+                        console.error("S3 Upload Error:", xhr.status, xhr.responseText);
                         if (retryCount > 0) {
                             console.log(`Retrying upload... (${retryCount} attempts left)`);
                             setTimeout(() => attemptUpload(retryCount - 1), 1000);
                         } else {
-                            reject(new Error(`Upload failed with status ${xhr.status}`));
+                            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.statusText}`));
                         }
                     }
                 };
