@@ -5,7 +5,7 @@ export async function GET() {
     try {
         const s3Client = new S3Client({
             region: "auto",
-            endpoint: process.env.AWS_ENDPOINT,
+            endpoint: process.env.AWS_ENDPOINT?.replace(new RegExp(`/${process.env.AWS_BUCKET_NAME}$`), "").replace(/\/$/, ""),
             credentials: {
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,

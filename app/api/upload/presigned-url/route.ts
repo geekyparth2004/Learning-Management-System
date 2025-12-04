@@ -4,8 +4,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/auth";
 
 const s3Client = new S3Client({
-    region: "auto",
-    endpoint: process.env.AWS_ENDPOINT,
+    region: "us-east-1", // R2 requires us-east-1 for S3 compatibility
+    endpoint: process.env.AWS_ENDPOINT?.replace(new RegExp(`/${process.env.AWS_BUCKET_NAME}$`), "").replace(/\/$/, ""),
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
