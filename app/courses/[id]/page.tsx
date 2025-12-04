@@ -118,7 +118,8 @@ export default function CoursePlayerPage() {
     }, [courseId]);
 
     const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
-    const activeItem = course?.modules.find(m => m.id === activeModuleId)?.items.find(i => i.id === activeItemId);
+    const activeModule = course?.modules.find(m => m.id === activeModuleId);
+    const activeItem = activeModule?.items.find(i => i.id === activeItemId);
 
     useEffect(() => {
         const fetchSignedUrl = async () => {
@@ -374,8 +375,7 @@ export default function CoursePlayerPage() {
         );
     }
 
-    const activeModule = course.modules.find(m => m.id === activeModuleId);
-    const activeItem = activeModule?.items.find(i => i.id === activeItemId);
+
 
     console.log("Active Item:", activeItem);
     if (activeItem?.type === "ASSIGNMENT") {
