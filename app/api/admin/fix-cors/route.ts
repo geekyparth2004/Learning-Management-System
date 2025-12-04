@@ -1,72 +1,38 @@
 import { NextResponse } from "next/server";
-
-const keyId = "7fefe6aee55b";
-const applicationKey = "00592621332427b97436be42ed614428513660e32d";
-const bucketId = "47ff2e7f3e16ea5e9ea5051b";
+import { S3Client, PutBucketCorsCommand } from "@aws-sdk/client-s3";
 
 export async function GET() {
     try {
-        console.log("Authenticating with B2 Native API...");
-
-        // Manual Base64 encoding
-        const authString = Buffer.from(keyId + ":" + applicationKey).toString("base64");
-
-        const authRes = await fetch("https://api.backblazeb2.com/b2api/v2/b2_authorize_account", {
-            headers: {
-                "Authorization": "Basic " + authString
-            }
-        });
-
-        if (!authRes.ok) {
-            const errorText = await authRes.text();
-            console.error("Auth Failed:", errorText);
-            return NextResponse.json({ success: false, error: "Auth Failed", details: errorText }, { status: 500 });
-        }
-
-        const authData = await authRes.json();
-        const apiUrl = authData.apiUrl;
-        const accountAuthToken = authData.authorizationToken;
-        const accountId = authData.accountId;
-
-        console.log("Updating Bucket CORS...");
-        const updateRes = await fetch(apiUrl + "/b2api/v2/b2_update_bucket", {
-            method: "POST",
-            headers: {
-                "Authorization": accountAuthToken,
-                "Content-Type": "application/json"
+        const s3Client = new S3Client({
+            region: "auto",
+            endpoint: process.env.AWS_ENDPOINT,
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
             },
-            body: JSON.stringify({
-                accountId: accountId,
-                bucketId: bucketId,
-                corsRules: [
+            forcePathStyle: true,
+        });
+
+        const command = new PutBucketCorsCommand({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            CORSConfiguration: {
+                CORSRules: [
                     {
-                        corsRuleName: "allow-all",
-                        allowedOrigins: ["*"],
-                        allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
-                        allowedHeaders: ["*"],
-                        exposeHeaders: ["ETag"],
-                        maxAgeSeconds: 3600
-                    }
-                ]
-            })
+                        AllowedHeaders: ["*"],
+                        AllowedMethods: ["GET", "PUT", "POST", "DELETE", "HEAD"],
+                        AllowedOrigins: ["*"],
+                        ExposeHeaders: ["ETag"],
+                        MaxAgeSeconds: 3600,
+                    },
+                ],
+            },
         });
 
-        if (!updateRes.ok) {
-            const errorText = await updateRes.text();
-            console.error("Update Failed:", errorText);
-            return NextResponse.json({ success: false, error: "Update Failed", details: errorText }, { status: 500 });
-        }
+        await s3Client.send(command);
 
-        const updateData = await updateRes.json();
-
-        return NextResponse.json({
-            success: true,
-            message: "CORS Updated Successfully via Native API!",
-            rules: updateData.corsRules
-        });
-
+        return NextResponse.json({ success: true, message: "CORS Updated Successfully for R2!" });
     } catch (error: any) {
-        console.error("CORS Fix Failed:", error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        console.error("CORS Update Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
