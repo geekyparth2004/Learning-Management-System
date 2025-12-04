@@ -117,6 +117,32 @@ export default function CoursePlayerPage() {
         fetchCourseData();
     }, [courseId]);
 
+    const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
+    const activeItem = course?.modules.find(m => m.id === activeModuleId)?.items.find(i => i.id === activeItemId);
+
+    useEffect(() => {
+        const fetchSignedUrl = async () => {
+            if (activeItem?.type === "VIDEO" && activeItem.content && !activeItem.content.includes("cloudinary.com") && !activeItem.content.includes("youtube")) {
+                try {
+                    const res = await fetch("/api/video/sign", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: activeItem.content })
+                    });
+                    const data = await res.json();
+                    if (data.signedUrl) {
+                        setSignedVideoUrl(data.signedUrl);
+                    }
+                } catch (e) {
+                    console.error("Failed to sign video URL", e);
+                }
+            } else {
+                setSignedVideoUrl(null);
+            }
+        };
+        fetchSignedUrl();
+    }, [activeItem]);
+
     // Timer Logic
     useEffect(() => {
         if (!course || !activeModuleId) return;
@@ -482,9 +508,9 @@ export default function CoursePlayerPage() {
                             >
                                 {activeItem.type === "VIDEO" ? (
                                     <div className="h-full w-full bg-black flex items-center justify-center">
-                                        {activeItem.content?.includes("cloudinary.com") ? (
+                                        {activeItem.content?.includes("cloudinary.com") || activeItem.content?.includes("r2.cloudflarestorage.com") || activeItem.content?.includes("backblazeb2.com") || activeItem.content?.endsWith(".mp4") ? (
                                             <video
-                                                src={activeItem.content}
+                                                src={signedVideoUrl || activeItem.content}
                                                 controls
                                                 playsInline
                                                 className="max-h-full max-w-full object-contain"
