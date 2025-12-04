@@ -290,6 +290,24 @@ export default function CourseBuilderPage() {
                 }
                 const assignment = await assignRes.json();
                 content = assignment.id;
+            } else if (newItemType === "LEETCODE") {
+                let videoUrl = undefined;
+                if (videoFile) {
+                    setIsUploading(true);
+                    try {
+                        videoUrl = await uploadToS3(videoFile);
+                    } catch (error: any) {
+                        console.error("Upload failed:", error);
+                        setIsUploading(false);
+                        alert(`Failed to upload video: ${error.message}`);
+                        return;
+                    }
+                    setIsUploading(false);
+                }
+                content = JSON.stringify({
+                    leetcodeUrl: newItemContent,
+                    videoSolution: videoUrl
+                });
             }
 
             const res = await fetch(`/api/modules/${activeModuleId}/items`, {
@@ -743,6 +761,55 @@ export default function CourseBuilderPage() {
                                                                         <p className="text-xs text-gray-500">
                                                                             Paste the full URL of the LeetCode problem.
                                                                         </p>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Solution Video (Optional)</label>
+                                                                        <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
+                                                                            <input
+                                                                                type="file"
+                                                                                accept="video/*"
+                                                                                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                                                                                className="hidden"
+                                                                                id="leetcode-video-upload"
+                                                                            />
+                                                                            {videoFile ? (
+                                                                                <div className="w-full space-y-2">
+                                                                                    <video
+                                                                                        src={URL.createObjectURL(videoFile)}
+                                                                                        controls
+                                                                                        className="max-h-[200px] w-full rounded bg-black"
+                                                                                    />
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <span className="text-sm font-medium text-blue-400">{videoFile.name}</span>
+                                                                                        <label
+                                                                                            htmlFor="leetcode-video-upload"
+                                                                                            className="cursor-pointer text-xs text-gray-400 hover:text-white"
+                                                                                        >
+                                                                                            Change
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <label
+                                                                                    htmlFor="leetcode-video-upload"
+                                                                                    className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
+                                                                                >
+                                                                                    <Upload className="h-6 w-6" />
+                                                                                    <span className="text-xs">Upload Solution Video</span>
+                                                                                </label>
+                                                                            )}
+                                                                        </div>
+                                                                        {uploadProgress > 0 && (
+                                                                            <div className="flex items-center gap-2">
+                                                                                <div className="h-1 flex-1 overflow-hidden rounded-full bg-gray-800">
+                                                                                    <div
+                                                                                        className="h-full bg-blue-500 transition-all duration-300"
+                                                                                        style={{ width: `${uploadProgress}%` }}
+                                                                                    />
+                                                                                </div>
+                                                                                <span className="text-xs text-gray-400">{uploadProgress}%</span>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             ) : null}

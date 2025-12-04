@@ -118,11 +118,13 @@ export default function CoursePlayerPage() {
     }, [courseId]);
 
     const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
+    const [signedSolutionUrl, setSignedSolutionUrl] = useState<string | null>(null);
     const activeModule = course?.modules.find(m => m.id === activeModuleId);
     const activeItem = activeModule?.items.find(i => i.id === activeItemId);
 
     useEffect(() => {
         const fetchSignedUrl = async () => {
+            // Sign main video content
             if (activeItem?.type === "VIDEO" && activeItem.content && !activeItem.content.includes("cloudinary.com") && !activeItem.content.includes("youtube")) {
                 try {
                     const res = await fetch("/api/video/sign", {
@@ -139,6 +141,26 @@ export default function CoursePlayerPage() {
                 }
             } else {
                 setSignedVideoUrl(null);
+            }
+
+            // Sign solution video content
+            const solutionUrl = activeItem?.assignment?.problems?.[0]?.videoSolution;
+            if (activeItem?.type === "LEETCODE" && solutionUrl && !solutionUrl.includes("cloudinary.com") && !solutionUrl.includes("youtube")) {
+                try {
+                    const res = await fetch("/api/video/sign", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url: solutionUrl })
+                    });
+                    const data = await res.json();
+                    if (data.signedUrl) {
+                        setSignedSolutionUrl(data.signedUrl);
+                    }
+                } catch (e) {
+                    console.error("Failed to sign solution URL", e);
+                }
+            } else {
+                setSignedSolutionUrl(null);
             }
         };
         fetchSignedUrl();
@@ -751,9 +773,9 @@ export default function CoursePlayerPage() {
                                                                     <div className="space-y-2">
                                                                         <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
                                                                         <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-                                                                            {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") ? (
+                                                                            {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.includes("r2.cloudflarestorage.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.endsWith(".mp4") ? (
                                                                                 <video
-                                                                                    src={activeItem.assignment?.problems?.[0]?.videoSolution}
+                                                                                    src={signedSolutionUrl || activeItem.assignment?.problems?.[0]?.videoSolution}
                                                                                     controls
                                                                                     className="h-full w-full object-contain"
                                                                                 />

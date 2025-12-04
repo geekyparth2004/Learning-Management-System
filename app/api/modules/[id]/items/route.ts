@@ -34,8 +34,32 @@ export async function POST(
             order: newOrder,
         };
 
-        if (type === "VIDEO" || type === "LEETCODE") {
+        if (type === "VIDEO") {
             itemData.content = content;
+        } else if (type === "LEETCODE") {
+            try {
+                const { leetcodeUrl, videoSolution } = JSON.parse(content);
+
+                const assignment = await db.assignment.create({
+                    data: {
+                        title: title,
+                        problems: {
+                            create: {
+                                title: title,
+                                description: "LeetCode Problem",
+                                leetcodeUrl: leetcodeUrl,
+                                videoSolution: videoSolution,
+                                difficulty: "Medium"
+                            }
+                        }
+                    }
+                });
+
+                itemData.assignmentId = assignment.id;
+            } catch (e) {
+                // Fallback: treat content as direct URL (legacy)
+                itemData.content = content;
+            }
         } else if (type === "ASSIGNMENT") {
             // content is expected to be assignmentId
             itemData.assignmentId = content;
