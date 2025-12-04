@@ -132,6 +132,7 @@ export default function CourseBuilderPage() {
         }
 
         const { uploadUrl, publicUrl } = presignedData;
+        console.log("Generated Upload URL:", uploadUrl);
 
         return new Promise<string>((resolve, reject) => {
             const attemptUpload = (retryCount: number) => {

@@ -41,11 +41,7 @@ export async function GET() {
                 corsRules: [
                     {
                         corsRuleName: "allow-all",
-                        allowedOrigins: [
-                            "https://technical-interview-practice.vercel.app",
-                            "https://www.technical-interview-practice.vercel.app",
-                            "http://localhost:3000"
-                        ],
+                        allowedOrigins: ["*"],
                         allowedOperations: ["s3_head", "s3_put", "s3_post", "s3_get", "s3_delete"],
                         allowedHeaders: ["*"],
                         exposeHeaders: ["ETag"],

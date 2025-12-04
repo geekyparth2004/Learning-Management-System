@@ -4,7 +4,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/auth";
 
 const s3Client = new S3Client({
-    region: "us-east-1", // Force us-east-1 for B2 compatibility
+    region: process.env.AWS_REGION || "us-east-005",
     endpoint: (process.env.AWS_ENDPOINT || "https://s3.us-east-005.backblazeb2.com").replace(/\/$/, ""),
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
