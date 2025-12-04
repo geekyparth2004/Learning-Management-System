@@ -144,8 +144,13 @@ export default function CoursePlayerPage() {
             }
 
             // Sign solution video content
-            const solutionUrl = activeItem?.assignment?.problems?.[0]?.videoSolution;
-            if (activeItem?.type === "LEETCODE" && solutionUrl && !solutionUrl.includes("cloudinary.com") && !solutionUrl.includes("youtube")) {
+            const solutionUrl = activeItem?.type === "LEETCODE"
+                ? activeItem?.assignment?.problems?.[0]?.videoSolution
+                : activeItem?.type === "WEB_DEV"
+                    ? activeItem?.content
+                    : null;
+
+            if (solutionUrl && !solutionUrl.includes("cloudinary.com") && !solutionUrl.includes("youtube")) {
                 try {
                     const res = await fetch("/api/video/sign", {
                         method: "POST",

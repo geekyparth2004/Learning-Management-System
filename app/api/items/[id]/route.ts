@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { deleteFromR2 } from "@/lib/s3";
 
 export async function DELETE(
     req: Request,
@@ -16,6 +17,30 @@ export async function DELETE(
 
         if (!id) {
             return NextResponse.json({ error: "Missing item ID" }, { status: 400 });
+        }
+
+        // Fetch item to get content URL
+        const item = await db.moduleItem.findUnique({
+            where: { id },
+            include: {
+                assignment: {
+                    include: {
+                        problems: true
+                    }
+                }
+            }
+        });
+
+        if (item) {
+            // Delete video file if it exists
+            if (item.type === "VIDEO" && item.content) {
+                await deleteFromR2(item.content);
+            }
+
+            // Delete LeetCode solution video if it exists
+            if (item.type === "LEETCODE" && item.assignment?.problems?.[0]?.videoSolution) {
+                await deleteFromR2(item.assignment.problems[0].videoSolution);
+            }
         }
 
         // Delete the item

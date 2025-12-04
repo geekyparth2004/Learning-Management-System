@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { deleteFromR2 } from "@/lib/s3";
 
 export async function DELETE(
     req: Request,
@@ -24,6 +25,42 @@ export async function DELETE(
 
         if (course.teacherId !== session.user.id) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        // Fetch course with modules and items to delete files
+        const courseToDelete = await db.course.findUnique({
+            where: { id },
+            include: {
+                modules: {
+                    include: {
+                        items: {
+                            include: {
+                                assignment: {
+                                    include: {
+                                        problems: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (courseToDelete) {
+            for (const module of courseToDelete.modules) {
+                for (const item of module.items) {
+                    // Delete video file if it exists
+                    if (item.type === "VIDEO" && item.content) {
+                        await deleteFromR2(item.content);
+                    }
+
+                    // Delete LeetCode solution video if it exists
+                    if (item.type === "LEETCODE" && item.assignment?.problems?.[0]?.videoSolution) {
+                        await deleteFromR2(item.assignment.problems[0].videoSolution);
+                    }
+                }
+            }
         }
 
         await db.course.delete({

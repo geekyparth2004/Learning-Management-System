@@ -266,13 +266,27 @@ export default function CourseBuilderPage() {
                     problems: testProblems
                 });
             } else if (newItemType === "WEB_DEV") {
+                let videoUrl = undefined;
+                if (videoFile) {
+                    setIsUploading(true);
+                    try {
+                        videoUrl = await uploadToS3(videoFile);
+                    } catch (error: any) {
+                        console.error("Upload failed:", error);
+                        setIsUploading(false);
+                        alert(`Failed to upload video: ${error.message}`);
+                        return;
+                    }
+                    setIsUploading(false);
+                }
                 content = JSON.stringify({
                     instructions: webDevInstructions,
                     initialCode: {
                         html: webDevHtml,
                         css: webDevCss,
                         js: webDevJs
-                    }
+                    },
+                    videoSolution: videoUrl
                 });
             } else if (newItemType === "ASSIGNMENT") {
                 const formData = new FormData();

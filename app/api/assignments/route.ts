@@ -24,8 +24,8 @@ export async function POST(request: Request) {
             const p = problems[i];
             let videoPath = null;
 
-            // Check if hints contain a video URL (usually the last hint)
-            if (p.hints && Array.isArray(p.hints)) {
+            // Check if hints contain a video URL (legacy support)
+            if (!p.videoSolution && p.hints && Array.isArray(p.hints)) {
                 const lastHint = p.hints[p.hints.length - 1];
                 if (typeof lastHint === "string" && (lastHint.startsWith("http") || lastHint.startsWith("https"))) {
                     videoPath = lastHint;
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
             processedProblems.push({
                 ...p,
-                videoSolution: videoPath
+                videoSolution: p.videoSolution || videoPath
             });
         }
 

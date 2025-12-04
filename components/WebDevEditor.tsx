@@ -16,10 +16,11 @@ interface WebDevEditorProps {
     instructions: string;
     activeFileName: string;
     setActiveFileName: (name: string) => void;
+    videoSolution?: string;
 }
 
-export default function WebDevEditor({ files, setFiles, instructions, activeFileName, setActiveFileName }: WebDevEditorProps) {
-    const [leftPanelTab, setLeftPanelTab] = useState<"problem" | "preview">("problem");
+export default function WebDevEditor({ files, setFiles, instructions, activeFileName, setActiveFileName, videoSolution }: WebDevEditorProps) {
+    const [leftPanelTab, setLeftPanelTab] = useState<"problem" | "preview" | "solution">("problem");
     const [splitRatio, setSplitRatio] = useState(40);
     const [isResizing, setIsResizing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +111,14 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                     >
                         Live Preview
                     </button>
+                    {videoSolution && (
+                        <button
+                            onClick={() => setLeftPanelTab("solution")}
+                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "solution" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
+                        >
+                            Solution
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -118,7 +127,7 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                             <h3 className="text-lg font-bold mb-4">Instructions</h3>
                             <div className="whitespace-pre-wrap text-gray-300">{instructions}</div>
                         </div>
-                    ) : (
+                    ) : leftPanelTab === "preview" ? (
                         <div className="h-full w-full bg-white">
                             <iframe
                                 srcDoc={srcDoc}
@@ -126,6 +135,25 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                                 sandbox="allow-scripts"
                                 className="h-full w-full border-0"
                             />
+                        </div>
+                    ) : (
+                        <div className="p-6">
+                            <h3 className="text-lg font-bold mb-4">Solution Video</h3>
+                            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                {videoSolution?.includes("cloudinary.com") || videoSolution?.includes("r2.cloudflarestorage.com") || videoSolution?.endsWith(".mp4") ? (
+                                    <video
+                                        src={videoSolution}
+                                        controls
+                                        className="h-full w-full object-contain"
+                                    />
+                                ) : (
+                                    <iframe
+                                        src={videoSolution?.replace("watch?v=", "embed/")}
+                                        className="h-full w-full"
+                                        allowFullScreen
+                                    />
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

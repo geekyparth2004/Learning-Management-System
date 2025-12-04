@@ -74,11 +74,30 @@ export async function POST(
                 return NextResponse.json({ error: "Invalid AI Interview config" }, { status: 400 });
             }
         } else if (type === "WEB_DEV") {
-            // content is expected to be JSON string: { instructions, initialCode }
+            // content is expected to be JSON string: { instructions, initialCode, videoSolution }
             try {
-                const { instructions, initialCode } = JSON.parse(content);
+                const { instructions, initialCode, videoSolution } = JSON.parse(content);
                 itemData.webDevInstructions = instructions;
                 itemData.webDevInitialCode = JSON.stringify(initialCode);
+                // We'll store videoSolution in the content field as a JSON string since there's no dedicated column
+                // Or we can add a column. But wait, itemData.content is overwritten below if we don't set it.
+                // Actually, for WEB_DEV, content IS the JSON string.
+                // The DB schema has webDevInstructions and webDevInitialCode columns, but content column is also there.
+                // Let's check how it's used.
+                // In the frontend player, it uses webDevInstructions/InitialCode columns.
+                // But we are passing `content` as JSON string from frontend.
+                // The backend parses it and sets specific columns.
+                // But `content` column is also set?
+                // Let's look at lines 92-94: `const item = await db.moduleItem.create({ data: itemData });`
+                // `itemData` has `webDevInstructions` etc.
+                // Does it have `content`?
+                // Lines 37-38 set `content` for VIDEO/LEETCODE.
+                // For WEB_DEV, `content` is NOT set in `itemData` in the original code.
+                // So we need to store `videoSolution` somewhere.
+                // Since we don't have a column, and `content` is available (and unused for WEB_DEV in DB?), we can use `content` to store the video URL.
+                // OR we can just store the whole JSON in `content` as a backup/extensibility.
+                // Let's store the video URL in `content` field for WEB_DEV items.
+                itemData.content = videoSolution;
             } catch (e) {
                 return NextResponse.json({ error: "Invalid Web Dev config" }, { status: 400 });
             }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { signR2Url } from "@/lib/s3";
 
 import { auth } from "@/auth";
 
@@ -69,23 +70,32 @@ export async function GET(
         console.log("Transforming assignment data...");
         const courseId = assignment.moduleItems[0]?.module?.courseId;
 
-        const problems = assignment.problems.map((p) => {
+        const problems = await Promise.all(assignment.problems.map(async (p) => {
             try {
                 const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
-                const processedHints = hintsRaw.map((hintContent: string, index: number) => {
+                const processedHints = await Promise.all(hintsRaw.map(async (hintContent: string, index: number) => {
                     // Unlock schedule: 5, 10, 15, 20 minutes
                     const unlockThreshold = (index + 1) * 5;
                     const isUnlocked = isTeacher || minutesElapsed >= unlockThreshold;
                     const unlockTime = new Date(startedAt.getTime() + unlockThreshold * 60 * 1000);
 
+                    let content = hintContent;
+                    if (index === 3 && p.videoSolution) {
+                        content = p.videoSolution;
+                        // Sign URL if it's an R2 URL and unlocked
+                        if (isUnlocked) {
+                            content = await signR2Url(content);
+                        }
+                    }
+
                     return {
                         id: index,
                         type: index === 3 && p.videoSolution ? "video" : "text",
-                        content: isUnlocked ? (index === 3 && p.videoSolution ? p.videoSolution : hintContent) : null,
+                        content: isUnlocked ? content : null,
                         locked: !isUnlocked,
                         unlockTime: unlockTime.toISOString(),
                     };
-                });
+                }));
 
                 return {
                     ...p,
@@ -96,7 +106,7 @@ export async function GET(
                 console.error(`Error processing problem ${p.id}:`, err);
                 return p; // Return raw problem if processing fails
             }
-        });
+        }));
 
         const transformedAssignment = {
             ...assignment,

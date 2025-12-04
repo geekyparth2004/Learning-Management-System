@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { deleteFromR2 } from "@/lib/s3";
 
 export async function DELETE(
     req: Request,
@@ -18,10 +19,37 @@ export async function DELETE(
             return NextResponse.json({ error: "Missing module ID" }, { status: 400 });
         }
 
+        // Fetch module and items to delete files
+        const moduleToDelete = await db.module.findUnique({
+            where: { id },
+            include: {
+                items: {
+                    include: {
+                        assignment: {
+                            include: {
+                                problems: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (moduleToDelete) {
+            for (const item of moduleToDelete.items) {
+                // Delete video file if it exists
+                if (item.type === "VIDEO" && item.content) {
+                    await deleteFromR2(item.content);
+                }
+
+                // Delete LeetCode solution video if it exists
+                if (item.type === "LEETCODE" && item.assignment?.problems?.[0]?.videoSolution) {
+                    await deleteFromR2(item.assignment.problems[0].videoSolution);
+                }
+            }
+        }
+
         // Delete the module
-        // Prisma handles cascading deletes if configured in schema, 
-        // otherwise we might need to delete items first. 
-        // Assuming standard cascade or simple delete for now.
         const deletedModule = await db.module.delete({
             where: {
                 id: id,

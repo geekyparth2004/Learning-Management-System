@@ -16,11 +16,12 @@ interface WebDevPlayerProps {
         css: string;
         js: string;
     };
+    videoSolution?: string;
     onComplete: (submission: any) => void;
     onBack?: () => void;
 }
 
-export default function WebDevPlayer({ instructions, initialCode, savedSubmission, onComplete, onBack }: WebDevPlayerProps) {
+export default function WebDevPlayer({ instructions, initialCode, savedSubmission, videoSolution, onComplete, onBack }: WebDevPlayerProps) {
     const [files, setFiles] = useState<{ name: string; language: string; content: string }[]>([
         { name: "index.html", language: "html", content: savedSubmission?.html || initialCode?.html || "" },
         { name: "styles.css", language: "css", content: savedSubmission?.css || initialCode?.css || "" },
@@ -154,6 +155,7 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
                 instructions={instructions}
                 activeFileName={activeFileName}
                 setActiveFileName={setActiveFileName}
+                videoSolution={videoSolution}
             />
         </div>
     );
