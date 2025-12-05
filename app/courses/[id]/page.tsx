@@ -670,16 +670,7 @@ export default function CoursePlayerPage() {
                                                 Start Assignment
                                             </Link>
 
-                                            {/* DEBUG INFO */}
-                                            <div className="mt-8 p-4 bg-gray-900 rounded text-left text-xs font-mono text-gray-500 overflow-auto max-w-lg max-h-40">
-                                                <p className="font-bold text-red-500 mb-2">DEBUG INFO (Send screenshot if LeetCode button is missing):</p>
-                                                <pre>{JSON.stringify({
-                                                    type: activeItem.type,
-                                                    hasAssignment: !!activeItem.assignment,
-                                                    problemsCount: activeItem.assignment?.problems?.length,
-                                                    firstProblem: activeItem.assignment?.problems?.[0]
-                                                }, null, 2)}</pre>
-                                            </div>
+
                                         </div>
                                     )
                                 ) : activeItem.type === "WEB_DEV" ? (
