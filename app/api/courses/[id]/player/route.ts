@@ -82,14 +82,16 @@ export async function GET(
 
                     // Unlock first module if enrolled and no progress
                     if (index === 0 && !progress) {
-                        status = "LOCKED"; // Will be unlocked by user action or default logic?
-                        // Actually, let's say first module is unlocked but not started
-                        // But wait, we want "Start Module" button. So status could be "LOCKED" but accessible?
-                        // Let's use logic: If previous module completed, this one is UNLOCKED (but maybe not IN_PROGRESS).
-                        // For simplicity, let's say "LOCKED" means not accessible. "IN_PROGRESS" means accessible/started.
-                        // We need a state for "UNLOCKED but not STARTED".
-                        // Let's stick to: LOCKED, IN_PROGRESS, COMPLETED.
-                        // If index 0, it should be IN_PROGRESS (or at least unlocked).
+                        status = "IN_PROGRESS";
+                    }
+
+                    // Check validation: If previous module is completed, this one should be unlocked
+                    if (index > 0) {
+                        const prevModuleId = course.modules[index - 1].id;
+                        const prevProgress = moduleProgress.find(mp => mp.moduleId === prevModuleId);
+                        if (prevProgress?.status === "COMPLETED" && status === "LOCKED") {
+                            status = "IN_PROGRESS";
+                        }
                     }
 
                     // Map items
