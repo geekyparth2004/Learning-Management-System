@@ -27,7 +27,10 @@ model User {
   moduleItemProgress ModuleItemProgress[]
   submissions        Submission[]
   assignmentProgress AssignmentProgress[]
+
   notifications      Notification[]
+  contestRegistrations ContestRegistration[]
+  contestSubmissions   ContestSubmission[]
   
   createdAt          DateTime             @default(now())
   updatedAt          DateTime?            @updatedAt
@@ -253,4 +256,87 @@ model Notification {
   link        String?  // URL to view submission
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+model Contest {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        String   // "INTERNAL" | "EXTERNAL"
+  
+  // Timings
+  startTime   DateTime
+  endTime     DateTime
+
+  // External
+  platformName String?
+  contestLink  String?
+
+  // Internal
+  problems      ContestProblem[]
+  registrations ContestRegistration[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContestProblem {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  difficulty  String   @default("Medium")
+  slug        String?
+
+  // Code
+  defaultCode String?  // JSON
+  // No hints for contest
+  
+  contestId   String
+  contest     Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  testCases   ContestTestCase[]
+  submissions ContestSubmission[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContestTestCase {
+  id             String         @id @default(cuid())
+  input          String
+  expectedOutput String
+  isHidden       Boolean        @default(false)
+  
+  problemId      String
+  problem        ContestProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model ContestRegistration {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contestId String
+  contest   Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  
+  score     Int      @default(0)
+  
+  joinedAt  DateTime @default(now())
+
+  @@unique([userId, contestId])
+}
+
+model ContestSubmission {
+  id        String   @id @default(cuid())
+  code      String
+  language  String
+  status    String   // "PASSED" | "FAILED"
+  passed    Boolean  @default(false)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  problemId String
+  problem   ContestProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
 }

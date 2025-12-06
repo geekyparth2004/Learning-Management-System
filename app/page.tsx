@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, LogIn, LogOut, User } from "lucide-react";
+import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import GitHubConnect from "@/components/GitHubConnect";
 
@@ -55,7 +55,7 @@ export default async function Home() {
 
         <div className="flex flex-col items-center justify-center gap-6">
           {isTeacher ? (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Link
                 href="/teacher/courses/create"
                 className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
@@ -81,20 +81,48 @@ export default async function Home() {
                   <p className="text-sm text-gray-400">Browse and manage existing courses.</p>
                 </div>
               </Link>
+
+              <Link
+                href="/teacher/contest"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-orange-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-orange-900/20 p-4 text-orange-400 transition-colors group-hover:bg-orange-500 group-hover:text-white">
+                  <Trophy className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Manage Contests</h3>
+                  <p className="text-sm text-gray-400">Create and monitor coding contests.</p>
+                </div>
+              </Link>
             </div>
           ) : (
-            <Link
-              href="/courses"
-              className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
-            >
-              <div className="rounded-full bg-blue-900/20 p-4 text-blue-400 transition-colors group-hover:bg-blue-500 group-hover:text-white">
-                <BookOpen className="h-8 w-8" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">Browse Courses</h3>
-                <p className="text-sm text-gray-400">Explore available courses and start learning.</p>
-              </div>
-            </Link>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Link
+                href="/courses"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-blue-900/20 p-4 text-blue-400 transition-colors group-hover:bg-blue-500 group-hover:text-white">
+                  <BookOpen className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Browse Courses</h3>
+                  <p className="text-sm text-gray-400">Explore available courses and start learning.</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/contest"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-orange-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-orange-900/20 p-4 text-orange-400 transition-colors group-hover:bg-orange-500 group-hover:text-white">
+                  <GraduationCap className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Contests</h3>
+                  <p className="text-sm text-gray-400">Participate in coding challenges and compete.</p>
+                </div>
+              </Link>
+            </div>
           )}
         </div>
       </div>
