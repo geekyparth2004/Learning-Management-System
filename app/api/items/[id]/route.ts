@@ -41,6 +41,14 @@ export async function DELETE(
             if (item.type === "LEETCODE" && item.assignment?.problems?.[0]?.videoSolution) {
                 await deleteFromR2(item.assignment.problems[0].videoSolution);
             }
+
+            // Cleanup Assignment if it exists
+            if (item.assignmentId) {
+                // Delete the assignment record (Cascade will handle problems/test cases)
+                await db.assignment.delete({
+                    where: { id: item.assignmentId }
+                });
+            }
         }
 
         // Delete the item
