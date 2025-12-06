@@ -59,7 +59,7 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
 
     // Decide what to render
     if (isActive && registration) {
-        const MAX_SAFE_PROBLEMS = contest.problems.map(p => ({
+        const MAX_SAFE_PROBLEMS = contest.problems.map((p: any) => ({
             ...p,
             testCases: p.testCases.map((tc: any) => ({
                 ...tc,
@@ -73,7 +73,7 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
     }
 
     // Otherwise -> LOBBY (Join, Wait, or Ended)
-    let leaderboard = null;
+    let leaderboard: any[] | undefined = undefined;
     if (isEnded && contest.type === "INTERNAL") {
         leaderboard = await db.contestRegistration.findMany({
             where: { contestId: id },
