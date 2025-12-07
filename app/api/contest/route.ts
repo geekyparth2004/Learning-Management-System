@@ -10,7 +10,7 @@ export async function POST(req: Request) {
         }
 
         const data = await req.json();
-        const { title, description, type, startTime, endTime, platformName, contestLink } = data;
+        const { title, description, type, startTime, endTime, duration, platformName, contestLink } = data;
 
         if (!title || !startTime || !endTime || !type) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
                 type,
                 startTime: new Date(startTime),
                 endTime: new Date(endTime),
+                duration: duration ? parseInt(duration) : null,
                 platformName: type === "EXTERNAL" ? platformName : null,
                 contestLink: type === "EXTERNAL" ? contestLink : null,
             },

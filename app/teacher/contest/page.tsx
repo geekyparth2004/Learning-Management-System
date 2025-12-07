@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { Plus, Trash2, ExternalLink, Calendar, Users, Trophy } from "lucide-react";
 import { redirect } from "next/navigation";
+import FormattedDate from "@/components/FormattedDate";
 
 export default async function TeacherContestPage() {
     const session = await auth();
@@ -78,9 +79,12 @@ export default async function TeacherContestPage() {
                                     </p>
 
                                     <div className="mt-4 flex items-center gap-6 text-sm text-gray-500">
+
                                         <div className="flex items-center gap-2">
                                             <Calendar className="h-4 w-4" />
-                                            <span>{new Date(contest.startTime).toLocaleString()}</span>
+                                            <span>
+                                                <FormattedDate date={contest.startTime.toISOString()} />
+                                            </span>
                                         </div>
                                         {contest.type === "INTERNAL" && (
                                             <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { ExternalLink, Clock, Calendar, Trophy, ArrowRight } from "lucide-react";
+import FormattedDate from "@/components/FormattedDate";
 
 export default async function ContestPage() {
     const session = await auth();
@@ -85,16 +86,14 @@ export default async function ContestPage() {
     );
 }
 
+// ... inside ContestCard
 function ContestCard({ contest, status }: { contest: any, status: "LIVE" | "UPCOMING" | "PAST" }) {
     const isExternal = contest.type === "EXTERNAL";
 
-    const startTime = new Date(contest.startTime).toLocaleString();
-    const endTime = new Date(contest.endTime).toLocaleString();
-
     return (
         <div className={`flex flex-col rounded-xl border p-6 transition-all ${status === "LIVE"
-                ? "border-green-900 bg-green-900/10 hover:border-green-500"
-                : "border-gray-800 bg-[#161616] hover:border-gray-600"
+            ? "border-green-900 bg-green-900/10 hover:border-green-500"
+            : "border-gray-800 bg-[#161616] hover:border-gray-600"
             }`}>
             <div className="mb-4">
                 <div className="flex items-start justify-between">
@@ -110,11 +109,15 @@ function ContestCard({ contest, status }: { contest: any, status: "LIVE" | "UPCO
                 <div className="space-y-1 text-xs text-gray-500">
                     <div className="flex justify-between">
                         <span>Starts:</span>
-                        <span className="text-gray-300">{startTime}</span>
+                        <span className="text-gray-300">
+                            <FormattedDate date={contest.startTime.toISOString()} />
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span>Ends:</span>
-                        <span className="text-gray-300">{endTime}</span>
+                        <span className="text-gray-300">
+                            <FormattedDate date={contest.endTime.toISOString()} />
+                        </span>
                     </div>
                     {isExternal && contest.platformName && (
                         <div className="flex justify-between">
@@ -130,10 +133,10 @@ function ContestCard({ contest, status }: { contest: any, status: "LIVE" | "UPCO
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-bold transition-colors ${status === "LIVE"
-                                ? "bg-green-600 hover:bg-green-700 text-white"
-                                : status === "UPCOMING"
-                                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                    : "bg-gray-800 text-gray-400 cursor-not-allowed"
+                            ? "bg-green-600 hover:bg-green-700 text-white"
+                            : status === "UPCOMING"
+                                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                : "bg-gray-800 text-gray-400 cursor-not-allowed"
                             }`}
                     >
                         {status === "PAST" ? "Ended" : "Go to Contest"} <ArrowRight className="h-4 w-4" />
@@ -142,10 +145,10 @@ function ContestCard({ contest, status }: { contest: any, status: "LIVE" | "UPCO
                     <Link
                         href={`/contest/${contest.id}`}
                         className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-bold transition-colors ${status === "LIVE"
-                                ? "bg-green-600 hover:bg-green-700 text-white"
-                                : status === "UPCOMING"
-                                    ? "bg-gray-700 text-gray-300 cursor-not-allowed" // Prevent entry before start
-                                    : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white" // Allow viewing past leaderboards/problems?
+                            ? "bg-green-600 hover:bg-green-700 text-white"
+                            : status === "UPCOMING"
+                                ? "bg-gray-700 text-gray-300 cursor-not-allowed" // Prevent entry before start
+                                : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white" // Allow viewing past leaderboards/problems?
                             }`}
                         aria-disabled={status === "UPCOMING"}
                     >

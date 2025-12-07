@@ -267,6 +267,7 @@ model Contest {
   // Timings
   startTime   DateTime
   endTime     DateTime
+  duration    Int?     // In minutes
 
   // External
   platformName String?
@@ -321,6 +322,7 @@ model ContestRegistration {
   score     Int      @default(0)
   
   joinedAt  DateTime @default(now())
+  startedAt DateTime?
 
   @@unique([userId, contestId])
 }

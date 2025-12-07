@@ -19,8 +19,9 @@ export default function CreateContestPage() {
             title: formData.get("title"),
             description: formData.get("description"),
             type: formData.get("type"),
-            startTime: formData.get("startTime"),
-            endTime: formData.get("endTime"),
+            startTime: new Date(formData.get("startTime") as string).toISOString(),
+            endTime: new Date(formData.get("endTime") as string).toISOString(),
+            duration: formData.get("duration") ? parseInt(formData.get("duration") as string) : null,
             platformName: formData.get("platformName"),
             contestLink: formData.get("contestLink"),
         };
@@ -102,6 +103,21 @@ export default function CreateContestPage() {
                             />
                         </div>
                     </div>
+
+                    {type === "INTERNAL" && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Duration (Minutes)</label>
+                            <input
+                                type="number"
+                                name="duration"
+                                className="w-full rounded-lg border border-gray-800 bg-[#111111] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                placeholder="e.g. 120"
+                            />
+                            <p className="text-xs text-gray-500">
+                                Time limit for students once they start the contest.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-300">Contest Type</label>
