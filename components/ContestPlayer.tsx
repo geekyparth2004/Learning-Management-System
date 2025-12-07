@@ -2,9 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, ChevronDown, Trophy } from "lucide-react";
-import CodeEditor from "@/components/CodeEditor";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 import { Language } from "@/types";
+
+const CodeEditor = dynamic(() => import("@/components/CodeEditor"), {
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-[#1e1e1e] animate-pulse rounded-md" />
+});
 
 interface ContestPlayerProps {
     contest: any;
