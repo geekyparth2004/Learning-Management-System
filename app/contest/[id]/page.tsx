@@ -75,21 +75,32 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
             }
 
             const MAX_SAFE_PROBLEMS = contest.problems.map((p: any) => ({
-                ...p,
-                createdAt: p.createdAt.toISOString(),
-                updatedAt: p.updatedAt.toISOString(),
-                testCases: p.testCases.map((tc: any) => ({
-                    ...tc,
-                }))
+                id: p.id,
+                title: p.title,
+                description: p.description,
+                defaultCode: p.defaultCode,
+                difficulty: p.difficulty,
+                // Explicitly convert dates
+                createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
+                updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : new Date().toISOString(),
+                testCases: p.testCases ? p.testCases.map((tc: any) => ({
+                    input: tc.input,
+                    expectedOutput: tc.expectedOutput,
+                    isHidden: tc.isHidden
+                })) : []
             }));
 
             const safeContest = {
-                ...contest,
+                id: contest.id,
+                title: contest.title,
+                description: contest.description,
+                type: contest.type,
+                duration: contest.duration,
                 startTime: contest.startTime.toISOString(),
                 endTime: contest.endTime.toISOString(),
                 createdAt: contest.createdAt.toISOString(),
                 updatedAt: contest.updatedAt.toISOString(),
-                problems: undefined // Don't pass full problems here if not needed or handle separately
+                problems: undefined
             };
 
             return <ContestPlayer
