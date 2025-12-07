@@ -12,7 +12,7 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
     }
 
     const { id } = await params;
-    const contest = await db.contest.findUnique({
+    const contest: any = await db.contest.findUnique({
         where: { id },
         include: {
             problems: {
@@ -48,7 +48,7 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
     const isEnded = now > contest.endTime;
 
     // Check Registration
-    const registration = await db.contestRegistration.findUnique({
+    const registration: any = await db.contestRegistration.findUnique({
         where: {
             userId_contestId: {
                 userId: session.user.id,
@@ -115,20 +115,33 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
         });
     }
 
+    // Safe serialization for leaderboard
+    const serializedLeaderboard = leaderboard?.map(entry => ({
+        ...entry,
+        joinedAt: entry.joinedAt.toISOString(),
+        startedAt: entry.startedAt ? entry.startedAt.toISOString() : null,
+        user: {
+            ...entry.user,
+            createdAt: entry.user.createdAt.toISOString(),
+            updatedAt: entry.user.updatedAt.toISOString(),
+            emailVerified: entry.user.emailVerified ? entry.user.emailVerified.toISOString() : null
+        }
+    }));
+
     const safeContestForLobby = {
         ...contest,
         startTime: contest.startTime.toISOString(),
         endTime: contest.endTime.toISOString(),
         createdAt: contest.createdAt.toISOString(),
         updatedAt: contest.updatedAt.toISOString(),
-        // problems: ... (Lobby might not need problems deep data)
+        problems: [] // Explicitly remove problems to avoid serialization error
     };
 
     return <ContestLobby
         contest={safeContestForLobby}
         isRegistered={!!registration}
-        leaderboard={leaderboard}
+        leaderboard={serializedLeaderboard}
         hasStarted={!!registration?.startedAt}
-        duration={contest.duration}
+        duration={contest.duration ?? undefined}
     />;
 }

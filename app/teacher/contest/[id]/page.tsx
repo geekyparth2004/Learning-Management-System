@@ -90,6 +90,7 @@ export default async function TeacherContestDetailsPage({ params }: { params: Pr
                         endTime: contest.endTime.toISOString(),
                         createdAt: contest.createdAt.toISOString(),
                         updatedAt: contest.updatedAt.toISOString(),
+                        problems: [] // Avoid spreading Date objects from problems
                     }}
                     problems={contest.problems.map(p => ({
                         ...p,
