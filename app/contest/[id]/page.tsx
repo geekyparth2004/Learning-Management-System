@@ -104,9 +104,9 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
             };
 
             return <ContestPlayer
-                contest={safeContest}
-                problems={MAX_SAFE_PROBLEMS}
-                endTime={deadline.toISOString()}
+                contest={{ title: "DEBUG MODE", id: "debug" }}
+                problems={[]}
+                endTime={new Date().toISOString()}
                 onLeave={async () => {
                     "use server";
                     redirect("/contest");
