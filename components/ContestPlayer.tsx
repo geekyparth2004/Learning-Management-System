@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, ChevronDown, Trophy } from "lucide-react";
-import CodeEditor from "@/components/CodeEditor";
+// import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import { Language } from "@/types";
 
