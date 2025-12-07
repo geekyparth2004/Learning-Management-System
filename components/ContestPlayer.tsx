@@ -249,10 +249,15 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
 
                     <div className="flex-1 relative">
                         {activeTab === "editor" && (
-                            <CodeEditor
-                                language={language}
-                                code={userCodes[activeProblem.id] || ""}
-                                onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
+                            // <CodeEditor
+                            //     language={language}
+                            //     code={userCodes[activeProblem.id] || ""}
+                            //     onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
+                            // />
+                            <textarea
+                                className="w-full h-full bg-[#1e1e1e] text-white p-4 font-mono"
+                                value={userCodes[activeProblem.id] || ""}
+                                onChange={(e) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: e.target.value }))}
                             />
                         )}
                         {activeTab === "results" && (
