@@ -2,14 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, ChevronDown, Trophy } from "lucide-react";
-import dynamic from "next/dynamic";
+import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import { Language } from "@/types";
-
-const CodeEditor = dynamic(() => import("@/components/CodeEditor"), {
-    ssr: false,
-    loading: () => <div className="h-full w-full bg-[#1e1e1e] animate-pulse rounded-md" />
-});
 
 interface ContestPlayerProps {
     contest: any;
@@ -19,6 +14,13 @@ interface ContestPlayerProps {
 }
 
 export default function ContestPlayer({ contest, problems, endTime, onLeave }: ContestPlayerProps) {
+    // Safety check for SSR
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Timer Logic
     const [timeLeft, setTimeLeft] = useState(0);
 
@@ -30,7 +32,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             if (diff <= 0) {
                 setTimeLeft(0);
                 clearInterval(interval);
-                alert("Contest Ended!");
+                // alert("Contest Ended!"); // Alert removed to prevent hydration mismatch issues with alerts
                 onLeave();
             } else {
                 setTimeLeft(diff);
@@ -53,15 +55,16 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
 
     const [userCodes, setUserCodes] = useState<{ [key: string]: string }>({});
 
-    const [results, setResults] = useState<{ [key: string]: boolean }>({});
+    // Additional UI states
     const [activeTab, setActiveTab] = useState<"editor" | "console" | "results">("editor");
     const [isRunning, setIsRunning] = useState(false);
     const [output, setOutput] = useState("");
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
+    const [results, setResults] = useState<{ [key: string]: boolean }>({});
 
     // Initialize Code safely
     useEffect(() => {
-        if (problems) {
+        if (problems && mounted) {
             const codes: any = {};
             problems.forEach(p => {
                 try {
@@ -83,16 +86,16 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                 return next;
             });
         }
-    }, [problems, language]);
+    }, [problems, language, mounted]);
 
     // Handle initial code update when switching problems
     useEffect(() => {
-        if (activeProblem && userCodes[activeProblem.id] === undefined) {
+        if (mounted && activeProblem && userCodes[activeProblem.id] === undefined) {
             let defaults = { python: "", java: "", cpp: "" };
             try { defaults = JSON.parse(activeProblem.defaultCode); } catch (e) { }
             setUserCodes(prev => ({ ...prev, [activeProblem.id]: defaults[language as keyof typeof defaults] || "" }));
         }
-    }, [activeProblem, language, userCodes]);
+    }, [activeProblem, language, userCodes, mounted]);
 
 
     const handleRun = async () => {
@@ -158,6 +161,10 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             console.error("Submission failed", e);
         }
     };
+
+    if (!mounted) {
+        return <div className="flex h-screen items-center justify-center bg-[#0e0e0e] text-white">Loading Contest Environment...</div>;
+    }
 
     if (!activeProblem) {
         return (
