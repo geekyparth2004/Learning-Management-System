@@ -66,10 +66,24 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
             }))
         }));
 
-        return <ContestPlayer contest={contest} problems={MAX_SAFE_PROBLEMS} endTime={contest.endTime} onLeave={async () => {
-            "use server";
-            redirect("/contest");
-        }} />;
+        const safeContest = {
+            ...contest,
+            startTime: contest.startTime.toISOString(),
+            endTime: contest.endTime.toISOString(),
+            createdAt: contest.createdAt.toISOString(),
+            updatedAt: contest.updatedAt.toISOString(),
+            problems: undefined // Don't pass full problems here if not needed or handle separately
+        };
+
+        return <ContestPlayer
+            contest={safeContest}
+            problems={MAX_SAFE_PROBLEMS}
+            endTime={contest.endTime.toISOString()}
+            onLeave={async () => {
+                "use server";
+                redirect("/contest");
+            }}
+        />;
     }
 
     // Otherwise -> LOBBY (Join, Wait, or Ended)
@@ -85,5 +99,14 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
         });
     }
 
-    return <ContestLobby contest={contest} isRegistered={!!registration} leaderboard={leaderboard} />;
+    const safeContestForLobby = {
+        ...contest,
+        startTime: contest.startTime.toISOString(),
+        endTime: contest.endTime.toISOString(),
+        createdAt: contest.createdAt.toISOString(),
+        updatedAt: contest.updatedAt.toISOString(),
+        // problems: ... (Lobby might not need problems deep data)
+    };
+
+    return <ContestLobby contest={safeContestForLobby} isRegistered={!!registration} leaderboard={leaderboard} />;
 }

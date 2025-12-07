@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, ChevronDown, Trophy } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
-import WebDevEditor from "./WebDevEditor";
+import { Language } from "@/types";
 
 interface ContestPlayerProps {
     contest: any;
     problems: any[];
-    endTime: Date;
+    endTime: string | Date;
     onLeave: () => void;
 }
 
@@ -44,7 +44,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
     // State
     const [activeProblemIndex, setActiveProblemIndex] = useState(0);
     const activeProblem = problems[activeProblemIndex];
-    const [language, setLanguage] = useState("java"); // Default java
+    const [language, setLanguage] = useState<Language>("java"); // Default java
 
     const [userCodes, setUserCodes] = useState<{ [key: string]: string | any[] }>({});
     const [activeFileName, setActiveFileName] = useState("index.html");
@@ -189,7 +189,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
 
                     <select
                         value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
+                        onChange={(e) => setLanguage(e.target.value as Language)}
                         className="rounded border border-gray-700 bg-[#1e1e1e] px-3 py-1 text-sm"
                     >
                         <option value="java">Java</option>

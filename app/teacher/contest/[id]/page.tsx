@@ -83,7 +83,20 @@ export default async function TeacherContestDetailsPage({ params }: { params: Pr
                 </div>
 
                 {/* Editor for Internal Problems */}
-                <ContestEditor contest={contest} problems={contest.problems} />
+                <ContestEditor
+                    contest={{
+                        ...contest,
+                        startTime: contest.startTime.toISOString(),
+                        endTime: contest.endTime.toISOString(),
+                        createdAt: contest.createdAt.toISOString(),
+                        updatedAt: contest.updatedAt.toISOString(),
+                    }}
+                    problems={contest.problems.map(p => ({
+                        ...p,
+                        createdAt: p.createdAt.toISOString(),
+                        updatedAt: p.updatedAt.toISOString(),
+                    }))}
+                />
             </div>
         </div>
     );
