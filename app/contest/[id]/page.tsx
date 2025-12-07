@@ -76,6 +76,8 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
 
             const MAX_SAFE_PROBLEMS = contest.problems.map((p: any) => ({
                 ...p,
+                createdAt: p.createdAt.toISOString(),
+                updatedAt: p.updatedAt.toISOString(),
                 testCases: p.testCases.map((tc: any) => ({
                     ...tc,
                 }))
