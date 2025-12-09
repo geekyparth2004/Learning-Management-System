@@ -111,6 +111,9 @@ model ModuleItem {
   testDuration      Int?            // in minutes
   testPassingScore  Int?            // percentage (e.g. 60)
   testProblems      Problem[]       // Problems specific to this test item
+  
+  // Content Meta
+  duration          Int             @default(0) // in seconds/minutes (store as seconds for precision)
 
   // Web Dev Fields
   webDevInstructions String?
