@@ -94,9 +94,22 @@ export default async function Home() {
                   <p className="text-sm text-gray-400">Create and monitor coding contests.</p>
                 </div>
               </Link>
+
+              <Link
+                href="/teacher/hackathon"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-purple-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-purple-900/20 p-4 text-purple-400 transition-colors group-hover:bg-purple-500 group-hover:text-white">
+                  <Trophy className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Manage Hackathons</h3>
+                  <p className="text-sm text-gray-400">Organize hackathons and events.</p>
+                </div>
+              </Link>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Link
                 href="/courses"
                 className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
@@ -120,6 +133,19 @@ export default async function Home() {
                 <div>
                   <h3 className="text-xl font-bold">Contests</h3>
                   <p className="text-sm text-gray-400">Participate in coding challenges and compete.</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/hackathon"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-purple-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-purple-900/20 p-4 text-purple-400 transition-colors group-hover:bg-purple-500 group-hover:text-white">
+                  <Trophy className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Hackathons</h3>
+                  <p className="text-sm text-gray-400">Join hackathons and special events.</p>
                 </div>
               </Link>
             </div>

@@ -263,6 +263,7 @@ model Contest {
   title       String
   description String?
   type        String   // "INTERNAL" | "EXTERNAL"
+  category    String   @default("CONTEST") // "CONTEST" | "HACKATHON"
   
   // Timings
   startTime   DateTime
