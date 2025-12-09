@@ -14,6 +14,8 @@ interface ContestPlayerProps {
 }
 
 export default function ContestPlayer({ contest, problems, endTime, onLeave }: ContestPlayerProps) {
+    const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
         setMounted(true);
         // Auto-enter Fullscreen
