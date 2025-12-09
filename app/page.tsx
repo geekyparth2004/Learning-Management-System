@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import StatCard from "@/components/dashboard/StatCard";
 import ActivityGraph from "@/components/dashboard/ActivityGraph";
 import ProblemsGraph from "@/components/dashboard/ProblemsGraph";
+import HoursStatCard from "@/components/dashboard/HoursStatCard";
 
 export default async function Home() {
   const session = await auth();
@@ -25,6 +26,15 @@ export default async function Home() {
     });
     const totalSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
     const hoursLearned = Math.round(totalSeconds / 3600);
+
+    // Today's Hours
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayItems = completedItems.filter(item => {
+      if (!item.completedAt) return false;
+      return new Date(item.completedAt) >= todayStart;
+    });
+    const todaySeconds = todayItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
+    const hoursToday = (todaySeconds / 3600).toFixed(1);
 
     // 2. Contests & Hackathons
     const contestsEntered = await db.contestRegistration.count({ where: { userId } });
@@ -72,6 +82,7 @@ export default async function Home() {
 
     dashboardData = {
       hoursLearned,
+      hoursToday,
       contestsEntered,
       hackathonsParticipated,
       problemsSolved: uniqueSolved,
@@ -213,10 +224,9 @@ export default async function Home() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Top Row */}
-              <StatCard
-                title="Hours Learned"
-                value={`${dashboardData?.hoursLearned || 0}`}
-                subtitle="hrs"
+              <HoursStatCard
+                totalHours={dashboardData?.hoursLearned || 0}
+                todayHours={dashboardData?.hoursToday || 0}
               />
               <StatCard
                 title="Contests Entered"
