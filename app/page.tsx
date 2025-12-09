@@ -231,6 +231,7 @@ export default async function Home() {
               <StatCard
                 title="Contests Entered"
                 value={`${dashboardData?.contestsEntered || 0}`}
+                link={{ text: "Enter Contest", href: "/contest" }}
               />
               {/* Activity Graph spans 1 col, but row span 2? Let's check layout. 
                         User image: Activity is top right.
@@ -250,6 +251,7 @@ export default async function Home() {
               <StatCard
                 title="Hackathons Participated"
                 value={`${dashboardData?.hackathonsParticipated || 0}`}
+                link={{ text: "Enter Hackathon", href: "/hackathon" }}
               />
 
               {/* Empty/Nav Card for balance or features */}

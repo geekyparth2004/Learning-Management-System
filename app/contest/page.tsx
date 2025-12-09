@@ -5,11 +5,19 @@ import { auth } from "@/auth";
 import { ExternalLink, Clock, Calendar, Trophy, ArrowRight } from "lucide-react";
 import FormattedDate from "@/components/FormattedDate";
 
+import ContestActionButtons from "@/components/contest/ContestActionButtons";
+
 export default async function ContestPage() {
     const session = await auth();
     const contests = await db.contest.findMany({
         orderBy: { startTime: "asc" },
     });
+
+    // Fetch registrations
+    const registrations = session?.user?.id ? await db.contestRegistration.findMany({
+        where: { userId: session.user.id }
+    }) : [];
+    const registrationMap = new Map(registrations.map(r => [r.contestId, r]));
 
     const now = new Date();
     const activeContests = contests.filter(c => c.startTime <= now && c.endTime > now);
@@ -42,7 +50,12 @@ export default async function ContestPage() {
                         </h2>
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {activeContests.map(contest => (
-                                <ContestCard key={contest.id} contest={contest} status="LIVE" />
+                                <ContestCard
+                                    key={contest.id}
+                                    contest={contest}
+                                    status="LIVE"
+                                    registration={registrationMap.get(contest.id)}
+                                />
                             ))}
                         </div>
                     </section>
@@ -57,7 +70,12 @@ export default async function ContestPage() {
                     {upcomingContests.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {upcomingContests.map(contest => (
-                                <ContestCard key={contest.id} contest={contest} status="UPCOMING" />
+                                <ContestCard
+                                    key={contest.id}
+                                    contest={contest}
+                                    status="UPCOMING"
+                                    registration={registrationMap.get(contest.id)}
+                                />
                             ))}
                         </div>
                     ) : (
@@ -74,7 +92,12 @@ export default async function ContestPage() {
                     {pastContests.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {pastContests.map(contest => (
-                                <ContestCard key={contest.id} contest={contest} status="PAST" />
+                                <ContestCard
+                                    key={contest.id}
+                                    contest={contest}
+                                    status="PAST"
+                                    registration={registrationMap.get(contest.id)}
+                                />
                             ))}
                         </div>
                     ) : (
@@ -86,8 +109,7 @@ export default async function ContestPage() {
     );
 }
 
-// ... inside ContestCard
-function ContestCard({ contest, status }: { contest: any, status: "LIVE" | "UPCOMING" | "PAST" }) {
+function ContestCard({ contest, status, registration }: { contest: any, status: "LIVE" | "UPCOMING" | "PAST", registration?: any }) {
     const isExternal = contest.type === "EXTERNAL";
 
     return (
@@ -127,34 +149,13 @@ function ContestCard({ contest, status }: { contest: any, status: "LIVE" | "UPCO
                     )}
                 </div>
 
-                {isExternal ? (
-                    <a
-                        href={contest.contestLink || "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-bold transition-colors ${status === "LIVE"
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : status === "UPCOMING"
-                                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                : "bg-gray-800 text-gray-400 cursor-not-allowed"
-                            }`}
-                    >
-                        {status === "PAST" ? "Ended" : "Go to Contest"} <ArrowRight className="h-4 w-4" />
-                    </a>
-                ) : (
-                    <Link
-                        href={`/contest/${contest.id}`}
-                        className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm font-bold transition-colors ${status === "LIVE"
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : status === "UPCOMING"
-                                ? "bg-gray-700 text-gray-300 cursor-not-allowed" // Prevent entry before start
-                                : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white" // Allow viewing past leaderboards/problems?
-                            }`}
-                        aria-disabled={status === "UPCOMING"}
-                    >
-                        {status === "LIVE" ? "Enter Contest" : status === "UPCOMING" ? "Coming Soon" : "View Results"}
-                    </Link>
-                )}
+                <ContestActionButtons
+                    contestId={contest.id}
+                    isExternal={isExternal}
+                    externalLink={contest.contestLink}
+                    status={status}
+                    registration={registration}
+                />
             </div>
         </div>
     );
