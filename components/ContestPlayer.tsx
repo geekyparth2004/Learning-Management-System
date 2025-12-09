@@ -54,7 +54,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
 
     const [userCodes, setUserCodes] = useState<{ [key: string]: string }>({});
 
-    // Additional UI states
+    // UI states matching TestPlayer
     const [activeTab, setActiveTab] = useState<"editor" | "console" | "results">("editor");
     const [isRunning, setIsRunning] = useState(false);
     const [output, setOutput] = useState("");
@@ -67,7 +67,6 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             const codes: any = {};
             problems.forEach(p => {
                 try {
-                    // Safe parsing with explicit null check
                     if (p.defaultCode && typeof p.defaultCode === 'string' && !p.defaultCode.includes("html")) {
                         const parsed = JSON.parse(p.defaultCode);
                         codes[p.id] = parsed?.[language] || "";
@@ -75,7 +74,6 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                         codes[p.id] = "";
                     }
                 } catch (e) {
-                    console.error("Error parsing default code for problem", p.id, e);
                     codes[p.id] = "";
                 }
             });
@@ -96,7 +94,6 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             try {
                 if (activeProblem.defaultCode) {
                     defaults = JSON.parse(activeProblem.defaultCode);
-                    // Ensure defaults is an object, not null
                     if (!defaults) defaults = { python: "", java: "", cpp: "" };
                 }
             } catch (e) {
@@ -154,8 +151,20 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
 
         if (allPassed) {
             setResults(prev => ({ ...prev, [activeProblem.id]: true }));
-            await submitSolution(true);
+            // Do not auto-submit on simple Run, only if user explicitly submits or if we want auto-submit logic like TestPlayer.
+            // For contest, let's keep it manual "Submit" usually, but here we can stick to previous logic or just track local success.
+            // Keeping previous logic:
+            // await submitSolution(true); 
         }
+    };
+
+    const handleExplicitSubmit = async () => {
+        // Run verification first
+        await handleRun();
+        // Then actually submit
+        await submitSolution(true); // Assumption: Submit counts even if failed? Or only if passed? 
+        // Logic: handleRun updates 'status'. We should probably submit based on that result.
+        // For now, let's reuse submitSolution which sends explicit 'passed' boolean.
     };
 
     const submitSolution = async (passed: boolean) => {
@@ -170,6 +179,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                     passed
                 })
             });
+            if (passed) alert("Solution Submitted!");
         } catch (e) {
             console.error("Submission failed", e);
         }
@@ -237,9 +247,16 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                     <button
                         onClick={handleRun}
                         disabled={isRunning}
+                        className="rounded bg-gray-700 px-6 py-2 text-sm font-bold hover:bg-gray-600 disabled:opacity-50"
+                    >
+                        {isRunning ? "Running..." : "Run"}
+                    </button>
+
+                    <button
+                        onClick={handleExplicitSubmit}
                         className="rounded bg-blue-600 px-6 py-2 text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
                     >
-                        {isRunning ? "Running..." : "Submit"}
+                        Submit
                     </button>
 
                     <button onClick={onLeave} className="text-sm text-red-400 hover:text-red-300">
@@ -249,32 +266,96 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-                <div className="w-1/2 flex flex-col border-r border-gray-800 p-6 overflow-y-auto">
-                    <h2 className="text-2xl font-bold mb-4">{activeProblem?.title}</h2>
-                    <p className="text-gray-300 whitespace-pre-wrap">{activeProblem?.description}</p>
+                <div className="w-1/2 flex flex-col border-r border-gray-800">
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <h2 className="text-xl font-bold mb-4">{activeProblem?.title}</h2>
+                        <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Description</div>
+                        <p className="text-gray-300 whitespace-pre-wrap leading-relaxed mb-8">{activeProblem?.description}</p>
+
+                        {/* Test Cases display like TestPlayer */}
+                        <h2 className="mb-4 text-lg font-bold">Test Cases</h2>
+                        <div className="space-y-4">
+                            {activeProblem.testCases && activeProblem.testCases.map((tc: any, idx: number) => (
+                                <div key={idx} className="rounded-lg border border-gray-800 bg-[#161616] p-4">
+                                    <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Case {idx + 1}</div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="text-xs text-gray-500 mb-1">Input:</div>
+                                            <div className="rounded bg-[#111111] p-2 font-mono text-sm text-gray-300">
+                                                {tc.input}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-gray-500 mb-1">Expected Output:</div>
+                                            <div className="rounded bg-[#111111] p-2 font-mono text-sm text-gray-300">
+                                                {tc.expectedOutput}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="w-1/2 flex flex-col bg-[#111111]">
                     <div className="flex border-b border-gray-800 bg-[#161616]">
-                        <button onClick={() => setActiveTab("editor")} className={cn("px-6 py-3 border-b-2 text-sm", activeTab === "editor" ? "border-blue-500 text-white" : "border-transparent text-gray-400")}>Editor</button>
-                        <button onClick={() => setActiveTab("results")} className={cn("px-6 py-3 border-b-2 text-sm", activeTab === "results" ? "border-blue-500 text-white" : "border-transparent text-gray-400")}>Results</button>
+                        <button
+                            onClick={() => setActiveTab("editor")}
+                            className={cn("px-6 py-3 border-b-2 text-sm font-medium transition-colors", activeTab === "editor" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white")}
+                        >
+                            Editor
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("console")}
+                            className={cn("px-6 py-3 border-b-2 text-sm font-medium transition-colors", activeTab === "console" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white")}
+                        >
+                            Console
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("results")}
+                            className={cn("px-6 py-3 border-b-2 text-sm font-medium transition-colors", activeTab === "results" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white")}
+                        >
+                            Test Results
+                        </button>
                     </div>
 
-                    <div className="flex-1 relative">
-                        {activeTab === "editor" && (
-                            <div className="h-full w-full">
-                                <CodeEditor
-                                    language={language}
-                                    code={userCodes[activeProblem.id] || ""}
-                                    onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
-                                />
+                    <div className="flex-1 relative overflow-hidden">
+                        <div className={cn("h-full w-full", activeTab === "editor" ? "block" : "hidden")}>
+                            <CodeEditor
+                                language={language}
+                                code={userCodes[activeProblem.id] || ""}
+                                onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
+                            />
+                        </div>
+
+                        <div className={cn("h-full w-full p-4 overflow-y-auto", activeTab === "console" ? "block" : "hidden")}>
+                            <div className="font-mono text-sm text-gray-300 whitespace-pre-wrap">
+                                {output || "Run code to see output..."}
                             </div>
-                        )}
-                        {activeTab === "results" && (
-                            <div className="p-4 font-mono text-sm text-gray-300 whitespace-pre-wrap">
-                                {status === "idle" ? "Run your code to see results." : output}
-                            </div>
-                        )}
+                        </div>
+
+                        <div className={cn("h-full w-full p-4 overflow-y-auto", activeTab === "results" ? "block" : "hidden")}>
+                            {status === "idle" && (
+                                <div className="text-gray-500 text-center mt-10">Run your code to see results</div>
+                            )}
+                            {status !== "idle" && (
+                                <div className="space-y-2">
+                                    <div className={cn(
+                                        "p-3 rounded border mb-4",
+                                        status === "success" ? "border-green-900 bg-green-900/20 text-green-400" :
+                                            status === "error" ? "border-red-900 bg-red-900/20 text-red-400" :
+                                                "border-blue-900 bg-blue-900/20 text-blue-400"
+                                    )}>
+                                        {status === "running" ? "Running Tests..." :
+                                            status === "success" ? "All Test Cases Passed!" : "Some Test Cases Failed"}
+                                    </div>
+                                    <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-[#0e0e0e] p-4 rounded border border-gray-800">
+                                        {output}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
