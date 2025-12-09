@@ -37,12 +37,38 @@ export default function PracticePlayerPage() {
         }
     }, [params.id, router]);
 
-    const handleComplete = (passed: boolean, score: number) => {
-        if (passed) {
-            alert(`Great job! You passed with a score of ${score.toFixed(0)}%`);
-            router.push("/practice");
-        } else {
-            alert(`You achieved a score of ${score.toFixed(0)}%. Keep trying!`);
+    const handleComplete = async (passed: boolean, score: number) => {
+        try {
+            // Always submit the result to track history and wallet
+            const res = await fetch("/api/practice/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    problemId: params.id,
+                    passed,
+                    // We don't have code/language in this callback yet unfortunately, 
+                    // TestPlayer handles execution but only passes score up.
+                    // For now we submit the status. To save code, we'd need to lift state up or modify TestPlayer.
+                    // Given the constraint "make interface exactly like assignment", I assume TestPlayer is standard.
+                    // We will submit empty code for now or minimal info, as wallet focus is on passing.
+                })
+            });
+
+            const data = await res.json();
+
+            if (passed) {
+                if (data.rewarded) {
+                    alert(`🎉 CONGRATULATIONS! 🎉\n\nYou passed and earned ₹5!\nWallet Balance: ₹${data.walletBalance}`);
+                } else {
+                    alert(`Great job! You passed!\n\n(No reward: Already solved this month)\nWallet Balance: ₹${data.walletBalance}`);
+                }
+                router.push("/practice");
+            } else {
+                alert(`You achieved a score of ${score.toFixed(0)}%. Keep trying to earn your reward!`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error submitting result");
         }
     };
 

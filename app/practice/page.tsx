@@ -6,6 +6,33 @@ import { Code, Terminal, CheckCircle2, ArrowRight } from "lucide-react";
 
 export default async function PracticePage() {
     const session = await auth();
+    let walletBalance = 0;
+
+    if (session?.user?.id) {
+        let user = await db.user.findUnique({
+            where: { id: session.user.id },
+            select: { id: true, walletBalance: true, lastWalletReset: true }
+        });
+
+        if (user) {
+            const now = new Date();
+            const lastReset = new Date(user.lastWalletReset);
+
+            // Lazy Reset Logic on Page Load
+            if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
+                user = await db.user.update({
+                    where: { id: user.id },
+                    data: {
+                        walletBalance: 0,
+                        lastWalletReset: now
+                    },
+                    select: { id: true, walletBalance: true, lastWalletReset: true }
+                });
+            }
+            walletBalance = user.walletBalance;
+        }
+    }
+
     const problems = await db.problem.findMany({
         where: { isPractice: true },
         orderBy: { createdAt: "desc" },
@@ -28,6 +55,12 @@ export default async function PracticePage() {
                             Practice Arena
                         </h1>
                         <p className="text-gray-400 mt-2">Master Data Structures and Algorithms with curated problems.</p>
+                    </div>
+                    {/* Wallet Display */}
+                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-6 py-3 text-yellow-400">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-yellow-600">Your Wallet</p>
+                        <p className="text-2xl font-bold">₹{walletBalance}</p>
+                        <p className="text-[10px] text-yellow-600/70">Resets on 1st of every month</p>
                     </div>
                 </div>
 
@@ -52,7 +85,14 @@ export default async function PracticePage() {
                                                     {isSolved ? <CheckCircle2 className="h-6 w-6" /> : <Code className="h-6 w-6" />}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold group-hover:text-blue-400 transition-colors">{problem.title}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-lg font-bold group-hover:text-blue-400 transition-colors">{problem.title}</h3>
+                                                        {!isSolved && (
+                                                            <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs font-bold text-yellow-400">
+                                                                +₹5
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div className="flex items-center gap-3 mt-1">
                                                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${problem.difficulty === "Easy" ? "bg-green-900/30 text-green-400" :
                                                             problem.difficulty === "Medium" ? "bg-yellow-900/30 text-yellow-400" :
