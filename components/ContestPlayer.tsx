@@ -51,6 +51,14 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
     // Timer Logic
     const [timeLeft, setTimeLeft] = useState(0);
 
+    // Auto-finish when time runs out
+    const autoFinish = async () => {
+        try {
+            await fetch(`/api/contest/${contest.id}/finish`, { method: "POST" });
+        } catch (e) { }
+        handleLeave();
+    };
+
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
@@ -59,7 +67,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             if (diff <= 0) {
                 setTimeLeft(0);
                 clearInterval(interval);
-                handleLeave();
+                autoFinish();
             } else {
                 setTimeLeft(diff);
             }
@@ -194,6 +202,20 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
         // For now, let's reuse submitSolution which sends explicit 'passed' boolean.
     };
 
+    const handleFinishContest = async () => {
+        if (!confirm("Are you sure you want to finish the contest? You cannot re-enter.")) return;
+
+        try {
+            await fetch(`/api/contest/${contest.id}/finish`, {
+                method: "POST"
+            });
+            handleLeave();
+        } catch (e) {
+            console.error("Finish failed", e);
+            alert("Failed to submit contest. Please try again.");
+        }
+    };
+
     const submitSolution = async (passed: boolean) => {
         try {
             await fetch(`/api/contest/${contest.id}/submit`, {
@@ -280,10 +302,10 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                     </button>
 
                     <button
-                        onClick={handleExplicitSubmit}
-                        className="rounded bg-blue-600 px-6 py-2 text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+                        onClick={handleFinishContest}
+                        className="rounded bg-green-600 px-6 py-2 text-sm font-bold hover:bg-green-700 disabled:opacity-50"
                     >
-                        Submit
+                        Submit Contest
                     </button>
 
                     <button onClick={handleLeave} className="text-sm text-red-400 hover:text-red-300">

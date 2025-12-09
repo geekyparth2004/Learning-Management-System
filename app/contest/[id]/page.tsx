@@ -62,6 +62,16 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
         // If contest has duration, check if user started
         if (contest.duration && !registration.startedAt) {
             // User hasn't started yet -> Show Lobby with Start Button
+        } else if (registration.completedAt) {
+            return (
+                <div className="flex min-h-screen items-center justify-center bg-[#0e0e0e] text-white">
+                    <div className="text-center p-8 border border-gray-800 rounded-lg bg-[#161616]">
+                        <h1 className="text-2xl font-bold mb-4">Contest Submitted</h1>
+                        <p className="mb-6 text-gray-400">You have already attempted this contest.</p>
+                        <a href="/contest" className="text-blue-500 hover:underline">Return to Contests</a>
+                    </div>
+                </div>
+            );
         } else {
             // User started OR no duration (legacy/auto-start)
 
@@ -136,8 +146,7 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
         user: {
             ...entry.user,
             createdAt: entry.user.createdAt.toISOString(),
-            updatedAt: entry.user.updatedAt.toISOString(),
-            emailVerified: entry.user.emailVerified ? entry.user.emailVerified.toISOString() : null
+            updatedAt: entry.user.updatedAt.toISOString()
         }
     }));
 
