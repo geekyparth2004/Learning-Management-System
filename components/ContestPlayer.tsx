@@ -14,12 +14,37 @@ interface ContestPlayerProps {
 }
 
 export default function ContestPlayer({ contest, problems, endTime, onLeave }: ContestPlayerProps) {
-    // Safety check for SSR
-    const [mounted, setMounted] = useState(false);
-
     useEffect(() => {
         setMounted(true);
+        // Auto-enter Fullscreen
+        const enterFullScreen = async () => {
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                } else if ((document.documentElement as any).webkitRequestFullscreen) {
+                    await (document.documentElement as any).webkitRequestFullscreen();
+                }
+            } catch (err) {
+                console.log("Error attempting to enable full-screen mode:", err);
+            }
+        };
+        enterFullScreen();
     }, []);
+
+    const handleLeave = async () => {
+        try {
+            if (document.fullscreenElement) {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if ((document as any).webkitExitFullscreen) {
+                    await (document as any).webkitExitFullscreen();
+                }
+            }
+        } catch (err) {
+            console.error("Error attempting to exit full-screen mode:", err);
+        }
+        onLeave();
+    };
 
     // Timer Logic
     const [timeLeft, setTimeLeft] = useState(0);
@@ -32,7 +57,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             if (diff <= 0) {
                 setTimeLeft(0);
                 clearInterval(interval);
-                onLeave();
+                handleLeave();
             } else {
                 setTimeLeft(diff);
             }
@@ -194,7 +219,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
             <div className="flex h-screen items-center justify-center bg-[#0e0e0e] text-white">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">No Problems Found</h1>
-                    <button onClick={onLeave} className="text-red-400 hover:text-red-300">Leave Contest</button>
+                    <button onClick={handleLeave} className="text-red-400 hover:text-red-300">Leave Contest</button>
                 </div>
             </div>
         );
@@ -259,7 +284,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                         Submit
                     </button>
 
-                    <button onClick={onLeave} className="text-sm text-red-400 hover:text-red-300">
+                    <button onClick={handleLeave} className="text-sm text-red-400 hover:text-red-300">
                         Leave Contest
                     </button>
                 </div>
