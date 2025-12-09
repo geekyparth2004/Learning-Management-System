@@ -141,6 +141,7 @@ model Problem {
   description   String
   difficulty    String       @default("Medium")
   slug          String?
+  isPractice    Boolean      @default(false)
   
   // Relations
   assignmentId  String?

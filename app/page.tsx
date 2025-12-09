@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy } from "lucide-react";
+import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy, Code } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import GitHubConnect from "@/components/GitHubConnect";
 
@@ -107,6 +107,19 @@ export default async function Home() {
                   <p className="text-sm text-gray-400">Organize hackathons and events.</p>
                 </div>
               </Link>
+
+              <Link
+                href="/teacher/practice"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-green-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-green-900/20 p-4 text-green-400 transition-colors group-hover:bg-green-500 group-hover:text-white">
+                  <Code className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Practice Arena</h3>
+                  <p className="text-sm text-gray-400">Manage DSA and Coding practice problems.</p>
+                </div>
+              </Link>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -146,6 +159,19 @@ export default async function Home() {
                 <div>
                   <h3 className="text-xl font-bold">Hackathons</h3>
                   <p className="text-sm text-gray-400">Join hackathons and special events.</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/practice"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-green-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-green-900/20 p-4 text-green-400 transition-colors group-hover:bg-green-500 group-hover:text-white">
+                  <Code className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Practice Arena</h3>
+                  <p className="text-sm text-gray-400">Master DSA with curated problems.</p>
                 </div>
               </Link>
             </div>
