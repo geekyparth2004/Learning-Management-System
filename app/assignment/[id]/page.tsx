@@ -86,6 +86,12 @@ export default function AssignmentPage() {
     const [hasStarted, setHasStarted] = useState(false);
     // Initialize based on URL to avoid flash
     const [showFocusOverlay, setShowFocusOverlay] = useState(isFocusMode);
+    const [startTime, setStartTime] = useState<number>(Date.now());
+
+    useEffect(() => {
+        // Reset timer on problem load/change
+        setStartTime(Date.now());
+    }, [assignmentId]);
 
     useEffect(() => {
         if (isFocusMode && !hasStarted) {
@@ -334,20 +340,22 @@ export default function AssignmentPage() {
         }
         setTestCaseResults(results);
         setStatus(results.every(r => r.passed) ? "success" : "error");
+
     };
 
     // Submit solution
     const handleSubmit = async () => {
         if (!problem) return;
 
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
         try {
             await fetch(`/api/assignments/${assignmentId}/submissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, language, passed: true }),
+                body: JSON.stringify({ code, language, passed: true, duration: timeSpent }),
             });
 
-            alert("Assignment Completed! Redirecting...");
             alert("Assignment Completed! Redirecting...");
             if (problem.courseId) {
                 router.push(`/courses/${problem.courseId}`);
@@ -378,17 +386,19 @@ export default function AssignmentPage() {
 
             if (data.success) {
                 alert("Verification Successful! Assignment Completed. ✅");
+                const timeSpent = Math.floor((Date.now() - startTime) / 1000);
                 // Mark as completed in DB (reusing submission logic but with a flag)
                 await fetch(`/api/assignments/${assignmentId}/submissions`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
+                    body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true, duration: timeSpent }),
                 });
                 if (problem.courseId) {
                     router.push(`/courses/${problem.courseId}`);
                 } else {
                     router.push("/");
                 }
+
             } else {
                 alert(`Verification Failed: ${data.message}`);
             }

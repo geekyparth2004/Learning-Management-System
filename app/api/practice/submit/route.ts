@@ -10,7 +10,7 @@ export async function POST(req: Request) {
         }
 
         const data = await req.json();
-        const { problemId, code, language, passed } = data;
+        const { problemId, code, language, passed, duration } = data;
 
         if (!problemId) {
             return NextResponse.json({ error: "Problem ID required" }, { status: 400 });
@@ -46,14 +46,14 @@ export async function POST(req: Request) {
         }
 
         // 2. Record Submission
-        // We always record the submission attempt history
         await db.submission.create({
             data: {
                 userId,
                 problemId,
                 code: code || "",
                 language: language || "unknown",
-                status: passed ? "PASSED" : "FAILED"
+                status: passed ? "PASSED" : "FAILED",
+                duration: duration || 0 // Save duration
             }
         });
 

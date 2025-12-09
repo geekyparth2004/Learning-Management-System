@@ -9,6 +9,12 @@ export default function PracticePlayerPage() {
     const router = useRouter();
     const [problem, setProblem] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [startTime, setStartTime] = useState<number>(Date.now());
+
+    useEffect(() => {
+        // Reset start time when problem changes
+        setStartTime(Date.now());
+    }, [params.id]);
 
     useEffect(() => {
         const fetchProblem = async () => {
@@ -23,6 +29,7 @@ export default function PracticePlayerPage() {
                 }
                 const data = await res.json();
                 setProblem(data);
+                setStartTime(Date.now());
             } catch (error) {
                 console.error(error);
                 alert("Error loading problem");
@@ -39,6 +46,8 @@ export default function PracticePlayerPage() {
 
     const handleComplete = async (passed: boolean, score: number) => {
         try {
+            const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
             // Always submit the result to track history and wallet
             const res = await fetch("/api/practice/submit", {
                 method: "POST",
@@ -46,11 +55,8 @@ export default function PracticePlayerPage() {
                 body: JSON.stringify({
                     problemId: params.id,
                     passed,
-                    // We don't have code/language in this callback yet unfortunately, 
-                    // TestPlayer handles execution but only passes score up.
-                    // For now we submit the status. To save code, we'd need to lift state up or modify TestPlayer.
-                    // Given the constraint "make interface exactly like assignment", I assume TestPlayer is standard.
-                    // We will submit empty code for now or minimal info, as wallet focus is on passing.
+                    duration: timeSpent,
+                    // ...
                 })
             });
 

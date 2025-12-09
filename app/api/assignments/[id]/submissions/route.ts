@@ -68,7 +68,7 @@ export async function POST(
         }
 
         const { id: assignmentId } = await params;
-        const { code, language, passed } = await request.json();
+        const { code, language, passed, duration } = await request.json();
 
         // Get the first problem of the assignment (assuming one problem per assignment)
         const assignment = await db.assignment.findUnique({
@@ -100,7 +100,8 @@ export async function POST(
                 problemId,
                 code,
                 language,
-                status: passed ? "ACCEPTED" : "WRONG_ANSWER",
+                status: passed ? "PASSED" : "FAILED", // Changed ACCEPTED -> PASSED to match dashboard filter
+                duration: duration || 0
             },
         });
 

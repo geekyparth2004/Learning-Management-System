@@ -10,6 +10,8 @@ import ProblemsGraph from "@/components/dashboard/ProblemsGraph";
 import HoursStatCard from "@/components/dashboard/HoursStatCard";
 import RecentActivityList from "@/components/dashboard/RecentActivityList";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const session = await auth();
   const isTeacher = session?.user?.role === "TEACHER";
@@ -20,37 +22,71 @@ export default async function Home() {
     const userId = session.user.id;
     const now = new Date();
 
-    // 1. Hours Learned
+    // 1. Fetch Completed Modules (and duration)
     const completedItems = await db.moduleItemProgress.findMany({
       where: { userId, isCompleted: true },
       include: { moduleItem: { select: { duration: true, title: true } } }
     });
-    const totalSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
-    const hoursLearned = Math.round(totalSeconds / 3600);
+    const moduleSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
 
-    // Today's Hours
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayItems = completedItems.filter(item => {
-      if (!item.completedAt) return false;
-      return new Date(item.completedAt) >= todayStart;
-    });
-    const todaySeconds = todayItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
-    const hoursToday = (todaySeconds / 3600).toFixed(1);
-
-    // 2. Contests & Hackathons
+    // 2. Fetch Contests & Hackathons Stats
     const contestsEntered = await db.contestRegistration.count({ where: { userId } });
     const hackathonsParticipated = await db.contestRegistration.count({
       where: { userId, contest: { type: "HACKATHON" } }
     });
 
-    // 3. Problems Solved
+    // 3. Fetch Solved Problems (and duration)
     const solvedProblems = await db.submission.findMany({
       where: { userId, status: "PASSED" },
-      select: { createdAt: true, problemId: true }
+      select: { createdAt: true, problemId: true, duration: true }
     });
     const uniqueSolved = new Set(solvedProblems.map(s => s.problemId)).size;
+    const practiceSeconds = solvedProblems.reduce((acc, curr) => acc + (curr.duration || 0), 0);
 
-    // 4. Graphs
+    // 4. Fetch Completed Contests Duration
+    const completedContests = await db.contestRegistration.findMany({
+      where: { userId, startedAt: { not: null }, completedAt: { not: null } },
+      select: { startedAt: true, completedAt: true }
+    });
+    const contestSeconds = completedContests.reduce((acc, curr) => {
+      if (curr.completedAt && curr.startedAt) {
+        return acc + (curr.completedAt.getTime() - curr.startedAt.getTime()) / 1000;
+      }
+      return acc;
+    }, 0);
+
+    // Calculate Total Hours Learned
+    const grandTotalSeconds = moduleSeconds + practiceSeconds + contestSeconds;
+    const hoursLearned = Math.round(grandTotalSeconds / 3600);
+
+    // 5. Calculate "Today's" Stats
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Modules Today
+    const todayItems = completedItems.filter(item => {
+      if (!item.completedAt) return false;
+      return new Date(item.completedAt) >= todayStart;
+    });
+    const todayModuleSeconds = todayItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
+
+    // Practice Today
+    const todayPracticeSeconds = solvedProblems.filter(s => {
+      const sDate = new Date(s.createdAt);
+      return sDate >= todayStart;
+    }).reduce((acc, curr) => acc + (curr.duration || 0), 0);
+
+    // Contests Today
+    const todayContestSeconds = completedContests.filter(c => {
+      const cDate = new Date(c.completedAt!);
+      return cDate >= todayStart;
+    }).reduce((acc, curr) => {
+      return acc + (curr.completedAt!.getTime() - curr.startedAt!.getTime()) / 1000;
+    }, 0);
+
+    const grandTotalTodaySeconds = todayModuleSeconds + todayPracticeSeconds + todayContestSeconds;
+    const hoursToday = (grandTotalTodaySeconds / 3600).toFixed(1);
+
+    // 6. Graphs Data
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const activityData = [];
     const problemsData = [];
@@ -81,7 +117,7 @@ export default async function Home() {
       problemsData.push({ day: label, value: solvedToday });
     }
 
-    // 5. Recent Activity (Top 5)
+    // 7. Recent Activity (Top 5)
     // Module Completions
     const recentModules = completedItems
       .filter(i => i.completedAt)
@@ -93,10 +129,8 @@ export default async function Home() {
       }));
 
     // Submissions
-    // Note: solvedProblems only selected createdAt and problemId.
-    // If I want titles, I should update the query above.
-    // Let's go back and update step 3 query first? Or just do a separate query.
-    // Separate query might be cleaner for "Recent Activity" specifically.
+    // Need titles? The current solvedProblems select doesn't have titles.
+    // Making a separate query for recent submissions to get titles.
     const recentSolved = await db.submission.findMany({
       where: { userId, status: "PASSED" },
       orderBy: { createdAt: "desc" },

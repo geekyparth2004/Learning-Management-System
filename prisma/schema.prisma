@@ -188,6 +188,7 @@ model Submission {
   code      String
   language  String
   status    String   // "PASSED" | "FAILED"
+  duration  Int      @default(0)
   
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
