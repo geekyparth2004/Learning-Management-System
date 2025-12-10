@@ -459,58 +459,53 @@ export default async function Home() {
           // STUDENT DASHBOARD
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Top Row */}
-              <HoursStatCard
-                totalHours={dashboardData?.hoursLearned || 0}
-                todayHours={dashboardData?.hoursToday || 0}
-              />
-              <StatCard
-                title="Contests Entered"
-                value={`${dashboardData?.contestsEntered || 0}`}
-                link={{ text: "Enter Contest", href: "/contest" }}
-              />
-              {/* Activity Graph spans 1 col, but row span 2? Let's check layout. 
-                        User image: Activity is top right.
-                     */}
-              <div className="row-span-2">
-                <ActivityGraph data={dashboardData?.activityData || []}>
-                  <RecentActivityList activities={dashboardData?.recentActivity || []} />
-                </ActivityGraph>
-              </div>
-
-              {/* Second Row */}
-              <div className="row-span-1">
+              {/* Column 1 */}
+              <div className="flex flex-col gap-6">
+                <HoursStatCard
+                  totalHours={dashboardData?.hoursLearned || 0}
+                  todayHours={dashboardData?.hoursToday || 0}
+                />
                 <ProblemsGraph
                   data={dashboardData?.problemsData || []}
                   totalSolved={dashboardData?.problemsSolved || 0}
                 />
+                <StatCard
+                  title="Hackathons Participated"
+                  value={`${dashboardData?.hackathonsParticipated || 0}`}
+                  link={{ text: "Enter Hackathon", href: "/hackathon" }}
+                />
               </div>
 
-              <div className="row-span-1">
+              {/* Column 2 */}
+              <div className="flex flex-col gap-6">
+                <StatCard
+                  title="Contests Entered"
+                  value={`${dashboardData?.contestsEntered || 0}`}
+                  link={{ text: "Enter Contest", href: "/contest" }}
+                />
                 <ExternalStatsCard user={userPlatforms || {}} />
+                <Link
+                  href="/courses"
+                  className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-blue-500 hover:bg-[#1a1a1a] transition-all"
+                >
+                  <h3 className="text-xl font-bold text-blue-400">Explore Courses</h3>
+                  <p className="text-sm text-gray-500">Continue your learning journey →</p>
+                </Link>
               </div>
 
-              <StatCard
-                title="Hackathons Participated"
-                value={`${dashboardData?.hackathonsParticipated || 0}`}
-                link={{ text: "Enter Hackathon", href: "/hackathon" }}
-              />
-
-              {/* Empty/Nav Card for balance or features */}
-              <Link
-                href="/courses"
-                className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-blue-500 hover:bg-[#1a1a1a] transition-all"
-              >
-                <h3 className="text-xl font-bold text-blue-400">Explore Courses</h3>
-                <p className="text-sm text-gray-500">Continue your learning journey →</p>
-              </Link>
-              <Link
-                href="/practice"
-                className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-green-500 hover:bg-[#1a1a1a] transition-all"
-              >
-                <h3 className="text-xl font-bold text-green-400">Practice Arena</h3>
-                <p className="text-sm text-gray-500">Solve more problems →</p>
-              </Link>
+              {/* Column 3 */}
+              <div className="flex flex-col gap-6">
+                <ActivityGraph data={dashboardData?.activityData || []}>
+                  <RecentActivityList activities={dashboardData?.recentActivity || []} />
+                </ActivityGraph>
+                <Link
+                  href="/practice"
+                  className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-green-500 hover:bg-[#1a1a1a] transition-all"
+                >
+                  <h3 className="text-xl font-bold text-green-400">Practice Arena</h3>
+                  <p className="text-sm text-gray-500">Solve more problems →</p>
+                </Link>
+              </div>
             </div>
           </div>
         )}
