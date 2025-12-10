@@ -79,6 +79,13 @@ async function fetchLeetCodeStats(username: string) {
                         reputation
                     }
                 }
+                userContestRankingHistory(username: $username) {
+                    attended
+                    rating
+                    contest {
+                        startTime
+                    }
+                }
             }
         `;
 
@@ -96,6 +103,8 @@ async function fetchLeetCodeStats(username: string) {
 
         const data = await response.json();
         const matched = data?.data?.matchedUser;
+        const history = data?.data?.userContestRankingHistory;
+
         if (!matched) return null;
 
         const submissions = matched.submitStats.acSubmissionNum;
@@ -104,12 +113,19 @@ async function fetchLeetCodeStats(username: string) {
         const medium = submissions.find((s: any) => s.difficulty === "Medium")?.count || 0;
         const hard = submissions.find((s: any) => s.difficulty === "Hard")?.count || 0;
 
+        // Filter and format history
+        const formattedHistory = history?.filter((h: any) => h.attended).map((h: any) => ({
+            timestamp: h.contest.startTime,
+            rating: Math.round(h.rating),
+        })) || [];
+
         return {
             totalSolved: total,
             easySolved: easy,
             mediumSolved: medium,
             hardSolved: hard,
-            ranking: matched.profile?.ranking || 0
+            ranking: matched.profile?.ranking || 0,
+            history: formattedHistory
         };
     } catch (e) {
         console.error("LeetCode Fetch Error", e);

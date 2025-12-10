@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { Edit2, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import PlatformConnection from "./PlatformConnection";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ExternalStats {
     leetcode: {
@@ -12,6 +13,7 @@ interface ExternalStats {
         mediumSolved: number;
         hardSolved: number;
         ranking: number;
+        history?: { timestamp: number; rating: number }[];
     } | null;
     codeforces: {
         rating: number;
@@ -106,28 +108,59 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
                                     </a>
                                 </div>
                                 {stats?.leetcode ? (
-                                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-orange-400 font-bold">{stats.leetcode.totalSolved}</div>
-                                            <div className="text-gray-500">Solved</div>
+                                    <>
+                                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                            <div className="rounded bg-[#1e1e1e] p-2">
+                                                <div className="text-orange-400 font-bold">{stats.leetcode.totalSolved}</div>
+                                                <div className="text-gray-500">Solved</div>
+                                            </div>
+                                            <div className="rounded bg-[#1e1e1e] p-2">
+                                                <div className="text-white font-bold">{stats.leetcode.ranking.toLocaleString()}</div>
+                                                <div className="text-gray-500">Rank</div>
+                                            </div>
+                                            <div className="rounded bg-[#1e1e1e] p-2">
+                                                <div className="text-green-400 font-bold">{stats.leetcode.easySolved}</div>
+                                                <div className="text-gray-500">Easy</div>
+                                            </div>
+                                            <div className="rounded bg-[#1e1e1e] p-2">
+                                                <div className="text-yellow-400 font-bold">{stats.leetcode.mediumSolved}</div>
+                                                <div className="text-gray-500">Medium</div>
+                                            </div>
+                                            <div className="rounded bg-[#1e1e1e] p-2">
+                                                <div className="text-red-400 font-bold">{stats.leetcode.hardSolved}</div>
+                                                <div className="text-gray-500">Hard</div>
+                                            </div>
                                         </div>
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-white font-bold">{stats.leetcode.ranking.toLocaleString()}</div>
-                                            <div className="text-gray-500">Rank</div>
-                                        </div>
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-green-400 font-bold">{stats.leetcode.easySolved}</div>
-                                            <div className="text-gray-500">Easy</div>
-                                        </div>
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-yellow-400 font-bold">{stats.leetcode.mediumSolved}</div>
-                                            <div className="text-gray-500">Medium</div>
-                                        </div>
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-red-400 font-bold">{stats.leetcode.hardSolved}</div>
-                                            <div className="text-gray-500">Hard</div>
-                                        </div>
-                                    </div>
+
+                                        {stats.leetcode.history && stats.leetcode.history.length > 0 && (
+                                            <div className="mt-4 h-32 w-full">
+                                                <div className="mb-2 text-xs font-semibold text-gray-400">Contest Rating</div>
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={stats.leetcode.history}>
+                                                        <XAxis
+                                                            dataKey="timestamp"
+                                                            hide
+                                                        />
+                                                        <YAxis
+                                                            hide
+                                                            domain={['auto', 'auto']}
+                                                        />
+                                                        <Tooltip
+                                                            contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #333", borderRadius: "8px", fontSize: "12px" }}
+                                                            labelFormatter={(ts) => new Date(ts * 1000).toLocaleDateString()}
+                                                        />
+                                                        <Line
+                                                            type="monotone"
+                                                            dataKey="rating"
+                                                            stroke="#fb923c"
+                                                            strokeWidth={2}
+                                                            dot={false}
+                                                        />
+                                                    </LineChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        )}
+                                    </>
                                 ) : (
                                     <div className="text-xs text-red-400">Failed to load stats</div>
                                 )}
@@ -193,7 +226,7 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
                         )}
                     </div>
                 )}
-            </div>
+            </div >
 
             <PlatformConnection
                 isOpen={isEditOpen}
