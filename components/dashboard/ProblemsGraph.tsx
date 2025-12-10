@@ -17,11 +17,12 @@ export default function ProblemsGraph({ data, totalSolved }: ProblemsGraphProps)
             <div className="mt-8 h-[120px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data}>
-                        dataKey="day"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#6b7280", fontSize: 12 }}
-                        dy={10}
+                        <XAxis
+                            dataKey="day"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fill: "#6b7280", fontSize: 12 }}
+                            dy={10}
                         />
                         <Tooltip
                             cursor={{ fill: 'transparent' }}
