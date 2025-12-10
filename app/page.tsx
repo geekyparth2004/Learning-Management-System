@@ -9,6 +9,7 @@ import ActivityGraph from "@/components/dashboard/ActivityGraph";
 import ProblemsGraph from "@/components/dashboard/ProblemsGraph";
 import HoursStatCard from "@/components/dashboard/HoursStatCard";
 import RecentActivityList from "@/components/dashboard/RecentActivityList";
+import ExternalStatsCard from "@/components/dashboard/ExternalStatsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function Home() {
   const isTeacher = session?.user?.role === "TEACHER";
 
   let dashboardData = null;
+  let userPlatforms = null;
 
   if (session && !isTeacher) {
     const userId = session.user.id;
@@ -26,6 +28,12 @@ export default async function Home() {
     const completedItems = await db.moduleItemProgress.findMany({
       where: { userId, isCompleted: true },
       include: { moduleItem: { select: { duration: true, title: true } } }
+    });
+
+    // 1.1 Fetch User Platforms
+    userPlatforms = await db.user.findUnique({
+      where: { id: userId },
+      select: { leetcodeUsername: true, codeforcesUsername: true, gfgUsername: true }
     });
     const moduleSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
 
@@ -476,6 +484,10 @@ export default async function Home() {
                   data={dashboardData?.problemsData || []}
                   totalSolved={dashboardData?.problemsSolved || 0}
                 />
+              </div>
+
+              <div className="row-span-1">
+                <ExternalStatsCard user={userPlatforms || {}} />
               </div>
 
               <StatCard

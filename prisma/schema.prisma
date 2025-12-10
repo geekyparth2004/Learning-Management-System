@@ -19,6 +19,8 @@ model User {
   role               String               @default("STUDENT") // Was UserRole
   githubAccessToken  String?
   leetcodeUsername   String?
+  codeforcesUsername String?
+  gfgUsername        String?
   
   // Relations
   courses            Course[]             @relation("TeacherCourses")
