@@ -193,17 +193,36 @@ export default function PracticePlayerPage() {
                 }
 
                 // Parse hints if string or null
-                let hints: Hint[] = [];
+                let rawHints: any[] = [];
                 if (Array.isArray(problemData.hints)) {
-                    hints = problemData.hints;
+                    rawHints = problemData.hints;
                 } else if (typeof problemData.hints === 'string') {
                     try {
                         const parsed = JSON.parse(problemData.hints);
-                        hints = Array.isArray(parsed) ? parsed : [];
+                        rawHints = Array.isArray(parsed) ? parsed : [];
                     } catch (e) {
-                        hints = [];
+                        rawHints = [];
                     }
                 }
+
+                // Normalize hints to Hint objects
+                const hints: Hint[] = rawHints.map((h: any) => {
+                    if (typeof h === 'string') {
+                        return {
+                            type: 'text',
+                            content: h,
+                            locked: false, // Default unlocked for simple hints in practice
+                            unlockTime: new Date().toISOString()
+                        };
+                    }
+                    // Ensure object has required fields
+                    return {
+                        type: h.type || 'text',
+                        content: h.content || '',
+                        locked: h.locked !== undefined ? h.locked : false,
+                        unlockTime: h.unlockTime || new Date().toISOString()
+                    };
+                });
                 problemData.hints = hints;
 
                 setProblem(problemData);

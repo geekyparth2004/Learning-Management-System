@@ -160,10 +160,10 @@ export default async function Home() {
       problemsData.push({ day: label, value: solvedToday });
     }
 
-    // 7. Recent Activity (Top 5)
+    // 7. Recent Activity (Top 5 for Today)
     // Module Completions
     const recentModules = completedItems
-      .filter(i => i.completedAt)
+      .filter(i => i.completedAt && new Date(i.completedAt) >= todayStart)
       .map(i => ({
         id: i.id,
         type: "MODULE_ITEM" as const,
@@ -175,7 +175,11 @@ export default async function Home() {
     // Need titles? The current solvedProblems select doesn't have titles.
     // Making a separate query for recent submissions to get titles.
     const recentSolved = await db.submission.findMany({
-      where: { userId, status: "PASSED" },
+      where: {
+        userId,
+        status: "PASSED",
+        createdAt: { gte: todayStart }
+      },
       orderBy: { createdAt: "desc" },
       take: 5,
       include: { problem: { select: { title: true } } }
@@ -189,7 +193,10 @@ export default async function Home() {
 
     // Contest Details for Recent
     const recentContests = await db.contestRegistration.findMany({
-      where: { userId },
+      where: {
+        userId,
+        joinedAt: { gte: todayStart }
+      },
       orderBy: { joinedAt: "desc" },
       take: 5,
       include: { contest: { select: { title: true } } }
