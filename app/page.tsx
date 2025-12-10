@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy, Code } from "lucide-react";
+import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy, Code, ExternalLink, Clock, Calendar, ArrowRight } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import GitHubConnect from "@/components/GitHubConnect";
 import { db } from "@/lib/db";
@@ -109,10 +109,20 @@ export default async function Home() {
 
     // Calculate Total Hours Learned
     const grandTotalSeconds = moduleSeconds + practiceSeconds + contestSeconds;
+
     const hoursLearned = Math.round(grandTotalSeconds / 3600);
 
-    // 5. Calculate "Today's" Stats
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // 5. Calculate "Today's" Stats (Strict IST Midnight)
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata", year: 'numeric', month: '2-digit', day: '2-digit' };
+    const istDateFormatter = new Intl.DateTimeFormat('en-US', options);
+    const parts = istDateFormatter.formatToParts(now);
+    const year = parts.find(p => p.type === 'year')?.value;
+    const month = parts.find(p => p.type === 'month')?.value;
+    const day = parts.find(p => p.type === 'day')?.value;
+
+    // Explicitly construct midnight IST
+    const todayStart = new Date(`${year}-${month}-${day}T00:00:00+05:30`);
 
     // Modules Today
     const todayItems = completedItems.filter(item => {
@@ -196,7 +206,7 @@ export default async function Home() {
     const recentSolvedMapped = recentSolved.map(s => ({
       id: s.id,
       type: "SUBMISSION" as const,
-      title: `Solved: ${s.problem.title}`,
+      title: `Solved: ${s.problem.title} `,
       date: s.createdAt
     }));
 
@@ -213,7 +223,7 @@ export default async function Home() {
     const recentContestsMapped = recentContests.map(c => ({
       id: c.id,
       type: "CONTEST" as const,
-      title: `Joined: ${c.contest.title}`,
+      title: `Joined: ${c.contest.title} `,
       date: c.joinedAt
     }));
 
@@ -554,7 +564,7 @@ export default async function Home() {
                 />
                 <StatCard
                   title="Hackathons Participated"
-                  value={`${dashboardData?.hackathonsParticipated || 0}`}
+                  value={`${dashboardData?.hackathonsParticipated || 0} `}
                   link={{ text: "Enter Hackathon", href: "/hackathon" }}
                   className={dashboardData?.hackathonStyle}
                 />
@@ -564,7 +574,7 @@ export default async function Home() {
               <div className="flex flex-col gap-6">
                 <StatCard
                   title="Contests Entered"
-                  value={`${dashboardData?.contestsEntered || 0}`}
+                  value={`${dashboardData?.contestsEntered || 0} `}
                   link={{ text: "Enter Contest", href: "/contest" }}
                   className={dashboardData?.contestStyle}
                 />
