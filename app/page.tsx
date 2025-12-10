@@ -484,13 +484,7 @@ export default async function Home() {
                   link={{ text: "Enter Contest", href: "/contest" }}
                 />
                 <ExternalStatsCard user={userPlatforms || {}} />
-                <Link
-                  href="/courses"
-                  className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-blue-500 hover:bg-[#1a1a1a] transition-all"
-                >
-                  <h3 className="text-xl font-bold text-blue-400">Explore Courses</h3>
-                  <p className="text-sm text-gray-500">Continue your learning journey →</p>
-                </Link>
+
               </div>
 
               {/* Column 3 */}
@@ -504,6 +498,13 @@ export default async function Home() {
                 >
                   <h3 className="text-xl font-bold text-green-400">Practice Arena</h3>
                   <p className="text-sm text-gray-500">Solve more problems →</p>
+                </Link>
+                <Link
+                  href="/courses"
+                  className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-blue-500 hover:bg-[#1a1a1a] transition-all"
+                >
+                  <h3 className="text-xl font-bold text-blue-400">Explore Courses</h3>
+                  <p className="text-sm text-gray-500">Continue your learning journey →</p>
                 </Link>
               </div>
             </div>
