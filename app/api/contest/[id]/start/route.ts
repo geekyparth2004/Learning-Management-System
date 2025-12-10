@@ -13,43 +13,34 @@ export async function POST(
         }
 
         const { id } = await params;
+        const userId = session.user.id;
 
+        // Check registration
         const registration = await db.contestRegistration.findUnique({
             where: {
                 userId_contestId: {
-                    userId: session.user.id,
-                    contestId: id,
-                },
-            },
+                    userId,
+                    contestId: id
+                }
+            }
         });
 
         if (!registration) {
-            // Auto-register if not registered? Usually Enter Contest implies registering.
-            // For now, assume registered or create if missing.
-            await db.contestRegistration.create({
-                data: {
-                    userId: session.user.id,
-                    contestId: id,
-                    startedAt: new Date(),
-                }
-            });
-        } else if (!registration.startedAt) {
+            return NextResponse.json({ error: "Not registered" }, { status: 400 });
+        }
+
+        // If not started, start now
+        if (!registration.startedAt) {
             await db.contestRegistration.update({
-                where: {
-                    userId_contestId: {
-                        userId: session.user.id,
-                        contestId: id,
-                    },
-                },
-                data: {
-                    startedAt: new Date(),
-                },
+                where: { id: registration.id },
+                data: { startedAt: new Date() }
             });
         }
 
         return NextResponse.json({ success: true });
+
     } catch (error) {
-        console.error("Start Contest Error:", error);
-        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+        console.error("Error starting contest:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

@@ -52,8 +52,48 @@ export default function ContestActionButtons({
         }
     };
 
+    const handleStart = async (redirectUrl: string, isExternal: boolean = false) => {
+        setIsLoading(true);
+        try {
+            // Mark as started in DB
+            await fetch(`/api/contest/${contestId}/start`, { method: "POST" });
+
+            if (isExternal) {
+                window.open(redirectUrl, "_blank");
+            } else {
+                router.push(redirectUrl);
+            }
+        } catch (error) {
+            console.error("Error starting contest:", error);
+            // Fallback navigation
+            if (isExternal) {
+                window.open(redirectUrl, "_blank");
+            } else {
+                router.push(redirectUrl);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // External Contest Logic
     if (type === "EXTERNAL") {
+        if (isLive && isRegistered) {
+            return (
+                <button
+                    onClick={() => handleStart(contestLink || "#", true)}
+                    disabled={isLoading}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 animate-pulse transition-colors"
+                >
+                    {isLoading ? "Opening..." : (
+                        <>
+                            <Play size={14} /> Go to Contest Link
+                        </>
+                    )}
+                </button>
+            );
+        }
+
         return (
             <a
                 href={contestLink || "#"}
@@ -87,10 +127,15 @@ export default function ContestActionButtons({
         // Live
         return (
             <button
-                onClick={() => router.push(`/contest/${contestId}`)}
+                onClick={() => handleStart(`/contest/${contestId}`)}
+                disabled={isLoading}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 animate-pulse"
             >
-                <Play size={14} /> Start Contest
+                {isLoading ? "Starting..." : (
+                    <>
+                        <Play size={14} /> Start Contest
+                    </>
+                )}
             </button>
         );
     }

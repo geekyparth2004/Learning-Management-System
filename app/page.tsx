@@ -37,10 +37,19 @@ export default async function Home() {
     });
     const moduleSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
 
-    // 2. Fetch Contests & Hackathons Stats
-    const contestsEntered = await db.contestRegistration.count({ where: { userId } });
+    // 2. Fetch Contests & Hackathons Stats (Only Started)
+    const contestsEntered = await db.contestRegistration.count({
+      where: {
+        userId,
+        startedAt: { not: null } // Only count if actually started
+      }
+    });
     const hackathonsParticipated = await db.contestRegistration.count({
-      where: { userId, contest: { type: "HACKATHON" } }
+      where: {
+        userId,
+        contest: { type: "HACKATHON" },
+        startedAt: { not: null } // Only count if actually started
+      }
     });
 
     // 3. Fetch Solved Problems (and duration)
