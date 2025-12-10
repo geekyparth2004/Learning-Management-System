@@ -113,7 +113,6 @@ export default async function Home() {
     const hoursLearned = Math.round(grandTotalSeconds / 3600);
 
     // 5. Calculate "Today's" Stats (Strict IST Midnight)
-    const now = new Date();
     const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata", year: 'numeric', month: '2-digit', day: '2-digit' };
     const istDateFormatter = new Intl.DateTimeFormat('en-US', options);
     const parts = istDateFormatter.formatToParts(now);
