@@ -79,12 +79,12 @@ async function fetchLeetCodeStats(username: string) {
                         reputation
                     }
                 }
-                userContestRankingHistory(username: $username) {
-                    attended
+                userContestRanking(username: $username) {
+                    attendedContestsCount
                     rating
-                    contest {
-                        startTime
-                    }
+                    globalRanking
+                    totalParticipants
+                    topPercentage
                 }
             }
         `;
@@ -103,7 +103,7 @@ async function fetchLeetCodeStats(username: string) {
 
         const data = await response.json();
         const matched = data?.data?.matchedUser;
-        const history = data?.data?.userContestRankingHistory;
+        const contestRanking = data?.data?.userContestRanking;
 
         if (!matched) return null;
 
@@ -113,19 +113,19 @@ async function fetchLeetCodeStats(username: string) {
         const medium = submissions.find((s: any) => s.difficulty === "Medium")?.count || 0;
         const hard = submissions.find((s: any) => s.difficulty === "Hard")?.count || 0;
 
-        // Filter and format history
-        const formattedHistory = history?.filter((h: any) => h.attended).map((h: any) => ({
-            timestamp: h.contest.startTime,
-            rating: Math.round(h.rating),
-        })) || [];
-
         return {
             totalSolved: total,
             easySolved: easy,
             mediumSolved: medium,
             hardSolved: hard,
             ranking: matched.profile?.ranking || 0,
-            history: formattedHistory
+            contest: contestRanking ? {
+                attended: contestRanking.attendedContestsCount,
+                rating: Math.round(contestRanking.rating),
+                globalRanking: contestRanking.globalRanking,
+                totalParticipants: contestRanking.totalParticipants,
+                topPercentage: contestRanking.topPercentage
+            } : null
         };
     } catch (e) {
         console.error("LeetCode Fetch Error", e);

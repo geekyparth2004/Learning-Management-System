@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Edit2, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import PlatformConnection from "./PlatformConnection";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
 
 interface ExternalStats {
     leetcode: {
@@ -13,7 +13,13 @@ interface ExternalStats {
         mediumSolved: number;
         hardSolved: number;
         ranking: number;
-        history?: { timestamp: number; rating: number }[];
+        contest?: {
+            attended: number;
+            rating: number;
+            globalRanking: number;
+            totalParticipants: number;
+            topPercentage: number;
+        } | null;
     } | null;
     codeforces: {
         rating: number;
@@ -132,32 +138,35 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
                                             </div>
                                         </div>
 
-                                        {stats.leetcode.history && stats.leetcode.history.length > 0 && (
-                                            <div className="mt-4 h-32 w-full">
-                                                <div className="mb-2 text-xs font-semibold text-gray-400">Contest Rating</div>
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <LineChart data={stats.leetcode.history}>
-                                                        <XAxis
-                                                            dataKey="timestamp"
-                                                            hide
-                                                        />
-                                                        <YAxis
-                                                            hide
-                                                            domain={['auto', 'auto']}
-                                                        />
-                                                        <Tooltip
-                                                            contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #333", borderRadius: "8px", fontSize: "12px" }}
-                                                            labelFormatter={(ts) => new Date(ts * 1000).toLocaleDateString()}
-                                                        />
-                                                        <Line
-                                                            type="monotone"
-                                                            dataKey="rating"
-                                                            stroke="#fb923c"
-                                                            strokeWidth={2}
-                                                            dot={false}
-                                                        />
-                                                    </LineChart>
-                                                </ResponsiveContainer>
+
+
+                                        {stats.leetcode.contest && (
+                                            <div className="mt-4 rounded-lg bg-[#1e1e1e] p-3">
+                                                <div className="mb-2 flex items-center justify-between border-b border-gray-700 pb-2">
+                                                    <span className="text-xs font-semibold text-gray-400">Contest Rating</span>
+                                                    <span className="text-sm font-bold text-white">{stats.leetcode.contest.rating.toLocaleString()}</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <div className="text-[10px] text-gray-500 uppercase tracking-wider">Global Ranking</div>
+                                                        <div className="text-xs text-gray-300">
+                                                            <span className="font-medium text-white">{stats.leetcode.contest.globalRanking.toLocaleString()}</span>
+                                                            <span className="text-gray-600"> / {stats.leetcode.contest.totalParticipants.toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[10px] text-gray-500 uppercase tracking-wider">Top</div>
+                                                        <div className="text-xs font-bold text-orange-400">
+                                                            {stats.leetcode.contest.topPercentage}%
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[10px] text-gray-500 uppercase tracking-wider">Attended</div>
+                                                        <div className="text-xs text-white">
+                                                            {stats.leetcode.contest.attended}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </>
