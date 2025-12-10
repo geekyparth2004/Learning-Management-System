@@ -479,7 +479,7 @@ export default async function Home() {
               </div>
 
               {/* Second Row */}
-              <div className="row-span-2">
+              <div className="row-span-1">
                 <ProblemsGraph
                   data={dashboardData?.problemsData || []}
                   totalSolved={dashboardData?.problemsSolved || 0}

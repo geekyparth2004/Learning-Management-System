@@ -10,7 +10,7 @@ interface ActivityGraphProps {
 
 export default function ActivityGraph({ data, children }: ActivityGraphProps) {
     return (
-        <div className="flex h-full flex-col justify-between rounded-xl border border-gray-800 bg-[#161616] p-6">
+        <div className="flex h-full flex-col rounded-xl border border-gray-800 bg-[#161616] p-6">
             <div>
                 <h3 className="mb-4 text-sm font-medium text-gray-400">Activity</h3>
                 <div className="h-[120px] w-full">

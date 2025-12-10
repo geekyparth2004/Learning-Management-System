@@ -20,11 +20,11 @@ export default function RecentActivityList({ activities }: { activities: Activit
     }
 
     return (
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 space-y-3">
             <h4 className="text-sm font-medium text-gray-400">Recent Activity</h4>
             <div className="space-y-3">
                 {activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 rounded-lg border border-gray-800 bg-[#1a1a1a] p-3 transition-colors hover:border-gray-700">
+                    <div key={activity.id} className="flex items-start gap-3 rounded-lg border border-gray-800 bg-[#1a1a1a] p-2 transition-colors hover:border-gray-700">
                         <div className="mt-0.5">
                             {activity.type === "MODULE_ITEM" && <CheckCircle className="h-4 w-4 text-green-400" />}
                             {activity.type === "SUBMISSION" && <Code className="h-4 w-4 text-blue-400" />}
