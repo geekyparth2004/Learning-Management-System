@@ -331,8 +331,38 @@ export default async function Home() {
       <div className="mx-auto max-w-7xl space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
-            LMS Platform
+          <div className="flex items-center gap-8">
+            <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+              LMS Platform
+            </div>
+            {!isTeacher && session && (
+              <nav className="hidden md:flex items-center gap-6">
+                <Link
+                  href="/practice"
+                  className="text-sm font-medium text-gray-400 hover:text-green-400 transition-colors"
+                >
+                  Practice Arena
+                </Link>
+                <Link
+                  href="/courses"
+                  className="text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors"
+                >
+                  Explore Courses
+                </Link>
+                <Link
+                  href="/contest"
+                  className="text-sm font-medium text-gray-400 hover:text-orange-400 transition-colors"
+                >
+                  Contests
+                </Link>
+                <Link
+                  href="/hackathon"
+                  className="text-sm font-medium text-gray-400 hover:text-purple-400 transition-colors"
+                >
+                  Hackathons
+                </Link>
+              </nav>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -492,20 +522,7 @@ export default async function Home() {
                 <ActivityGraph data={dashboardData?.activityData || []}>
                   <RecentActivityList activities={dashboardData?.recentActivity || []} />
                 </ActivityGraph>
-                <Link
-                  href="/practice"
-                  className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-green-500 hover:bg-[#1a1a1a] transition-all"
-                >
-                  <h3 className="text-xl font-bold text-green-400">Practice Arena</h3>
-                  <p className="text-sm text-gray-500">Solve more problems →</p>
-                </Link>
-                <Link
-                  href="/courses"
-                  className="flex flex-col justify-center gap-2 rounded-xl border border-gray-800 bg-[#161616] p-6 text-center hover:border-blue-500 hover:bg-[#1a1a1a] transition-all"
-                >
-                  <h3 className="text-xl font-bold text-blue-400">Explore Courses</h3>
-                  <p className="text-sm text-gray-500">Continue your learning journey →</p>
-                </Link>
+
               </div>
             </div>
           </div>
