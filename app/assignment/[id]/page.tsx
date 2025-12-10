@@ -356,7 +356,6 @@ export default function AssignmentPage() {
                 body: JSON.stringify({ code, language, passed: true, duration: timeSpent }),
             });
 
-            alert("Assignment Completed! Redirecting...");
             if (problem.courseId) {
                 router.push(`/courses/${problem.courseId}`);
             } else {
@@ -385,7 +384,6 @@ export default function AssignmentPage() {
             const data = await res.json();
 
             if (data.success) {
-                alert("Verification Successful! Assignment Completed. ✅");
                 const timeSpent = Math.floor((Date.now() - startTime) / 1000);
                 // Mark as completed in DB (reusing submission logic but with a flag)
                 await fetch(`/api/assignments/${assignmentId}/submissions`, {
