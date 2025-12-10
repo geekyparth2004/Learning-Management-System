@@ -63,6 +63,41 @@ export default async function Home() {
       return acc;
     }, 0);
 
+    // 4.1 Fetch Nearest Contest & Hackathon for Live/Upcoming Status
+    const nextContest = await db.contest.findFirst({
+      where: {
+        category: "CONTEST",
+        endTime: { gt: now }
+      },
+      orderBy: { startTime: 'asc' }
+    });
+
+    const nextHackathon = await db.contest.findFirst({
+      where: {
+        category: "HACKATHON",
+        endTime: { gt: now }
+      },
+      orderBy: { startTime: 'asc' }
+    });
+
+    const getCardStyle = (contest: typeof nextContest) => {
+      if (!contest) return "";
+      const start = new Date(contest.startTime);
+      const end = new Date(contest.endTime);
+      const diff = start.getTime() - now.getTime();
+      const oneHour = 60 * 60 * 1000;
+
+      // Live: Red Animation
+      if (now >= start && now <= end) {
+        return "border-red-500 bg-red-900/10 animate-pulse shadow-[0_0_20px_rgba(220,38,38,0.3)]";
+      }
+      // Upcoming (within 1 hour): Blue
+      if (diff > 0 && diff <= oneHour) {
+        return "border-blue-500 bg-blue-900/20";
+      }
+      return "";
+    };
+
     // Calculate Total Hours Learned
     const grandTotalSeconds = moduleSeconds + practiceSeconds + contestSeconds;
     const hoursLearned = Math.round(grandTotalSeconds / 3600);
@@ -179,7 +214,9 @@ export default async function Home() {
       problemsSolved: uniqueSolved,
       activityData,
       problemsData,
-      recentActivity: allActivity
+      recentActivity: allActivity,
+      contestStyle: getCardStyle(nextContest),
+      hackathonStyle: getCardStyle(nextHackathon)
     };
   }
 
@@ -503,6 +540,7 @@ export default async function Home() {
                   title="Hackathons Participated"
                   value={`${dashboardData?.hackathonsParticipated || 0}`}
                   link={{ text: "Enter Hackathon", href: "/hackathon" }}
+                  className={dashboardData?.hackathonStyle}
                 />
               </div>
 
@@ -512,6 +550,7 @@ export default async function Home() {
                   title="Contests Entered"
                   value={`${dashboardData?.contestsEntered || 0}`}
                   link={{ text: "Enter Contest", href: "/contest" }}
+                  className={dashboardData?.contestStyle}
                 />
                 <ExternalStatsCard user={userPlatforms || {}} />
 
