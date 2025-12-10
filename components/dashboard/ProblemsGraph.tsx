@@ -10,7 +10,7 @@ interface ProblemsGraphProps {
 
 export default function ProblemsGraph({ data, totalSolved }: ProblemsGraphProps) {
     return (
-        <div className="h-full w-full rounded-xl border border-gray-800 bg-[#161616] p-6">
+        <div className="w-full rounded-xl border border-gray-800 bg-[#161616] p-6">
             <h3 className="text-sm font-medium text-gray-400">Problems Solved</h3>
             <div className="mt-2 text-4xl font-bold text-white">{totalSolved}</div>
 
