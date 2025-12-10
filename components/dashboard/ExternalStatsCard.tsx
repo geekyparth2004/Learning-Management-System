@@ -119,6 +119,14 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
                                             <div className="text-green-400 font-bold">{stats.leetcode.easySolved}</div>
                                             <div className="text-gray-500">Easy</div>
                                         </div>
+                                        <div className="rounded bg-[#1e1e1e] p-2">
+                                            <div className="text-yellow-400 font-bold">{stats.leetcode.mediumSolved}</div>
+                                            <div className="text-gray-500">Medium</div>
+                                        </div>
+                                        <div className="rounded bg-[#1e1e1e] p-2">
+                                            <div className="text-red-400 font-bold">{stats.leetcode.hardSolved}</div>
+                                            <div className="text-gray-500">Hard</div>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="text-xs text-red-400">Failed to load stats</div>
