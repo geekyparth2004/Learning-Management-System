@@ -10,6 +10,8 @@ import ProblemsGraph from "@/components/dashboard/ProblemsGraph";
 import HoursStatCard from "@/components/dashboard/HoursStatCard";
 import RecentActivityList from "@/components/dashboard/RecentActivityList";
 import ExternalStatsCard from "@/components/dashboard/ExternalStatsCard";
+import NotificationBell from "@/components/NotificationBell";
+import NewContestBanner from "@/components/NewContestBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -152,30 +154,57 @@ export default async function Home() {
     const activityData = [];
     const problemsData = [];
 
-    // Sort logic: Get last 7 days including today
+    // Derive 7 days based on IST
+    const istNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
+      const d = new Date(istNow);
       d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0); // Start of that day in IST-like local time
+
       const nextDay = new Date(d);
       nextDay.setDate(d.getDate() + 1);
 
       const label = days[d.getDay()];
 
+      // Since 'd' is constructed from IST string, its .getTime() is effectively "Local IST Time treated as UTC" 
+      // OR we need to be careful comparing with DB dates (which are true UTC).
+
+      // DB dates are UTC. 
+      // If d is "2023-10-27 00:00:00" (derived from IST), we want to find records where:
+      // record.createdAt (UTC) falls within this IST day.
+      // IST day starts at 00:00 IST -> which is Previous Day 18:30 UTC.
+
+      // So we need to convert 'd' back to the true UTC timestamp for comparison.
+      // 'd' here (via new Date(string)) creates a date object.
+      // Easiest is to construct the specific range:
+      // Start: d (IST 00:00) -> UTC timestamp
+      // We can use the timezone offset logic again for precision.
+
+      const currentDayIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+      currentDayIST.setDate(currentDayIST.getDate() - i);
+      currentDayIST.setUTCHours(0, 0, 0, 0); // Midnight of that IST day
+
+      const startRange = new Date(currentDayIST.getTime() - (5.5 * 60 * 60 * 1000)); // Back to real UTC
+      const endRange = new Date(startRange.getTime() + (24 * 60 * 60 * 1000));
+
+      const labelDate = new Date(startRange.getTime() + (5.5 * 60 * 60 * 1000)); // For Getting Day Name correctly
+      const dayLabel = days[labelDate.getUTCDay()];
+
       // Activity: Submissions + Completions
       const solvedToday = solvedProblems.filter(s => {
         const sDate = new Date(s.createdAt);
-        return sDate >= d && sDate < nextDay;
+        return sDate >= startRange && sDate < endRange;
       }).length;
 
       const itemsCompletedToday = completedItems.filter(item => {
         if (!item.completedAt) return false;
         const cDate = new Date(item.completedAt);
-        return cDate >= d && cDate < nextDay;
+        return cDate >= startRange && cDate < endRange;
       }).length;
 
-      activityData.push({ day: label, value: solvedToday + itemsCompletedToday });
-      problemsData.push({ day: label, value: solvedToday });
+      activityData.push({ day: dayLabel, value: solvedToday + itemsCompletedToday });
+      problemsData.push({ day: dayLabel, value: solvedToday });
     }
 
     // 7. Recent Activity (Top 5 for Today)
@@ -275,6 +304,7 @@ export default async function Home() {
   if (isTeacher) {
     return (
       <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
+        <NewContestBanner />
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="mb-8 flex items-center justify-between">
             <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
@@ -284,6 +314,7 @@ export default async function Home() {
             <div className="flex items-center gap-4">
               {session ? (
                 <div className="flex items-center gap-4">
+                  <NotificationBell />
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <User className="h-4 w-4" />
                     <span>{session.user?.name} ({session.user?.role})</span>
@@ -390,6 +421,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
+      <NewContestBanner />
       <div className="mx-auto max-w-7xl space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -430,6 +462,7 @@ export default async function Home() {
           <div className="flex items-center gap-4">
             {session ? (
               <div className="flex items-center gap-4">
+                <NotificationBell />
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <User className="h-4 w-4" />
                   <span>{session.user?.name} ({session.user?.role})</span>

@@ -25,7 +25,8 @@ export default function FormattedDate({ date, className = "", showTime = true }:
     const dateObj = new Date(date);
     return (
         <span className={className}>
-            {dateObj.toLocaleString(undefined, {
+            {dateObj.toLocaleString("en-US", {
+                timeZone: "Asia/Kolkata",
                 year: 'numeric',
                 month: 'numeric',
                 day: 'numeric',

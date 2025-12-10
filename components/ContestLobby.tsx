@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, Calendar, Trophy, ArrowRight, User } from "lucide-react";
+import FormattedDate from "@/components/FormattedDate";
 
 interface ContestLobbyProps {
     contest: any;
@@ -79,7 +80,7 @@ export default function ContestLobby({ contest, isRegistered, leaderboard, hasSt
                         <span className="text-sm font-medium text-gray-500">Starts</span>
                         <span className="flex items-center gap-2 text-lg font-bold">
                             <Calendar className="h-4 w-4 text-blue-400" />
-                            {startTime.toLocaleString()}
+                            <FormattedDate date={startTime} />
                         </span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
