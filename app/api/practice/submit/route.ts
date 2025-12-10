@@ -61,6 +61,48 @@ export async function POST(req: Request) {
 
         // 3. Reward Logic (Only if passed)
         if (passed) {
+            // 3.1 GitHub Sync (Fire and forget or await?) - Let's await to be safe but catch errors
+            if (session.user.githubAccessToken) {
+                try {
+                    // Fetch problem for title
+                    const problem = await db.problem.findUnique({
+                        where: { id: problemId },
+                        select: { title: true }
+                    });
+
+                    if (problem) {
+                        const { createOrUpdateFile } = await import("@/lib/github");
+
+                        // Map language to extension
+                        const extMap: Record<string, string> = {
+                            "python": "py",
+                            "java": "java",
+                            "cpp": "cpp",
+                            "c": "c",
+                            "javascript": "js"
+                        };
+                        const ext = extMap[language.toLowerCase()] || "txt";
+
+                        // Sanitize title for folder name
+                        const folderName = problem.title.replace(/[^a-zA-Z0-9-_]/g, "_");
+                        const fileName = `Solution.${ext}`;
+                        const path = `${folderName}/${fileName}`;
+                        const message = `Solved: ${problem.title}`;
+
+                        await createOrUpdateFile(
+                            session.user.githubAccessToken,
+                            "Practice-Questions", // Repo Name
+                            path,
+                            code,
+                            message
+                        );
+                    }
+                } catch (ghError) {
+                    console.error("GitHub Sync Error:", ghError);
+                    // Don't fail the submission if GitHub fails, just log it
+                }
+            }
+
             // Check if ALREADY solved before this specific submission
             // We search for ANY *previous* passed submission for this problem
             // explicitly excluding the one we just created? No, easier to just check exists count > 1 or check before create.
@@ -96,7 +138,8 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             walletBalance: currentBalance,
-            rewarded
+            rewarded,
+            message: "Submission recorded"
         });
 
     } catch (error) {

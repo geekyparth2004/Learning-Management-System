@@ -152,10 +152,11 @@ function ContestCard({ contest, status, registration }: { contest: any, status: 
 
                 <ContestActionButtons
                     contestId={contest.id}
-                    isExternal={isExternal}
-                    externalLink={contest.contestLink}
-                    status={status}
-                    registration={registration}
+                    type={contest.type as "INTERNAL" | "EXTERNAL"}
+                    contestLink={contest.contestLink}
+                    isRegistered={!!registration}
+                    startTime={contest.startTime.toISOString()}
+                    endTime={contest.endTime.toISOString()}
                 />
             </div>
         </div>
