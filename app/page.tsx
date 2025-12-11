@@ -456,6 +456,12 @@ export default async function Home() {
                 >
                   Hackathons
                 </Link>
+                <Link
+                  href="/jobs"
+                  className="text-sm font-medium text-gray-400 hover:text-yellow-400 transition-colors"
+                >
+                  Jobs
+                </Link>
               </nav>
             )}
           </div>
@@ -584,7 +590,6 @@ export default async function Home() {
         ) : (
           // STUDENT DASHBOARD
           <div className="space-y-6">
-            {/* <JobRecommendations /> - Temporarily disabled due to DB connection issue */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Column 1 */}
               <div className="flex flex-col gap-6">
