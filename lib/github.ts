@@ -79,7 +79,6 @@ export const createOrUpdateFile = async (
         console.error("Error updating file:", error);
         return { success: false, error };
     }
-}
 };
 
 export const getNextSequenceNumber = async (
