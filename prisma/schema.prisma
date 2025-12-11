@@ -355,3 +355,15 @@ model ContestSubmission {
   
   createdAt DateTime @default(now())
 }
+
+model Job {
+  id        String   @id @default(cuid())
+  title     String
+  company   String
+  location  String
+  salary    String?
+  link      String
+  platform  String   // "LinkedIn", "Naukri", etc.
+  postedAt  DateTime
+  createdAt DateTime @default(now())
+}

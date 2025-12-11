@@ -12,6 +12,7 @@ import RecentActivityList from "@/components/dashboard/RecentActivityList";
 import ExternalStatsCard from "@/components/dashboard/ExternalStatsCard";
 import NotificationBell from "@/components/NotificationBell";
 import NewContestBanner from "@/components/NewContestBanner";
+import JobRecommendations from "@/components/dashboard/JobRecommendations";
 
 export const dynamic = "force-dynamic";
 
@@ -583,6 +584,7 @@ export default async function Home() {
         ) : (
           // STUDENT DASHBOARD
           <div className="space-y-6">
+            <JobRecommendations />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Column 1 */}
               <div className="flex flex-col gap-6">
