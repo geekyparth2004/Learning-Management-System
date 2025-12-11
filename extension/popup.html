@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      width: 400px;
+      padding: 16px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0e0e0e;
+      color: white;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #60a5fa;
+      font-size: 18px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      color: #fbbf24;
+      margin: 16px 0 8px 0;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: white;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 12px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #60a5fa;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      margin-top: 10px;
+      position: sticky;
+      bottom: 0;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-action {
+      background: #10b981;
+      color: white;
+      margin-top: 8px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #374151;
+      margin: 20px 0;
+    }
+
+    #status {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 16px;
+    }
+
+    /* Scrollable Form Area */
+    .form-container {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .form-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .form-container::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>LMS Job Copilot 🚀</h2>
+
+  <div class="form-container">
+
+    <!-- Personal Details -->
+    <div class="section-title">Personal Details</div>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="fullName" placeholder="John Doe">
+    </div>
+    <div class="row">
+      <div class="col form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="john@example.com">
+      </div>
+      <div class="col form-group">
+        <label>Phone</label>
+        <input type="tel" id="phone" placeholder="+91 XXXXX XXXXX">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Full Address</label>
+      <input type="text" id="address" placeholder="Flat No, Street, Area">
+    </div>
+
+    <!-- Education: UG -->
+    <div class="section-title">Undergraduate (UG)</div>
+    <div class="form-group">
+      <label>College/University Name</label>
+      <input type="text" id="ugCollege" placeholder="IIT Bombay">
+    </div>
+    <div class="row">
+      <div class="col form-group">
+        <label>Degree</label>
+        <input type="text" id="ugDegree" placeholder="B.Tech">
+      </div>
+      <div class="col form-group">
+        <label>Branch/Stream</label>
+        <input type="text" id="ugBranch" placeholder="CSE">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col form-group">
+        <label>CGPA / %</label>
+        <input type="text" id="ugScore" placeholder="9.5">
+      </div>
+      <div class="col form-group">
+        <label>Year Passing</label>
+        <input type="number" id="ugYear" placeholder="2024">
+      </div>
+    </div>
+
+    <!-- Education: 12th -->
+    <div class="section-title">Class 12th (HSC)</div>
+    <div class="form-group">
+      <label>School/College Name</label>
+      <input type="text" id="twelfthSchool" placeholder="ABC Public School">
+    </div>
+    <div class="row">
+      <div class="col form-group">
+        <label>Board</label>
+        <input type="text" id="twelfthBoard" placeholder="CBSE">
+      </div>
+      <div class="col form-group">
+        <label>Percentage</label>
+        <input type="text" id="twelfthScore" placeholder="95%">
+      </div>
+    </div>
+
+    <!-- Education: 10th -->
+    <div class="section-title">Class 10th (SSC)</div>
+    <div class="form-group">
+      <label>School Name</label>
+      <input type="text" id="tenthSchool" placeholder="ABC Public School">
+    </div>
+    <div class="row">
+      <div class="col form-group">
+        <label>Board</label>
+        <input type="text" id="tenthBoard" placeholder="CBSE">
+      </div>
+      <div class="col form-group">
+        <label>Percentage</label>
+        <input type="text" id="tenthScore" placeholder="98%">
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="section-title">Professional Links</div>
+    <div class="form-group">
+      <label>LinkedIn URL</label>
+      <input type="url" id="linkedin" placeholder="https://linkedin.com/in/...">
+    </div>
+    <div class="form-group">
+      <label>GitHub URL</label>
+      <input type="url" id="github" placeholder="https://github.com/...">
+    </div>
+    <div class="form-group">
+      <label>Portfolio / Personal Spec</label>
+      <input type="url" id="portfolio" placeholder="https://...">
+    </div>
+
+    <button id="saveBtn" class="btn-primary">Save Profile</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <button id="autofillBtn" class="btn-action">✨ Autofill Form</button>
+  <div id="status"></div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
