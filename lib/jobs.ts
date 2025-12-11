@@ -19,27 +19,23 @@ const MOCK_TITLES = ["Frontend Developer", "Backend Developer", "Full Stack Engi
 const MOCK_COMPANIES = ["Google", "Amazon", "Microsoft", "Flipkart", "Swiggy", "Zomato", "Cred", "Razorpay", "Uber", "Ola"];
 const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Pune", "Gurugram", "Mumbai", "Remote"];
 
-const MOCK_JOBS = Array.from({ length: 30 }).map((_, i) => {
-    const title = `${MOCK_TITLES[i % MOCK_TITLES.length]}`;
-    const company = MOCK_COMPANIES[i % MOCK_COMPANIES.length];
-    const platform = i % 3 === 0 ? "LinkedIn" : i % 3 === 1 ? "Naukri" : "Careers Page";
-
-    let link = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title)}`;
-    if (platform === "Naukri") {
-        link = `https://www.naukri.com/${title.toLowerCase().replace(/ /g, '-')}-jobs-in-india`;
-    } else if (platform === "Careers Page") {
-        link = `https://www.google.com/search?q=${encodeURIComponent(company + " careers " + title)}`;
-    }
-
-    return {
-        title: title,
-        company: company,
-        location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
-        salary: `₹${12 + (i % 20)}L - ₹${18 + (i % 20)}L`,
-        link: link,
-        platform: platform
-    };
-});
+const MOCK_JOBS = [
+    { title: "Frontend Developer", company: "Google", location: "Bengaluru", salary: "₹18L - ₹35L", platform: "Careers Page", link: "https://www.google.com/about/careers/applications/jobs/results/?location=India&q=Frontend%20Developer" },
+    { title: "Backend SDE-1", company: "Amazon", location: "Hyderabad", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.amazon.jobs/en/search?base_query=Software+Development+Engineer&loc_query=India" },
+    { title: "Full Stack Engineer", company: "Microsoft", location: "Bengaluru", salary: "₹20L - ₹40L", platform: "Careers Page", link: "https://careers.microsoft.com/us/en/search-results?keywords=Full%20Stack&p=India" },
+    { title: "SDE-2 (Java)", company: "Flipkart", location: "Bengaluru", salary: "₹28L - ₹50L", platform: "Careers Page", link: "https://www.flipkartcareers.com/#!/joblist?keywords=Java" },
+    { title: "Product Engineer", company: "Swiggy", location: "Bengaluru", salary: "₹15L - ₹30L", platform: "Careers Page", link: "https://careers.swiggy.com/#/careers" },
+    { title: "Senior Software Engineer", company: "Zomato", location: "Gurugram", salary: "₹20L - ₹40L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Zomato%20Software%20Engineer" },
+    { title: "Data Scientist", company: "Uber", location: "Bengaluru", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.uber.com/global/en/careers/list/?location=India&department=Data%20Science" },
+    { title: "System Engineer", company: "TCS", location: "Pune", salary: "₹4L - ₹8L", platform: "Naukri", link: "https://www.naukri.com/tcs-jobs" },
+    { title: "Java Developer", company: "Infosys", location: "Mysore", salary: "₹5L - ₹9L", platform: "Naukri", link: "https://www.naukri.com/infosys-jobs" },
+    { title: "DevOps Engineer", company: "Cred", location: "Bengaluru", salary: "₹20L - ₹40L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Cred%20DevOps" },
+    { title: "Software Engineer", company: "Google", location: "Hyderabad", salary: "₹18L - ₹35L", platform: "Careers Page", link: "https://www.google.com/about/careers/applications/jobs/results/?location=India&q=Software%20Engineer" },
+    { title: "SDE-1", company: "Amazon", location: "Bengaluru", salary: "₹20L - ₹35L", platform: "Careers Page", link: "https://www.amazon.jobs/en/search?base_query=SDE&loc_query=India" },
+    { title: "Frontend Engineer", company: "Atlassian", location: "Bengaluru", salary: "₹24L - ₹48L", platform: "Careers Page", link: "https://www.atlassian.com/company/careers/all-jobs?location=Bengaluru&team=Engineering" },
+    { title: "Python Developer", company: "Razorpay", location: "Bengaluru", salary: "₹15L - ₹30L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Razorpay%20Python" },
+    { title: "Android Developer", company: "Hotstar", location: "Mumbai", salary: "₹18L - ₹32L", platform: "Naukri", link: "https://www.naukri.com/hotstar-jobs" }
+].map(j => ({ ...j, postedAt: new Date() }));
 
 async function fetchJobsForQuery(query: string, apiKey: string) {
     const url = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query + " in India")}&num_pages=1&date_posted=today`;
