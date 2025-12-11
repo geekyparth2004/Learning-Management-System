@@ -21,13 +21,23 @@ const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Pune", "Gurugram", "Mumbai", 
 
 const MOCK_JOBS = Array.from({ length: 30 }).map((_, i) => {
     const title = `${MOCK_TITLES[i % MOCK_TITLES.length]}`;
+    const company = MOCK_COMPANIES[i % MOCK_COMPANIES.length];
+    const platform = i % 3 === 0 ? "LinkedIn" : i % 3 === 1 ? "Naukri" : "Careers Page";
+
+    let link = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title)}`;
+    if (platform === "Naukri") {
+        link = `https://www.naukri.com/${title.toLowerCase().replace(/ /g, '-')}-jobs-in-india`;
+    } else if (platform === "Careers Page") {
+        link = `https://www.google.com/search?q=${encodeURIComponent(company + " careers " + title)}`;
+    }
+
     return {
         title: title,
-        company: MOCK_COMPANIES[i % MOCK_COMPANIES.length],
+        company: company,
         location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
         salary: `₹${12 + (i % 20)}L - ₹${18 + (i % 20)}L`,
-        link: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title)}`,
-        platform: i % 3 === 0 ? "LinkedIn" : i % 3 === 1 ? "Naukri" : "Careers Page"
+        link: link,
+        platform: platform
     };
 });
 
