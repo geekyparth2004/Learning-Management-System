@@ -14,14 +14,19 @@ const JOB_CATEGORIES = [
     "Python Developer in India"
 ];
 
-// Mock data generator for simulation (Fallback)
-const MOCK_JOBS = [
-    { title: "SDE-1 (C++)", company: "Google", location: "Bengaluru", salary: "₹25L - ₹40L", link: "https://google.com/careers", platform: "Careers" },
-    { title: "Java Backend Developer", company: "Amazon", location: "Hyderabad", salary: "₹20L - ₹35L", link: "https://amazon.jobs", platform: "Careers" },
-    { title: "Frontend Engineer (React)", company: "Flipkart", location: "Bengaluru", salary: "₹18L - ₹28L", link: "https://flipkart.careers", platform: "Careers" },
-    { title: "Python Developer", company: "Hotstar", location: "Mumbai", salary: "₹15L - ₹25L", link: "https://hotstar.com", platform: "LinkedIn" },
-    { title: "SQL Database Administrator", company: "Oracle", location: "Bengaluru", salary: "₹12L - ₹20L", link: "https://oracle.com", platform: "Naukri" }
-];
+// Mock data generator for simulation (Fallback) - Expanded to 30 items
+const MOCK_TITLES = ["Frontend Developer", "Backend Developer", "Full Stack Engineer", "SDE-1", "SDE-2", "DevOps Engineer", "Data Scientist", "System Analyst"];
+const MOCK_COMPANIES = ["Google", "Amazon", "Microsoft", "Flipkart", "Swiggy", "Zomato", "Cred", "Razorpay", "Uber", "Ola"];
+const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Pune", "Gurugram", "Mumbai", "Remote"];
+
+const MOCK_JOBS = Array.from({ length: 30 }).map((_, i) => ({
+    title: `${MOCK_TITLES[i % MOCK_TITLES.length]}`,
+    company: MOCK_COMPANIES[i % MOCK_COMPANIES.length],
+    location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
+    salary: `₹${12 + (i % 20)}L - ₹${18 + (i % 20)}L`,
+    link: "https://www.linkedin.com/jobs",
+    platform: i % 3 === 0 ? "LinkedIn" : i % 3 === 1 ? "Naukri" : "Careers Page"
+}));
 
 async function fetchJobsForQuery(query: string, apiKey: string) {
     const url = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query + " in India")}&num_pages=1&date_posted=today`;
@@ -57,34 +62,26 @@ async function fetchJobsForQuery(query: string, apiKey: string) {
 
 export async function refreshJobs() {
     try {
-        // 1. Check if we have recent jobs (created in last 24h)
+        // 1. Check if we have recent jobs
         const yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
-        const existingJobs = await (db as any).job.findFirst({
+        const jobsCount = await (db as any).job.count({
             where: { createdAt: { gt: yesterday } }
         });
 
-        // 2. Clear old cache to force update for new requirements (TEMPORARY: Remove this line later if caching needed strictly)
-        // For now, we want to ensure the user sees their new categories immediately.
-        if (existingJobs) {
-            // Optional: Uncomment to force refresh every time for debugging
-            // await (db as any).job.deleteMany({});
-            // return; 
-
-            // Standard behavior: return if cached
-            // But since user JUST changed requirements, we might want to bypass?
-            // Let's stick to standard behavior. If user wants fresh, they can restart DB or wait.
-            // Actually, to be helpful, let's assume if count is low or wrong type? No.
-            // We will return to respect API limits.
+        // ONLY return if we have enough jobs (e.g., > 10). 
+        // If we only have 5 (old mock data), we MUST refresh.
+        if (jobsCount > 10) {
+            console.log("Using cached jobs (Count sufficient)");
             return;
         }
 
-        console.log("Refreshing job cache with Multi-Category Search...");
+        console.log("Refreshing job cache (Count low or expired)...");
         const apiKey = process.env.RAPID_API_KEY;
 
         let newJobs: any[] = [];
 
         if (apiKey) {
-            // Pick 3 random categories to fetch to diversify without hitting rate limits
+            // Pick 3 random categories to fetch
             const shuffled = [...JOB_CATEGORIES].sort(() => 0.5 - Math.random());
             const selectedCategories = shuffled.slice(0, 3);
 
@@ -93,7 +90,6 @@ export async function refreshJobs() {
             const promises = selectedCategories.map(cat => fetchJobsForQuery(cat, apiKey));
             const results = await Promise.all(promises);
 
-            // Flatten results
             newJobs = results.flat();
         }
 
@@ -104,7 +100,7 @@ export async function refreshJobs() {
         }
 
         // 4. Save to DB
-        // Clear previous entries to keep the list fresh and relevant to the new query
+        // Clear previous entries to force fresh start
         await (db as any).job.deleteMany({});
 
         await (db as any).job.createMany({
