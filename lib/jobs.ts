@@ -65,20 +65,30 @@ async function fetchJobsForQuery(query: string, apiKey: string) {
 
 export async function refreshJobs() {
     try {
-        // 1. Check if we have recent jobs
-        const yesterday = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+        // 1. Check if we have recent jobs (Midnight IST Strategy)
+        // We want to fetch new jobs if the current cached jobs were created BEFORE today's midnight IST.
+
+        const now = new Date();
+        // IST is UTC + 5:30. 
+        // We calculate "Midnight IST Today" in UTC time.
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istTime = new Date(now.getTime() + istOffset);
+        istTime.setUTCHours(0, 0, 0, 0); // Midnight in IST terms
+
+        // This is the collection cutoff. Any job created BEFORE this timestamp is "yesterday's news".
+        const midnightIstInUtc = new Date(istTime.getTime() - istOffset);
+
         const jobsCount = await (db as any).job.count({
-            where: { createdAt: { gt: yesterday } }
+            where: { createdAt: { gt: midnightIstInUtc } }
         });
 
-        // ONLY return if we have enough jobs (e.g., > 10). 
-        // If we only have 5 (old mock data), we MUST refresh.
+        // ONLY return if we have enough jobs for "Today"
         if (jobsCount > 10) {
-            console.log("Using cached jobs (Count sufficient)");
+            console.log("Using cached jobs (Fresh for Today IST)");
             return;
         }
 
-        console.log("Refreshing job cache (Count low or expired)...");
+        console.log("Refreshing job cache (New Day in IST)...");
         const apiKey = process.env.RAPID_API_KEY;
 
         let newJobs: any[] = [];
