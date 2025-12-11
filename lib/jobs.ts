@@ -48,6 +48,8 @@ async function fetchJobsForQuery(query: string, apiKey: string) {
         const result = await response.json();
         if (!result.data || !Array.isArray(result.data)) return [];
 
+        console.log(`API returned ${result.data.length} jobs for ${query}`); // Debug log
+
         return result.data.map((job: any) => ({
             title: job.job_title,
             company: job.employer_name,
