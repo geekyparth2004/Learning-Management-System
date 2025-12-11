@@ -24,7 +24,7 @@ export async function POST(
 
                 if (course && module) {
                     const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
-                    const { createOrUpdateFile } = await import("@/lib/github");
+                    const { createOrUpdateFile, getNextSequenceNumber } = await import("@/lib/github");
 
                     // Determine file extension
                     const extensionMap: Record<string, string> = {
@@ -39,16 +39,26 @@ export async function POST(
                     };
                     const ext = extensionMap[language.toLowerCase()] || "txt";
 
-                    // Generate filename: ModuleTitle/practice-{timestamp}.ext
-                    const timestamp = Date.now();
-                    const filename = `${module.title.replace(/\s+/g, "-")}/practice-${timestamp}.${ext}`;
+                    // Generate filename: ModuleTitle/ModuleTitle - {N}.ext
+                    const folderName = module.title.replace(/\s+/g, "-"); // Keep folder name sanitized
+                    const fileBaseName = module.title; // Keep filename human readable (e.g. Bubble Sort)
+
+                    const nextNum = await getNextSequenceNumber(
+                        user.githubAccessToken,
+                        repoName,
+                        folderName,
+                        fileBaseName,
+                        ext
+                    );
+
+                    const filename = `${folderName}/${fileBaseName} - ${nextNum}.${ext}`;
 
                     await createOrUpdateFile(
                         user.githubAccessToken,
                         repoName,
                         filename,
                         code,
-                        `Practice code from ${module.title}`
+                        `Practice code from ${module.title} (#${nextNum})`
                     );
 
                     return NextResponse.json({ success: true, message: "Saved to GitHub" });

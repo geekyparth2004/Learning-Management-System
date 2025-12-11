@@ -20,7 +20,11 @@ export async function GET(req: Request) {
             },
             include: {
                 moduleItem: {
-                    select: { duration: true }
+                    select: {
+                        duration: true,
+                        type: true,
+                        assignmentId: true
+                    }
                 }
             }
         });

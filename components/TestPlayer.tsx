@@ -58,7 +58,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
 
     // Tabs State
-    const [activeTab, setActiveTab] = useState<"editor" | "console" | "results">("editor");
+    const [activeTab, setActiveTab] = useState<"console" | "results">("console");
 
     const processedProblems = React.useMemo(() => {
         return problems.map(p => {
@@ -364,71 +364,71 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
                         {/* Right Panel: Editor & Console */}
                         <div className="w-1/2 flex flex-col bg-[#111111]">
-                            {/* Tabs */}
-                            <div className="flex border-b border-gray-800 bg-[#161616]">
-                                <button
-                                    onClick={() => setActiveTab("editor")}
-                                    className={cn(
-                                        "px-6 py-3 text-sm font-medium transition-colors border-b-2",
-                                        activeTab === "editor" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
-                                    )}
-                                >
-                                    Editor
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("console")}
-                                    className={cn(
-                                        "px-6 py-3 text-sm font-medium transition-colors border-b-2",
-                                        activeTab === "console" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
-                                    )}
-                                >
-                                    Console
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("results")}
-                                    className={cn(
-                                        "px-6 py-3 text-sm font-medium transition-colors border-b-2",
-                                        activeTab === "results" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
-                                    )}
-                                >
-                                    Test Results
-                                </button>
-                            </div>
-
-                            {/* Tab Content */}
-                            <div className="flex-1 overflow-hidden relative">
-                                <div className={cn("h-full w-full", activeTab === "editor" ? "block" : "hidden")}>
+                            {/* Top Section: Code Editor (Always Visible) */}
+                            <div className="flex-[2] min-h-0 flex flex-col border-b border-gray-800">
+                                <div className="bg-[#1e1e1e] px-4 py-2 text-sm text-gray-400 border-b border-black">
+                                    main.{language === "python" ? "py" : language === "cpp" ? "cpp" : "java"}
+                                </div>
+                                <div className="flex-1 overflow-hidden">
                                     <CodeEditor
                                         language={language}
                                         code={userCodes[activeProblem.id] as string || ""}
                                         onChange={handleCodeChange}
                                     />
                                 </div>
+                            </div>
 
-                                <div className={cn("h-full w-full p-4 overflow-y-auto", activeTab === "console" ? "block" : "hidden")}>
-                                    <div className="font-mono text-sm text-gray-300 whitespace-pre-wrap">
-                                        {output || "Run code to see output..."}
-                                    </div>
+                            {/* Bottom Section: Tabs & Results */}
+                            <div className="flex-1 min-h-0 flex flex-col">
+                                {/* Tabs */}
+                                <div className="flex border-b border-gray-800 bg-[#161616]">
+                                    <button
+                                        onClick={() => setActiveTab("console")}
+                                        className={cn(
+                                            "px-6 py-2 text-sm font-medium transition-colors border-b-2",
+                                            activeTab === "console" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        Console
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("results")}
+                                        className={cn(
+                                            "px-6 py-2 text-sm font-medium transition-colors border-b-2",
+                                            activeTab === "results" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        Test Results
+                                    </button>
                                 </div>
 
-                                <div className={cn("h-full w-full p-4 overflow-y-auto", activeTab === "results" ? "block" : "hidden")}>
-                                    {status === "idle" && (
-                                        <div className="text-gray-500 text-center mt-10">Run your code to see results</div>
-                                    )}
-                                    {status !== "idle" && (
-                                        <div className="space-y-2">
-                                            <div className={cn(
-                                                "p-3 rounded border mb-4",
-                                                status === "success" ? "border-green-900 bg-green-900/20 text-green-400" :
-                                                    status === "error" ? "border-red-900 bg-red-900/20 text-red-400" :
-                                                        "border-blue-900 bg-blue-900/20 text-blue-400"
-                                            )}>
-                                                {status === "running" ? "Running Tests..." :
-                                                    status === "success" ? "All Test Cases Passed!" : "Some Test Cases Failed"}
-                                            </div>
-                                            <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-[#0e0e0e] p-4 rounded border border-gray-800">
-                                                {output}
-                                            </pre>
+                                {/* Tab Content */}
+                                <div className="flex-1 overflow-hidden relative bg-[#111111]">
+                                    {activeTab === "console" ? (
+                                        <div className="h-full w-full p-4 overflow-y-auto font-mono text-sm text-gray-300 whitespace-pre-wrap">
+                                            {output || "Run code to see output..."}
+                                        </div>
+                                    ) : (
+                                        <div className="h-full w-full p-4 overflow-y-auto">
+                                            {status === "idle" && (
+                                                <div className="text-gray-500 text-center mt-4">Run your code to see results</div>
+                                            )}
+                                            {status !== "idle" && (
+                                                <div className="space-y-2">
+                                                    <div className={cn(
+                                                        "p-3 rounded border mb-4",
+                                                        status === "success" ? "border-green-900 bg-green-900/20 text-green-400" :
+                                                            status === "error" ? "border-red-900 bg-red-900/20 text-red-400" :
+                                                                "border-blue-900 bg-blue-900/20 text-blue-400"
+                                                    )}>
+                                                        {status === "running" ? "Running Tests..." :
+                                                            status === "success" ? "All Test Cases Passed!" : "Some Test Cases Failed"}
+                                                    </div>
+                                                    <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-[#0e0e0e] p-4 rounded border border-gray-800">
+                                                        {output}
+                                                    </pre>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

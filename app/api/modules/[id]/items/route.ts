@@ -13,7 +13,7 @@ export async function POST(
         }
 
         const { id } = await params;
-        const { title, type, content } = await req.json();
+        const { title, type, content, duration } = await req.json();
 
         if (!title || !type) {
             return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -32,6 +32,7 @@ export async function POST(
             type,
             moduleId: id,
             order: newOrder,
+            duration: duration ? parseInt(duration) * 60 : 0, // Convert minutes to seconds
         };
 
         if (type === "VIDEO") {
