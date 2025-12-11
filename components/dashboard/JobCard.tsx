@@ -11,7 +11,7 @@ interface JobProps {
         salary?: string | null;
         link: string;
         platform: string;
-        postedAt: string;
+        postedAt: string | Date;
     }
 }
 
@@ -29,8 +29,8 @@ export default function JobCard({ job }: JobProps) {
                     </div>
                 </div>
                 <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider ${job.platform === 'LinkedIn' ? 'bg-blue-900/40 text-blue-400' :
-                        job.platform === 'Naukri' ? 'bg-yellow-900/30 text-yellow-500' :
-                            'bg-gray-800 text-gray-400'
+                    job.platform === 'Naukri' ? 'bg-yellow-900/30 text-yellow-500' :
+                        'bg-gray-800 text-gray-400'
                     }`}>
                     {job.platform}
                 </span>
