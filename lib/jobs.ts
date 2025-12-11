@@ -19,14 +19,17 @@ const MOCK_TITLES = ["Frontend Developer", "Backend Developer", "Full Stack Engi
 const MOCK_COMPANIES = ["Google", "Amazon", "Microsoft", "Flipkart", "Swiggy", "Zomato", "Cred", "Razorpay", "Uber", "Ola"];
 const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Pune", "Gurugram", "Mumbai", "Remote"];
 
-const MOCK_JOBS = Array.from({ length: 30 }).map((_, i) => ({
-    title: `${MOCK_TITLES[i % MOCK_TITLES.length]}`,
-    company: MOCK_COMPANIES[i % MOCK_COMPANIES.length],
-    location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
-    salary: `₹${12 + (i % 20)}L - ₹${18 + (i % 20)}L`,
-    link: "https://www.linkedin.com/jobs",
-    platform: i % 3 === 0 ? "LinkedIn" : i % 3 === 1 ? "Naukri" : "Careers Page"
-}));
+const MOCK_JOBS = Array.from({ length: 30 }).map((_, i) => {
+    const title = `${MOCK_TITLES[i % MOCK_TITLES.length]}`;
+    return {
+        title: title,
+        company: MOCK_COMPANIES[i % MOCK_COMPANIES.length],
+        location: MOCK_LOCATIONS[i % MOCK_LOCATIONS.length],
+        salary: `₹${12 + (i % 20)}L - ₹${18 + (i % 20)}L`,
+        link: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title)}`,
+        platform: i % 3 === 0 ? "LinkedIn" : i % 3 === 1 ? "Naukri" : "Careers Page"
+    };
+});
 
 async function fetchJobsForQuery(query: string, apiKey: string) {
     const url = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query + " in India")}&num_pages=1&date_posted=today`;
