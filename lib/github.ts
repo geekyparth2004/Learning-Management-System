@@ -79,4 +79,52 @@ export const createOrUpdateFile = async (
         console.error("Error updating file:", error);
         return { success: false, error };
     }
+}
+};
+
+export const getNextSequenceNumber = async (
+    accessToken: string,
+    repoName: string,
+    folderPath: string,
+    fileBaseName: string,
+    extension: string
+) => {
+    const octokit = new Octokit({ auth: accessToken });
+    try {
+        const owner = (await octokit.rest.users.getAuthenticated()).data.login;
+        let maxNum = 0;
+
+        try {
+            const { data } = await octokit.rest.repos.getContent({
+                owner,
+                repo: repoName,
+                path: folderPath,
+            });
+
+            if (Array.isArray(data)) {
+                // Escape special regex characters in fileBaseName
+                const escapedBaseName = fileBaseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`^${escapedBaseName} - (\\d+)\\.${extension}$`);
+
+                data.forEach((file: any) => {
+                    if (file.type === "file") {
+                        const match = file.name.match(regex);
+                        if (match) {
+                            const num = parseInt(match[1]);
+                            if (!isNaN(num) && num > maxNum) {
+                                maxNum = num;
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            // Folder doesn't exist
+        }
+
+        return maxNum + 1;
+    } catch (error) {
+        console.error("Error getting sequence number:", error);
+        return 1;
+    }
 };
