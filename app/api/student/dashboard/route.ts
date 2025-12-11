@@ -28,8 +28,43 @@ export async function GET(req: Request) {
         // Calculate hours (duration is in seconds hopefully, or minutes. Let's assume minutes based on typical LMS, but I commented seconds in schema. Let's treat as minutes for fail safety or seconds? Schema said "seconds/minutes". I'll assume MINUTES for now as it makes more sense for "12 hrs" type outputs without massive numbers. Actually standard is usually seconds. Let's stick to seconds.)
         // User request "12 hrs". If I store 12*3600 = 43200.
         // Let's assume the field `duration` will be populated in SECONDS.
-        const totalSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
-        const hoursLearned = Math.round(totalSeconds / 3600);
+        // Calculate hours
+        // Priority:
+        // 1. Module Item Duration (Set by Teacher for Videos/Content)
+        // 2. Submission Duration (Actual time spent by Student on Assignments/Practice)
+
+        let totalSeconds = 0;
+
+        for (const progress of completedItems) {
+            let itemDuration = progress.moduleItem.duration || 0;
+
+            // If item duration is 0 (Teacher didn't set it), check if there's a submission with duration
+            if (itemDuration === 0 && progress.moduleItem.type === "ASSIGNMENT" && progress.moduleItem.assignmentId) {
+                // Fetch submission duration for this assignment
+                // We need to fetch it separately or include it in the query above.
+                // For efficiency, let's include it in the initial query or fetch separately.
+                // Given the loop, let's look for a matching submission in our `solvedProblems` list if it helps, 
+                // but solvedProblems is only for internal problems. 
+                // Let's do a lightweight check for the assignment submission.
+
+                const submission = await db.submission.findFirst({
+                    where: {
+                        userId,
+                        problem: { assignmentId: progress.moduleItem.assignmentId }
+                    },
+                    select: { duration: true },
+                    orderBy: { duration: 'desc' } // Take max duration? or sum? Usually max single sit.
+                });
+
+                if (submission) {
+                    itemDuration = submission.duration;
+                }
+            }
+
+            totalSeconds += itemDuration;
+        }
+
+        const hoursLearned = Math.round((totalSeconds / 3600) * 10) / 10; // 1 decimal place
 
         // 2. Contests Entered
         const contestsEntered = await db.contestRegistration.count({
