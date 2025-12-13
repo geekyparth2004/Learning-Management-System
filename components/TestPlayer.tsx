@@ -341,13 +341,13 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                         <span className="text-sm font-bold text-gray-300">Description</span>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-300">
-                        <h2 className="mb-4 text-lg font-bold text-white">{problems[currentProblemIndex].title}</h2>
+                        <h2 className="mb-4 text-lg font-bold text-white">{problems[activeProblemIndex].title}</h2>
                         <div className="prose prose-invert max-w-none">
-                            <p>{problems[currentProblemIndex].description}</p>
+                            <p>{problems[activeProblemIndex].description}</p>
                         </div>
 
                         <div className="mt-8 space-y-4">
-                            {problems[currentProblemIndex].testCases.map((tc: any, i: number) => (
+                            {problems[activeProblemIndex].testCases.map((tc: any, i: number) => (
                                 <div key={i} className="rounded bg-[#0e0e0e] p-3">
                                     <div className="mb-1 text-xs font-bold text-gray-500">Example {i + 1}</div>
                                     <div className="space-y-1 font-mono text-xs">
@@ -387,18 +387,10 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             </div>
                         </div>
                         <div className="flex-1 overflow-hidden relative">
-                            <Editor
-                                height="100%"
-                                language={language === "c++" ? "cpp" : language}
-                                theme="vs-dark"
-                                value={code}
+                            <CodeEditor
+                                language={language as any}
+                                code={code}
                                 onChange={(val) => setCode(val || "")}
-                                options={{
-                                    minimap: { enabled: false },
-                                    fontSize: 14,
-                                    scrollBeyondLastLine: false,
-                                    padding: { top: 16 },
-                                }}
                             />
                             {/* Run Button Floating or fixed in header? Header is better but let's keep consistent */}
                             <div className="absolute bottom-4 right-4 z-10">
