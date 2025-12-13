@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, CheckCircle, ChevronDown } from "lucide-react";
+import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import WebDevEditor from "./WebDevEditor";
