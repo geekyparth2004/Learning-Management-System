@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle } from "lucide-react";
+import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle, Lock, Video } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import WebDevEditor from "./WebDevEditor";
@@ -18,13 +18,20 @@ interface TestCase {
     isHidden: boolean;
 }
 
+interface Hint {
+    type: "text" | "video";
+    content: string;
+    locked: boolean;
+    unlockTime: string;
+}
+
 interface Problem {
     id: string;
     title: string;
     description: string;
     defaultCode: any; // { python: string, cpp: string }
     testCases: TestCase[];
-    hints: string[];
+    hints: Hint[];
     type?: "CODING" | "WEB_DEV";
     webDevInstructions?: string;
     webDevInitialCode?: {
@@ -59,11 +66,23 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
 
     // Tabs State
-    const [activeTab, setActiveTab] = useState<"console" | "results">("console");
+    const [activeTab, setActiveTab] = useState<"console" | "results" | "ask-ai">("console");
     const [testResults, setTestResults] = useState<any>(null);
 
-    const processedProblems = React.useMemo(() => {
-        return problems.map(p => {
+    // Ask AI state
+    const [aiMessage, setAiMessage] = useState<string | null>(null);
+    const [isAskingAi, setIsAskingAi] = useState(false);
+    const [canAskAi, setCanAskAi] = useState(false);
+    const [timeToAi, setTimeToAi] = useState<string>("");
+    const [showGiveAnswer, setShowGiveAnswer] = useState(false);
+    const [expandedHints, setExpandedHints] = useState<number[]>([]);
+
+    // State for local modified problems (tracking locked hints)
+    const [localProblems, setLocalProblems] = useState<Problem[]>([]);
+
+    // Initialize localProblems with hints processing
+    useEffect(() => {
+        const processed = problems.map(p => {
             let defaultCode: any = p.defaultCode;
             let type: "CODING" | "WEB_DEV" = "CODING";
             let webDevInitialCode = undefined;
@@ -85,17 +104,35 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 };
             }
 
-            let hints: string[] = [];
+            let rawHints: any[] = [];
             if (Array.isArray(p.hints)) {
-                hints = p.hints;
+                rawHints = p.hints;
             } else if (typeof p.hints === 'string') {
                 try {
                     const parsed = JSON.parse(p.hints);
-                    hints = Array.isArray(parsed) ? parsed : [];
+                    rawHints = Array.isArray(parsed) ? parsed : [];
                 } catch (e) {
-                    hints = [];
+                    rawHints = [];
                 }
             }
+
+            // Normalize hints
+            const hints: Hint[] = rawHints.map((h: any) => {
+                if (typeof h === 'string') {
+                    return {
+                        type: 'text',
+                        content: h,
+                        locked: true, // Start locked
+                        unlockTime: new Date().toISOString() // Placeholder, updated in loop
+                    };
+                }
+                return {
+                    type: h.type || 'text',
+                    content: h.content || '',
+                    locked: true,
+                    unlockTime: h.unlockTime || new Date().toISOString()
+                };
+            });
 
             return {
                 ...p,
@@ -105,14 +142,16 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 hints,
             };
         });
+        setLocalProblems(processed as any);
     }, [problems]);
 
-    const activeProblem = processedProblems[activeProblemIndex];
+    const activeProblem = localProblems[activeProblemIndex] || ({} as Problem);
 
-    // Initialize code
+    // Initialize code (Wait for localProblems)
     useEffect(() => {
+        if (localProblems.length === 0) return;
         const initialCodes: any = {};
-        processedProblems.forEach(p => {
+        localProblems.forEach(p => {
             if (p.type === "WEB_DEV") {
                 initialCodes[p.id] = [
                     { name: "index.html", language: "html", content: p.webDevInitialCode?.html || "" },
@@ -128,7 +167,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
             }
         });
         setUserCodes(initialCodes);
-    }, [processedProblems]);
+    }, [localProblems]);
 
     // Update code when language changes (only for coding problems)
     useEffect(() => {
@@ -140,13 +179,70 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         }
     }, [language, activeProblem]);
 
-    // Timer (Stopwatch)
+    // Timer (Stopwatch + Features)
     useEffect(() => {
         const timer = setInterval(() => {
             setElapsedTime(prev => prev + 1);
+
+            // Ask AI Timer (7 minutes = 420 seconds)
+            const aiUnlockTime = 7 * 60;
+            // Since we use elapsedTime (seconds), compare directly
+            // Wait, elapsedTime starts at 0. So we need to check if current time < 420.
+            // But we need to use a Ref or access state inside interval.
+            // Simplified: Calculate unlocking based on elapsedTime update using setElapsedTime callback?
+            // No, we can just recalculate inside the SetElapsedTime or use a separate effect that depends on elapsedTime (might be too frequent re-renders if we put heavy logic).
+            // Better: Do it all here. But we need access to `elapsedTime` value. 
+            // We can use functional update for setElapsedTime and do side effects? No pure side effects in setter.
+            // Let's rely on `elapsedTime` as dependency for a separate Effect or use Ref for time.
         }, 1000);
         return () => clearInterval(timer);
     }, []);
+
+    // Effect for Time-based Unlocking (Hints & AI)
+    useEffect(() => {
+        if (elapsedTime === 0 && localProblems.length === 0) return;
+
+        // Ask AI Logic (7 mins = 420s)
+        const remainingAi = (7 * 60) - elapsedTime;
+        if (remainingAi <= 0) {
+            setCanAskAi(true);
+            setTimeToAi("");
+        } else {
+            setCanAskAi(false);
+            const mins = Math.floor(remainingAi / 60);
+            const secs = remainingAi % 60;
+            setTimeToAi(`${mins}:${secs.toString().padStart(2, "0")}`);
+        }
+
+        // Progressive Hints Logic (Every 2 mins = 120s)
+        setLocalProblems(prevProblems => {
+            if (!prevProblems.length) return prevProblems;
+            let changed = false;
+
+            const newProblems = prevProblems.map(p => {
+                const updatedHints = p.hints.map((h, idx) => {
+                    const unlockForHint = (idx + 1) * 2 * 60; // 2m, 4m, 6m... (in seconds)
+                    const isLocked = elapsedTime < unlockForHint;
+
+                    if (isLocked !== h.locked) changed = true;
+                    // Format relative countdown
+                    const remaining = Math.max(0, unlockForHint - elapsedTime);
+                    const m = Math.floor(remaining / 60);
+                    const s = remaining % 60;
+                    // Mock ISO string for compatibility if needed or Just use a display helper
+                    // Storing a helper "unlockTime" string might be easier for UI reusing practice component logic?
+                    // But here we are independent.
+
+                    return { ...h, locked: isLocked, unlockTime: new Date(Date.now() + remaining * 1000).toISOString() };
+                });
+                return { ...p, hints: updatedHints };
+            });
+
+            if (!changed) return prevProblems;
+            return newProblems;
+        });
+
+    }, [elapsedTime]); // Run every second when time updates
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -230,6 +326,44 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
             score: allPassed ? 100 : 0,
             results: detailedResults
         });
+    };
+
+    // Ask AI Handler
+    const handleAskAi = async (mode: "guide" | "solution") => {
+        setIsAskingAi(true);
+        try {
+            const res = await fetch("/api/ask-ai", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    problemDescription: activeProblem.description,
+                    studentCode: userCodes[activeProblem.id] as string,
+                    mode
+                }),
+            });
+            const data = await res.json();
+            setAiMessage(data.message);
+            if (mode === "guide") {
+                setShowGiveAnswer(true);
+            }
+        } catch (e) {
+            setAiMessage("Failed to get help from AI.");
+        } finally {
+            setIsAskingAi(false);
+        }
+    };
+
+    const toggleHint = (index: number) => {
+        setExpandedHints(prev =>
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
+    };
+
+    const formatTimeRemaining = (unlockTime: string) => {
+        const remaining = Math.max(0, Math.floor((new Date(unlockTime).getTime() - Date.now()) / 1000));
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     };
 
     const handleSubmitTest = (auto = false) => {
@@ -340,6 +474,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                         </div>
 
                         <div className="mt-8 space-y-4">
+                            {/* Test Cases */}
                             {problems[activeProblemIndex].testCases.map((tc: any, i: number) => (
                                 <div key={i} className="rounded bg-[#0e0e0e] p-3">
                                     <div className="mb-1 text-xs font-bold text-gray-500">Example {i + 1}</div>
@@ -348,11 +483,61 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                             <span className="text-blue-400">Input:</span> {tc.input}
                                         </div>
                                         <div>
-                                            <span className="text-green-400">Output:</span> {tc.output}
+                                            <span className="text-green-400">Output:</span> {tc.expectedOutput || tc.output}
                                         </div>
                                     </div>
                                 </div>
                             ))}
+
+                            {/* Hints */}
+                            {activeProblem.hints && activeProblem.hints.length > 0 && (
+                                <div className="mt-6">
+                                    <div className="mb-2 flex items-center gap-2">
+                                        <h3 className="text-sm font-bold text-gray-300">Hints</h3>
+                                        <span className="rounded-full bg-gray-800 px-2 py-0.5 text-[10px] text-gray-400">
+                                            {activeProblem.hints.filter((h: any) => !h.locked).length}/{activeProblem.hints.length} unlocked
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {activeProblem.hints.map((hint: any, idx: number) => (
+                                            <div key={idx} className="overflow-hidden rounded border border-gray-800 bg-[#161616]">
+                                                <button
+                                                    onClick={() => toggleHint(idx)}
+                                                    className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-[#1e1e1e]"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-medium text-gray-300">Hint {idx + 1}</span>
+                                                        {hint.type === "video" && (
+                                                            <span className="flex items-center gap-1 rounded bg-blue-900/30 px-1.5 py-0.5 text-[10px] text-blue-400">
+                                                                <Video size={10} /> Solution
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {hint.locked ? (
+                                                            <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                                                                <Lock size={10} />
+                                                                <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <ChevronDown size={14} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
+                                                        )}
+                                                    </div>
+                                                </button>
+                                                {expandedHints.includes(idx) && !hint.locked && (
+                                                    <div className="border-t border-gray-800 bg-[#111111] p-3 text-xs text-gray-300">
+                                                        {hint.type === "text" ? (
+                                                            hint.content
+                                                        ) : (
+                                                            <video src={hint.content} controls className="w-full rounded" />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -425,6 +610,15 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                     Test Results
                                 </div>
                             </button>
+                            <button
+                                onClick={() => canAskAi && setActiveTab("ask-ai")}
+                                className={`border-b-2 py-2 text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === "ask-ai" ? "border-blue-500 text-blue-400" : "border-transparent text-gray-500 hover:text-gray-300"
+                                    } ${!canAskAi ? "opacity-50 cursor-not-allowed" : ""}`}
+                            >
+                                <span>Ask AI</span>
+                                {!canAskAi && <span className="text-[10px]">({timeToAi})</span>}
+                                {!canAskAi && <Lock size={12} />}
+                            </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
@@ -434,6 +628,51 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                         <pre className="whitespace-pre-wrap text-gray-300">{output}</pre>
                                     ) : (
                                         <div className="text-gray-600 italic">Run your code to see output...</div>
+                                    )}
+                                </div>
+                            ) : activeTab === "ask-ai" ? (
+                                <div className="space-y-6">
+                                    {!aiMessage ? (
+                                        <div className="space-y-4">
+                                            <div className="rounded border border-blue-900/30 bg-blue-900/10 p-4">
+                                                <h3 className="mb-2 font-bold text-blue-400">Ask AI for Guidance</h3>
+                                                <p className="text-xs text-gray-400">
+                                                    Stuck? The AI can analyze your code and provide guidance without giving away the answer immediately.
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => handleAskAi("guide")}
+                                                disabled={isAskingAi}
+                                                className="w-full rounded bg-blue-600 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                                            >
+                                                {isAskingAi ? "Analyzing..." : "Ask AI for Guidance"}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            <div className="rounded border border-gray-800 bg-[#161616] p-4">
+                                                <h3 className="mb-2 font-bold text-gray-300">AI Suggestion</h3>
+                                                <div className="prose prose-invert max-w-none text-sm text-gray-400 whitespace-pre-wrap">
+                                                    {aiMessage}
+                                                </div>
+                                            </div>
+
+                                            {showGiveAnswer && (
+                                                <div className="rounded border border-yellow-900/30 bg-yellow-900/10 p-4">
+                                                    <h3 className="mb-2 font-bold text-yellow-400">Still Stuck?</h3>
+                                                    <p className="mb-4 text-xs text-gray-400">
+                                                        If the guidance wasn't enough, you can ask for the full solution.
+                                                    </p>
+                                                    <button
+                                                        onClick={() => handleAskAi("solution")}
+                                                        disabled={isAskingAi}
+                                                        className="w-full rounded border border-yellow-600 py-2 text-sm font-bold text-yellow-500 hover:bg-yellow-900/20 disabled:opacity-50"
+                                                    >
+                                                        {isAskingAi ? "Thinking..." : "Give me the Solution"}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             ) : (
