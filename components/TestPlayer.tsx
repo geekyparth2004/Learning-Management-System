@@ -376,7 +376,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             <div className="flex items-center gap-2">
                                 <select
                                     value={language}
-                                    onChange={(e) => setLanguage(e.target.value)}
+                                    onChange={(e) => setLanguage(e.target.value as any)}
                                     className="rounded bg-[#0e0e0e] px-2 py-1 text-xs text-gray-300 border border-gray-700"
                                 >
                                     <option value="python">Python</option>
@@ -389,8 +389,8 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                         <div className="flex-1 overflow-hidden relative">
                             <CodeEditor
                                 language={language as any}
-                                code={code}
-                                onChange={(val) => setCode(val || "")}
+                                code={userCodes[activeProblem.id] as string || ""}
+                                onChange={handleCodeChange}
                             />
                             {/* Run Button Floating or fixed in header? Header is better but let's keep consistent */}
                             <div className="absolute bottom-4 right-4 z-10">
