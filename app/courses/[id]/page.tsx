@@ -403,6 +403,7 @@ export default function CoursePlayerPage() {
                 body: JSON.stringify({
                     code: practiceCode,
                     language: practiceLanguage,
+                    videoTitle: activeItem?.title || "Practice",
                 }),
             });
             const data = await res.json();
@@ -742,7 +743,7 @@ export default function CoursePlayerPage() {
                                                 instructions={activeItem.webDevInstructions || ""}
                                                 initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
                                                 savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
-                                                onComplete={(submission) => submitWebDev(activeItem.id, submission)}
+                                                onComplete={(submission: any) => submitWebDev(activeItem.id, submission)}
                                                 onBack={() => {
                                                     setIsWebDevFullScreen(false);
                                                     if (document.fullscreenElement) {

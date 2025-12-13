@@ -13,7 +13,7 @@ export async function POST(
         }
 
         const { id } = await params;
-        const { html, css, js } = await req.json();
+        const { html, css, js, duration } = await req.json();
 
         // Check if this is the first submission (by checking if we already had a submission)
         const existingProgress = await db.moduleItemProgress.findUnique({
@@ -39,6 +39,7 @@ export async function POST(
                 isCompleted: true,
                 completedAt: new Date(),
                 webDevSubmission: JSON.stringify({ html, css, js }),
+                duration: duration ? { increment: Number(duration) } : undefined,
             },
             create: {
                 userId: session.user.id,
@@ -46,6 +47,7 @@ export async function POST(
                 isCompleted: true,
                 completedAt: new Date(),
                 webDevSubmission: JSON.stringify({ html, css, js }),
+                duration: duration ? Number(duration) : 0,
             },
         });
 

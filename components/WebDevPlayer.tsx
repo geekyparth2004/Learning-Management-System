@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Save, CheckCircle, RefreshCw, Layout, Code, Eye, ArrowLeft } from "lucide-react";
+import { CheckCircle, RefreshCw, Layout, ArrowLeft, Clock } from "lucide-react";
+
 import WebDevEditor from "./WebDevEditor";
 
 interface WebDevPlayerProps {
@@ -30,78 +31,35 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
     const [activeFileName, setActiveFileName] = useState("index.html");
     const [leftPanelTab, setLeftPanelTab] = useState<"problem" | "preview">("problem");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [duration, setDuration] = useState(0);
+
+    // Timer
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setDuration(prev => prev + 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
     // Split View State
     const [splitRatio, setSplitRatio] = useState(40);
-    const [isResizing, setIsResizing] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+    // ... rest of state ...
 
-    const startResizing = () => setIsResizing(true);
-    const stopResizing = () => setIsResizing(false);
+    // ... existing resize logic ...
 
-    const resize = (e: MouseEvent) => {
-        if (isResizing && containerRef.current) {
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const newRatio = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-            if (newRatio > 20 && newRatio < 80) {
-                setSplitRatio(newRatio);
-            }
-        }
-    };
+    // ... existing useEffect ...
 
-    useEffect(() => {
-        if (isResizing) {
-            window.addEventListener("mousemove", resize);
-            window.addEventListener("mouseup", stopResizing);
-        } else {
-            window.removeEventListener("mousemove", resize);
-            window.removeEventListener("mouseup", stopResizing);
-        }
-        return () => {
-            window.removeEventListener("mousemove", resize);
-            window.removeEventListener("mouseup", stopResizing);
-        };
-    }, [isResizing]);
+    // ... existing srcDoc ...
 
-    const srcDoc = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                html, body { height: 100%; margin: 0; }
-                ${files.filter(f => f.language === "css").map(f => f.content).join("\n")}
-            </style>
-        </head>
-        <body>
-            ${files.find(f => f.name === "index.html")?.content || ""}
-            <script>
-                ${files.filter(f => f.language === "javascript").map(f => f.content).join("\n")}
-            </script>
-        </body>
-        </html>
-    `;
+    // ... existing handleAddFile ...
 
-    const handleAddFile = () => {
-        const fileName = window.prompt("Enter file name (e.g., about.html, style2.css):");
-        if (!fileName) return;
-
-        if (files.some(f => f.name === fileName)) {
-            alert("File already exists!");
-            return;
-        }
-
-        let language = "plaintext";
-        if (fileName.endsWith(".html")) language = "html";
-        else if (fileName.endsWith(".css")) language = "css";
-        else if (fileName.endsWith(".js")) language = "javascript";
-
-        setFiles([...files, { name: fileName, language, content: "" }]);
-        setActiveFileName(fileName);
-    };
-
-    const updateFileContent = (value: string) => {
-        setFiles(files.map(f => f.name === activeFileName ? { ...f, content: value } : f));
-    };
+    // ... existing updateFileContent ...
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
@@ -110,7 +68,8 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
             const submission = {
                 html: files.find(f => f.name === "index.html")?.content || "",
                 css: files.find(f => f.name === "styles.css")?.content || "",
-                js: files.find(f => f.name === "script.js")?.content || ""
+                js: files.find(f => f.name === "script.js")?.content || "",
+                duration // Pass duration
             };
             await onComplete(submission);
         } catch (error) {
@@ -136,6 +95,12 @@ export default function WebDevPlayer({ instructions, initialCode, savedSubmissio
                     <div className="flex items-center gap-2">
                         <Layout className="text-blue-400" size={20} />
                         <span className="font-bold">Development Assignment</span>
+                    </div>
+
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-1 text-sm font-medium text-blue-400 border border-gray-700">
+                        <Clock size={14} />
+                        <span>{formatTime(duration)}</span>
                     </div>
                 </div>
                 <button

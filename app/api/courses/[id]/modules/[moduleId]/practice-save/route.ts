@@ -13,7 +13,7 @@ export async function POST(
         }
 
         const { id: courseId, moduleId } = await params;
-        const { code, language } = await req.json();
+        const { code, language, videoTitle } = await req.json();
 
         // Push to GitHub
         try {
@@ -39,9 +39,10 @@ export async function POST(
                     };
                     const ext = extensionMap[language.toLowerCase()] || "txt";
 
-                    // Generate filename: ModuleTitle/ModuleTitle - {N}.ext
+                    // Generate filename: ModuleTitle/VideoTitle - {N}.ext
                     const folderName = module.title.replace(/\s+/g, "-"); // Keep folder name sanitized
-                    const fileBaseName = module.title; // Keep filename human readable (e.g. Bubble Sort)
+                    // Use videoTitle if provided, otherwise fallback to module title
+                    const fileBaseName = videoTitle ? videoTitle : module.title;
 
                     const nextNum = await getNextSequenceNumber(
                         user.githubAccessToken,
