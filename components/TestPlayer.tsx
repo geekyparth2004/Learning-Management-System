@@ -395,7 +395,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             {/* Run Button Floating or fixed in header? Header is better but let's keep consistent */}
                             <div className="absolute bottom-4 right-4 z-10">
                                 <button
-                                    onClick={runCode}
+                                    onClick={handleRun}
                                     disabled={isRunning}
                                     className={`flex items-center gap-2 rounded-full px-6 py-2 font-bold shadow-lg transition-all ${isRunning
                                         ? "bg-gray-700 text-gray-400 cursor-not-allowed"
