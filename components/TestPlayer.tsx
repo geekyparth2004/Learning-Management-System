@@ -60,6 +60,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
     // Tabs State
     const [activeTab, setActiveTab] = useState<"console" | "results">("console");
+    const [testResults, setTestResults] = useState<any>(null);
 
     const processedProblems = React.useMemo(() => {
         return problems.map(p => {
@@ -174,11 +175,12 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         setIsRunning(true);
         setStatus("running");
         setOutput("Running test cases...");
-        setActiveTab("results"); // Switch to results tab
+        setActiveTab("results");
 
         const code = userCodes[activeProblem.id];
         let allPassed = true;
         let log = "";
+        const detailedResults: any[] = [];
 
         for (const [idx, tc] of activeProblem.testCases.entries()) {
             try {
@@ -191,19 +193,34 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
                 const actual = (data.output || "").trim();
                 const expected = tc.expectedOutput.trim();
+                const passed = !data.error && actual === expected;
+
+                if (!passed) allPassed = false;
 
                 if (data.error) {
                     log += `Case ${idx + 1}: Error\n${data.error}\n\n`;
-                    allPassed = false;
-                } else if (actual !== expected) {
+                } else if (!passed) {
                     log += `Case ${idx + 1}: Failed\nInput: ${tc.input}\nExpected: ${expected}\nActual: ${actual}\n\n`;
-                    allPassed = false;
                 } else {
                     log += `Case ${idx + 1}: Passed\n`;
                 }
-            } catch (e) {
+
+                detailedResults.push({
+                    passed,
+                    input: tc.input,
+                    expected: tc.expectedOutput,
+                    actual: data.error || actual
+                });
+
+            } catch (e: any) {
                 log += `Case ${idx + 1}: System Error\n`;
                 allPassed = false;
+                detailedResults.push({
+                    passed: false,
+                    input: tc.input,
+                    expected: tc.expectedOutput,
+                    actual: "System Error: " + e.message
+                });
             }
         }
 
@@ -213,6 +230,13 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
         // Update result for this problem
         setResults(prev => ({ ...prev, [activeProblem.id]: allPassed }));
+
+        // Update Test Results Detail for UI
+        setTestResults({
+            passed: allPassed,
+            score: allPassed ? 100 : 0,
+            results: detailedResults
+        });
     };
 
     const handleSubmitTest = (auto = false) => {
@@ -308,137 +332,158 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 </div>
             </div>
 
-            {/* Main Content */}
+            {/* Main Content: Split View */}
             <div className="flex flex-1 overflow-hidden">
-                {activeProblem.type === "WEB_DEV" ? (
-                    <div className="w-full h-full flex flex-col">
-                        <div className="flex-1 overflow-hidden">
-                            <WebDevEditor
-                                files={userCodes[activeProblem.id] as File[] || []}
-                                setFiles={handleWebDevFilesChange}
-                                instructions={activeProblem.webDevInstructions || ""}
-                                activeFileName={activeFileName}
-                                setActiveFileName={setActiveFileName}
-                            />
+                {/* Left Panel: Problem Description */}
+                <div className="w-1/3 border-r border-gray-800 bg-[#111111] flex flex-col">
+                    <div className="flex items-center gap-2 border-b border-gray-800 bg-[#161616] px-4 py-2">
+                        <FileText className="text-gray-400" size={16} />
+                        <span className="text-sm font-bold text-gray-300">Description</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-300">
+                        <h2 className="mb-4 text-lg font-bold text-white">{problems[currentProblemIndex].title}</h2>
+                        <div className="prose prose-invert max-w-none">
+                            <p>{problems[currentProblemIndex].description}</p>
                         </div>
-                        <div className="border-t border-gray-800 bg-[#161616] p-2 flex justify-end">
-                            <button
-                                onClick={() => setResults(prev => ({ ...prev, [activeProblem.id]: true }))}
-                                className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-bold hover:bg-blue-700"
-                            >
-                                <CheckCircle size={16} /> Mark as Completed
-                            </button>
+
+                        <div className="mt-8 space-y-4">
+                            {problems[currentProblemIndex].testCases.map((tc: any, i: number) => (
+                                <div key={i} className="rounded bg-[#0e0e0e] p-3">
+                                    <div className="mb-1 text-xs font-bold text-gray-500">Example {i + 1}</div>
+                                    <div className="space-y-1 font-mono text-xs">
+                                        <div>
+                                            <span className="text-blue-400">Input:</span> {tc.input}
+                                        </div>
+                                        <div>
+                                            <span className="text-green-400">Output:</span> {tc.output}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                ) : (
-                    <>
-                        {/* Left Panel: Description & Test Cases */}
-                        <div className="w-1/2 flex flex-col border-r border-gray-800">
-                            <div className="flex-1 overflow-y-auto p-6">
-                                <h2 className="mb-4 text-lg font-bold">Problem Description</h2>
-                                <p className="mb-8 text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                    {activeProblem.description}
-                                </p>
+                </div>
 
-                                <h2 className="mb-4 text-lg font-bold">Test Cases</h2>
-                                <div className="space-y-4">
-                                    {activeProblem.testCases.map((tc, idx) => (
-                                        <div key={idx} className="rounded-lg border border-gray-800 bg-[#161616] p-4">
-                                            <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Case {idx + 1}</div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <div className="text-xs text-gray-500 mb-1">Input:</div>
-                                                    <div className="rounded bg-[#111111] p-2 font-mono text-sm text-gray-300">
-                                                        {tc.input}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs text-gray-500 mb-1">Expected Output:</div>
-                                                    <div className="rounded bg-[#111111] p-2 font-mono text-sm text-gray-300">
-                                                        {tc.expectedOutput}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                {/* Right Panel: Editor (Top) + Console (Bottom) */}
+                <div className="flex flex-1 flex-col overflow-hidden">
+                    {/* Top: Editor */}
+                    <div className="flex-1 flex flex-col min-h-0 border-b border-gray-800">
+                        <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] px-4 py-2">
+                            <div className="flex items-center gap-2">
+                                <Code className="text-blue-400" size={16} />
+                                <span className="text-sm font-bold text-gray-300">Code Editor</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <select
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value)}
+                                    className="rounded bg-[#0e0e0e] px-2 py-1 text-xs text-gray-300 border border-gray-700"
+                                >
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="java">Java</option>
+                                </select>
                             </div>
                         </div>
-
-                        {/* Right Panel: Editor & Console */}
-                        <div className="w-1/2 flex flex-col bg-[#111111]">
-                            {/* Top Section: Code Editor (Always Visible) */}
-                            <div className="flex-[2] min-h-0 flex flex-col border-b border-gray-800">
-                                <div className="bg-[#1e1e1e] px-4 py-2 text-sm text-gray-400 border-b border-black">
-                                    main.{language === "python" ? "py" : language === "cpp" ? "cpp" : "java"}
-                                </div>
-                                <div className="flex-1 overflow-hidden">
-                                    <CodeEditor
-                                        language={language}
-                                        code={userCodes[activeProblem.id] as string || ""}
-                                        onChange={handleCodeChange}
-                                    />
-                                </div>
+                        <div className="flex-1 overflow-hidden relative">
+                            <Editor
+                                height="100%"
+                                language={language === "c++" ? "cpp" : language}
+                                theme="vs-dark"
+                                value={code}
+                                onChange={(val) => setCode(val || "")}
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 14,
+                                    scrollBeyondLastLine: false,
+                                    padding: { top: 16 },
+                                }}
+                            />
+                            {/* Run Button Floating or fixed in header? Header is better but let's keep consistent */}
+                            <div className="absolute bottom-4 right-4 z-10">
+                                <button
+                                    onClick={runCode}
+                                    disabled={isRunning}
+                                    className={`flex items-center gap-2 rounded-full px-6 py-2 font-bold shadow-lg transition-all ${isRunning
+                                        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                                        : "bg-green-600 text-white hover:bg-green-700 hover:scale-105"
+                                        }`}
+                                >
+                                    <Play size={16} />
+                                    {isRunning ? "Running..." : "Run Code"}
+                                </button>
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Bottom Section: Tabs & Results */}
-                            <div className="flex-1 min-h-0 flex flex-col">
-                                {/* Tabs */}
-                                <div className="flex border-b border-gray-800 bg-[#161616]">
-                                    <button
-                                        onClick={() => setActiveTab("console")}
-                                        className={cn(
-                                            "px-6 py-2 text-sm font-medium transition-colors border-b-2",
-                                            activeTab === "console" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
-                                        )}
-                                    >
-                                        Console
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab("results")}
-                                        className={cn(
-                                            "px-6 py-2 text-sm font-medium transition-colors border-b-2",
-                                            activeTab === "results" ? "border-blue-500 text-white" : "border-transparent text-gray-400 hover:text-white"
-                                        )}
-                                    >
-                                        Test Results
-                                    </button>
+                    {/* Bottom: Console/Results */}
+                    <div className="h-[35%] flex flex-col bg-[#0e0e0e]">
+                        <div className="flex items-center gap-4 border-b border-gray-800 bg-[#161616] px-4">
+                            <button
+                                onClick={() => setActiveTab("console")}
+                                className={`border-b-2 py-2 text-xs font-bold transition-colors ${activeTab === "console" ? "border-blue-500 text-blue-400" : "border-transparent text-gray-500 hover:text-gray-300"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Terminal size={14} />
+                                    Output
                                 </div>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("results")}
+                                className={`border-b-2 py-2 text-xs font-bold transition-colors ${activeTab === "results" ? "border-purple-500 text-purple-400" : "border-transparent text-gray-500 hover:text-gray-300"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle size={14} />
+                                    Test Results
+                                </div>
+                            </button>
+                        </div>
 
-                                {/* Tab Content */}
-                                <div className="flex-1 overflow-hidden relative bg-[#111111]">
-                                    {activeTab === "console" ? (
-                                        <div className="h-full w-full p-4 overflow-y-auto font-mono text-sm text-gray-300 whitespace-pre-wrap">
-                                            {output || "Run code to see output..."}
-                                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
+                            {activeTab === "console" ? (
+                                <div className="space-y-2">
+                                    {output ? (
+                                        <pre className="whitespace-pre-wrap text-gray-300">{output}</pre>
                                     ) : (
-                                        <div className="h-full w-full p-4 overflow-y-auto">
-                                            {status === "idle" && (
-                                                <div className="text-gray-500 text-center mt-4">Run your code to see results</div>
-                                            )}
-                                            {status !== "idle" && (
-                                                <div className="space-y-2">
-                                                    <div className={cn(
-                                                        "p-3 rounded border mb-4",
-                                                        status === "success" ? "border-green-900 bg-green-900/20 text-green-400" :
-                                                            status === "error" ? "border-red-900 bg-red-900/20 text-red-400" :
-                                                                "border-blue-900 bg-blue-900/20 text-blue-400"
-                                                    )}>
-                                                        {status === "running" ? "Running Tests..." :
-                                                            status === "success" ? "All Test Cases Passed!" : "Some Test Cases Failed"}
-                                                    </div>
-                                                    <pre className="font-mono text-sm text-gray-300 whitespace-pre-wrap bg-[#0e0e0e] p-4 rounded border border-gray-800">
-                                                        {output}
-                                                    </pre>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <div className="text-gray-600 italic">Run your code to see output...</div>
                                     )}
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {testResults ? (
+                                        <>
+                                            <div className={`flex items-center gap-2 text-sm font-bold ${testResults.passed ? "text-green-400" : "text-red-400"}`}>
+                                                {testResults.passed ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                                                <span>{testResults.passed ? "All Test Cases Passed!" : "Some Test Cases Failed"}</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {testResults.results.map((r: any, i: number) => (
+                                                    <div key={i} className={`rounded p-2 border ${r.passed ? "border-green-900/50 bg-green-900/10" : "border-red-900/50 bg-red-900/10"}`}>
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-xs font-bold text-gray-400">Case {i + 1}</span>
+                                                            {r.passed ? <span className="text-xs text-green-500">Passed</span> : <span className="text-xs text-red-500">Failed</span>}
+                                                        </div>
+                                                        {!r.passed && (
+                                                            <div className="space-y-1 text-xs">
+                                                                <div>Expected: <span className="text-gray-300">{r.expected}</span></div>
+                                                                <div>Actual: <span className="text-red-300">{r.actual}</span></div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-gray-600 italic">Run your code to check test cases...</div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    </>
-                )}
+                    </div>
+                </div>
             </div>
         </div>
     );
