@@ -213,20 +213,24 @@ export default function AssignmentPage() {
             setProblem(prev => {
                 if (!prev) return prev;
                 let changed = false;
-                const updatedHints = prev.hints.map(h => {
-                    const isLocked = new Date(h.unlockTime).getTime() > now;
+                const updatedHints = prev.hints.map((h, idx) => {
+                    // Progressive unlocking: 2 mins per hint
+                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 2 * 60 * 1000;
+                    const isLocked = now < unlockTime;
+
                     if (isLocked !== h.locked) changed = true;
-                    return { ...h, locked: isLocked };
+                    // Store/Update unlockTime in hint for UI countdown
+                    return { ...h, locked: isLocked, unlockTime: new Date(unlockTime).toISOString() };
                 });
 
                 if (!changed) return prev;
                 return { ...prev, hints: updatedHints };
             });
 
-            // Ask AI Timer (7 minutes = 7 * 60 * 1000 ms)
+            // Ask AI Timer (7 minutes from start)
             if (problem.startedAt) {
-                const startTime = new Date(problem.startedAt).getTime();
-                const unlockTime = startTime + 7 * 60 * 1000;
+                const startTimeLen = new Date(problem.startedAt).getTime();
+                const unlockTime = startTimeLen + 7 * 60 * 1000;
                 const remaining = unlockTime - now;
 
                 if (remaining <= 0) {
@@ -234,12 +238,12 @@ export default function AssignmentPage() {
                     setTimeToAi("");
                 } else {
                     setCanAskAi(false);
+                    // Format logic can stay
                     const minutes = Math.floor(remaining / 60000);
                     const seconds = Math.floor((remaining % 60000) / 1000);
                     setTimeToAi(`${minutes}:${seconds.toString().padStart(2, "0")}`);
                 }
             }
-
         }, 1000);
         return () => clearInterval(interval);
     }, [problem?.id, problem?.startedAt]);
@@ -632,6 +636,7 @@ export default function AssignmentPage() {
                             <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
                         </div>
 
+
                         {/* Hints Section */}
                         <div>
                             <div className="mb-4 flex items-center gap-3">
@@ -724,13 +729,15 @@ export default function AssignmentPage() {
                                 Test Results
                             </button>
                             <button
-                                onClick={() => setActiveTab("ask-ai")}
+                                onClick={() => canAskAi && setActiveTab("ask-ai")}
                                 className={cn(
                                     "px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2",
-                                    activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                    activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]",
+                                    !canAskAi && "opacity-50 cursor-not-allowed"
                                 )}
                             >
                                 Ask AI
+                                {!canAskAi && <span className="text-xs">({timeToAi})</span>}
                                 {!canAskAi && <Lock size={12} />}
                             </button>
                         </div>
