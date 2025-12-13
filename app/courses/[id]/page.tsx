@@ -171,6 +171,37 @@ export default function CoursePlayerPage() {
         fetchSignedUrl();
     }, [activeItem]);
 
+    // Video Watch Time Tracking
+    const [accumulatedTime, setAccumulatedTime] = useState(0);
+    const lastTimeRef = useRef(0);
+
+    const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        const currentTime = e.currentTarget.currentTime;
+        if (currentTime > lastTimeRef.current && currentTime - lastTimeRef.current < 2) {
+            setAccumulatedTime(prev => prev + (currentTime - lastTimeRef.current));
+        }
+        lastTimeRef.current = currentTime;
+    };
+
+    const saveVideoProgress = async () => {
+        if (accumulatedTime < 1) return;
+        try {
+            if (activeItem) {
+                await completeItem(activeItem.id, Math.floor(accumulatedTime), true);
+                setAccumulatedTime(0);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    useEffect(() => {
+        if (accumulatedTime > 0) {
+            const timer = setTimeout(saveVideoProgress, 30000);
+            return () => clearTimeout(timer);
+        }
+    }, [accumulatedTime]);
+
     // Timer Logic
     useEffect(() => {
         if (!course || !activeModuleId) return;
@@ -284,23 +315,13 @@ export default function CoursePlayerPage() {
         }
     };
 
-    const completeItem = async (itemId: string) => {
+    const completeItem = async (itemId: string, duration?: number, increment = false) => {
         try {
-            const res = await fetch(`/api/modules/items/${itemId}/complete`, { method: "POST" });
-            if (res.ok) {
-                fetchCourseData();
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const submitInterviewReview = async (itemId: string, messages: any[]) => {
-        try {
-            const res = await fetch(`/api/modules/items/${itemId}/review`, {
+            const body = JSON.stringify({ duration, increment });
+            const res = await fetch(`/api/modules/items/${itemId}/complete`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ messages }),
+                body
             });
             if (res.ok) {
                 fetchCourseData();
@@ -310,407 +331,352 @@ export default function CoursePlayerPage() {
         }
     };
 
-    const submitWebDev = async (itemId: string, submission: any) => {
-        try {
-            const res = await fetch(`/api/modules/items/${itemId}/submit-web`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(submission),
-            });
-            if (res.ok) {
-                fetchCourseData();
-                alert("Assignment Submitted Successfully!");
+    // ... inside render:
+    <TestPlayer
+        duration={activeItem.testDuration || 30}
+        passingScore={activeItem.testPassingScore || 60}
+        problems={activeItem.testProblems || []}
+        onComplete={(passed, score, durationSpent) => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(err => console.error(err));
             }
-        } catch (error) {
-            console.error(error);
-            alert("Failed to submit assignment");
+            setIsTestFullScreen(false);
+            setLastTestResult({ passed, score });
+            if (passed) {
+                completeItem(activeItem.id, durationSpent);
+            }
+        }}
+    />
+    try {
+        const res = await fetch(`/api/modules/items/${itemId}/review`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages }),
+        });
+        if (res.ok) {
+            fetchCourseData();
         }
-    };
+    } catch (error) {
+        console.error(error);
+    }
+};
 
-    const runPracticeCode = async () => {
-        setIsRunning(true);
-        setRunStatus("running");
-        setPracticeOutput("");
-        try {
-            const res = await fetch("/api/compile", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    code: practiceCode,
-                    language: practiceLanguage,
-                    input: customInput,
-                }),
-            });
-            const data = await res.json();
-            if (data.error) {
-                setRunStatus("error");
-                setPracticeOutput(data.error);
-            } else {
-                setRunStatus("success");
-                setPracticeOutput(data.output || "No output");
-            }
-        } catch (error) {
+const submitWebDev = async (itemId: string, submission: any) => {
+    try {
+        const res = await fetch(`/api/modules/items/${itemId}/submit-web`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(submission),
+        });
+        if (res.ok) {
+            fetchCourseData();
+            alert("Assignment Submitted Successfully!");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Failed to submit assignment");
+    }
+};
+
+const runPracticeCode = async () => {
+    setIsRunning(true);
+    setRunStatus("running");
+    setPracticeOutput("");
+    try {
+        const res = await fetch("/api/compile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                code: practiceCode,
+                language: practiceLanguage,
+                input: customInput,
+            }),
+        });
+        const data = await res.json();
+        if (data.error) {
             setRunStatus("error");
-            setPracticeOutput("Failed to run code");
-        } finally {
-            setIsRunning(false);
+            setPracticeOutput(data.error);
+        } else {
+            setRunStatus("success");
+            setPracticeOutput(data.output || "No output");
         }
-    };
+    } catch (error) {
+        setRunStatus("error");
+        setPracticeOutput("Failed to run code");
+    } finally {
+        setIsRunning(false);
+    }
+};
 
-    const savePracticeCode = async () => {
-        if (!activeModuleId) return;
-        try {
-            const res = await fetch(`/api/courses/${courseId}/modules/${activeModuleId}/practice-save`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    code: practiceCode,
-                    language: practiceLanguage,
-                }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-                alert("Code saved to GitHub!");
-                setPracticeCode(""); // Reset code
-            } else {
-                alert(data.error || "Failed to save code");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Failed to save code");
+const savePracticeCode = async () => {
+    if (!activeModuleId) return;
+    try {
+        const res = await fetch(`/api/courses/${courseId}/modules/${activeModuleId}/practice-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                code: practiceCode,
+                language: practiceLanguage,
+            }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert("Code saved to GitHub!");
+            setPracticeCode(""); // Reset code
+        } else {
+            alert(data.error || "Failed to save code");
         }
-    };
+    } catch (error) {
+        console.error(error);
+        alert("Failed to save code");
+    }
+};
 
-    if (isLoading) return <div className="p-8 text-white">Loading...</div>;
-    if (!course) return <div className="p-8 text-white">Course not found</div>;
+if (isLoading) return <div className="p-8 text-white">Loading...</div>;
+if (!course) return <div className="p-8 text-white">Course not found</div>;
 
-    if (!course.isEnrolled) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-[#0e0e0e] text-white">
-                <div className="max-w-md space-y-6 rounded-lg border border-gray-800 bg-[#111111] p-8 text-center">
-                    <h1 className="text-2xl font-bold">{course.title}</h1>
-                    <p className="text-gray-400">{course.description}</p>
+if (!course.isEnrolled) {
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-[#0e0e0e] text-white">
+            <div className="max-w-md space-y-6 rounded-lg border border-gray-800 bg-[#111111] p-8 text-center">
+                <h1 className="text-2xl font-bold">{course.title}</h1>
+                <p className="text-gray-400">{course.description}</p>
+                <button
+                    onClick={handleEnroll}
+                    disabled={isEnrolling}
+                    className="w-full rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700 disabled:opacity-50"
+                >
+                    {isEnrolling ? "Enrolling..." : "Enroll Now"}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+
+
+console.log("Active Item:", activeItem);
+if (activeItem?.type === "ASSIGNMENT") {
+    console.log("Assignment Problems:", activeItem.assignment?.problems);
+    console.log("LeetCode URL:", activeItem.assignment?.problems?.[0]?.leetcodeUrl);
+}
+
+return (
+    <div className="flex h-screen bg-[#0e0e0e] text-white">
+        {/* Sidebar */}
+        {!showPractice && !isWebDevFullScreen && !isTestFullScreen && (
+            <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
+                <div className="border-b border-gray-800 p-4">
+                    <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
+                        ← Back to Courses
+                    </Link>
+                    <h2 className="font-bold">{course.title}</h2>
+                </div>
+                <div className="p-4">
+                    {course.modules.map((module, idx) => (
+                        <div key={module.id} className="mb-6">
+                            <div className="mb-2 flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-gray-300">
+                                    Module {idx + 1}: {module.title}
+                                </h3>
+                                {module.status === "LOCKED" ? (
+                                    <Lock size={14} className="text-gray-600" />
+                                ) : module.status === "COMPLETED" ? (
+                                    <CheckCircle size={14} className="text-green-500" />
+                                ) : (
+                                    <Unlock size={14} className="text-blue-500" />
+                                )}
+                            </div>
+
+                            <div className="space-y-1">
+                                {module.items.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => {
+                                            if (module.status !== "LOCKED") {
+                                                setActiveModuleId(module.id);
+                                                setActiveItemId(item.id);
+                                                setIsWebDevFullScreen(false);
+                                                setIsTestFullScreen(false);
+                                            }
+                                        }}
+                                        disabled={module.status === "LOCKED"}
+                                        className={`flex w-full items-center gap-3 rounded px-3 py-2 text-sm transition-colors ${activeItemId === item.id && activeModuleId === module.id
+                                            ? "bg-blue-900/30 text-blue-400"
+                                            : "text-gray-400 hover:bg-[#1e1e1e] hover:text-white"
+                                            } ${module.status === "LOCKED" ? "cursor-not-allowed opacity-50" : ""}`}
+                                    >
+                                        {item.isCompleted ? (
+                                            <CheckCircle size={14} className="text-green-500" />
+                                        ) : item.type === "VIDEO" ? (
+                                            <Video size={16} className="text-blue-400" />
+                                        ) : item.type === "AI_INTERVIEW" ? (
+                                            <Brain size={16} className="text-pink-400" />
+                                        ) : item.type === "TEST" ? (
+                                            <Code size={16} className="text-yellow-400" />
+                                        ) : item.type === "WEB_DEV" ? (
+                                            <Layout size={16} className="text-orange-400" />
+                                        ) : item.type === "LEETCODE" ? (
+                                            <Code size={16} className="text-green-400" />
+                                        ) : (
+                                            <FileText size={16} className="text-purple-400" />
+                                        )}
+                                        <span className="truncate">{item.title}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </aside>
+        )}
+
+        {/* Main Content */}
+        <main className={`flex-1 overflow-y-auto ${showPractice || isWebDevFullScreen || isTestFullScreen ? "p-0" : "p-8"}`}>
+            {activeModule && activeModule.status === "LOCKED" ? (
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                    <Lock size={48} className="mb-4 text-gray-600" />
+                    <h2 className="text-xl font-bold">Module Locked</h2>
+                    <p className="text-gray-400">Complete the previous module to unlock this one.</p>
+                </div>
+            ) : activeModule && activeModule.status === "IN_PROGRESS" && !activeModule.startedAt ? (
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                    <h2 className="text-xl font-bold mb-4">{activeModule.title}</h2>
+                    <p className="text-gray-400 mb-6">You have {Math.round(activeModule.timeLimit / 60)} hours to complete this module once started.</p>
                     <button
-                        onClick={handleEnroll}
-                        disabled={isEnrolling}
-                        className="w-full rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700 disabled:opacity-50"
+                        onClick={() => startModule(activeModule.id)}
+                        className="rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700"
                     >
-                        {isEnrolling ? "Enrolling..." : "Enroll Now"}
+                        Start Module & Timer
                     </button>
                 </div>
-            </div>
-        );
-    }
+            ) : activeItem ? (
+                <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen || isTestFullScreen ? "max-w-full" : "max-w-4xl"}`}>
+                    {!isWebDevFullScreen && !isTestFullScreen && (
+                        <div className="mb-6 flex items-center justify-between">
+                            <h1 className="text-2xl font-bold">{activeItem.title}</h1>
+                            <div className="flex items-center gap-4">
+                                {activeItem.type === "VIDEO" && (
+                                    <button
+                                        onClick={() => setShowPractice(!showPractice)}
+                                        className={`flex items-center gap-2 rounded px-3 py-1 text-sm font-medium transition-colors ${showPractice ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                                            }`}
+                                    >
+                                        <Code size={16} />
+                                        {showPractice ? "Hide Practice" : "Practice Mode"}
+                                    </button>
+                                )}
+                                {timeLeft && (
+                                    <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
+                                        <Clock size={16} />
+                                        <span className="font-mono font-bold">{timeLeft}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-
-
-    console.log("Active Item:", activeItem);
-    if (activeItem?.type === "ASSIGNMENT") {
-        console.log("Assignment Problems:", activeItem.assignment?.problems);
-        console.log("LeetCode URL:", activeItem.assignment?.problems?.[0]?.leetcodeUrl);
-    }
-
-    return (
-        <div className="flex h-screen bg-[#0e0e0e] text-white">
-            {/* Sidebar */}
-            {!showPractice && !isWebDevFullScreen && !isTestFullScreen && (
-                <aside className="w-80 overflow-y-auto border-r border-gray-800 bg-[#111111]">
-                    <div className="border-b border-gray-800 p-4">
-                        <Link href="/courses" className="mb-2 block text-xs text-gray-500 hover:text-white">
-                            ← Back to Courses
-                        </Link>
-                        <h2 className="font-bold">{course.title}</h2>
-                    </div>
-                    <div className="p-4">
-                        {course.modules.map((module, idx) => (
-                            <div key={module.id} className="mb-6">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-gray-300">
-                                        Module {idx + 1}: {module.title}
-                                    </h3>
-                                    {module.status === "LOCKED" ? (
-                                        <Lock size={14} className="text-gray-600" />
-                                    ) : module.status === "COMPLETED" ? (
-                                        <CheckCircle size={14} className="text-green-500" />
+                    <div
+                        ref={containerRef}
+                        className={`flex-1 overflow-hidden ${!isWebDevFullScreen && !isTestFullScreen ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
+                    >
+                        <div
+                            className={`overflow-hidden bg-[#111111] ${isWebDevFullScreen || isTestFullScreen ? "h-full border-0 rounded-none" : "h-full rounded-lg border border-gray-800"}`}
+                            style={{ width: showPractice ? `${splitRatio}%` : "100%" }}
+                        >
+                            {activeItem.type === "VIDEO" ? (
+                                <div className="h-full w-full bg-black flex items-center justify-center">
+                                    {activeItem.content?.includes("cloudinary.com") || activeItem.content?.includes("r2.cloudflarestorage.com") || activeItem.content?.includes("backblazeb2.com") || activeItem.content?.endsWith(".mp4") ? (
+                                        <video
+                                            src={signedVideoUrl || activeItem.content}
+                                            controls
+                                            playsInline
+                                            className="max-h-full max-w-full object-contain"
+                                            onTimeUpdate={handleVideoTimeUpdate}
+                                            onPause={saveVideoProgress}
+                                            onEnded={() => {
+                                                saveVideoProgress();
+                                                completeItem(activeItem.id);
+                                            }}
+                                        />
                                     ) : (
-                                        <Unlock size={14} className="text-blue-500" />
+                                        <iframe
+                                            src={activeItem.content?.replace("watch?v=", "embed/")}
+                                            className="h-full w-full"
+                                            allowFullScreen
+                                        />
                                     )}
                                 </div>
+                            ) : activeItem.type === "AI_INTERVIEW" ? (
+                                <div className="h-full w-full overflow-y-auto bg-[#0e0e0e]">
+                                    <AIInterviewPlayer
+                                        topic={activeItem.aiInterviewTopic || "General"}
+                                        questionCountLimit={activeItem.aiQuestionsCount || 5}
+                                        difficulty={activeItem.aiDifficulty}
+                                        reviewStatus={activeItem.reviewStatus}
+                                        onComplete={() => completeItem(activeItem.id)}
+                                        onSubmitReview={(messages, duration) => submitInterviewReview(activeItem.id, messages, duration)}
+                                    />
+                                </div>
+                            ) : activeItem.type === "TEST" ? (
+                                !isTestFullScreen ? (
+                                    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                        <Code className="h-16 w-16 text-yellow-400" />
+                                        <h2 className="text-xl font-bold">Coding Test</h2>
 
-                                <div className="space-y-1">
-                                    {module.items.map((item) => (
+                                        {lastTestResult && (
+                                            <div className={`mb-2 rounded-lg border px-6 py-3 ${lastTestResult.passed
+                                                ? "border-green-900 bg-green-900/20 text-green-400"
+                                                : "border-red-900 bg-red-900/20 text-red-400"
+                                                }`}>
+                                                <p className="font-bold text-lg">{lastTestResult.passed ? "Test Passed!" : "Test Failed"}</p>
+                                                <p>Score: {lastTestResult.score.toFixed(1)}%</p>
+                                                {!lastTestResult.passed && (
+                                                    <p className="text-sm opacity-80 mt-1">
+                                                        Required: {activeItem.testPassingScore || 60}%
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <p className="text-gray-400">
+                                            You have {activeItem.testDuration || 30} minutes to complete this test.
+                                            <br />
+                                            Passing Score: {activeItem.testPassingScore || 60}%
+                                        </p>
                                         <button
-                                            key={item.id}
                                             onClick={() => {
-                                                if (module.status !== "LOCKED") {
-                                                    setActiveModuleId(module.id);
-                                                    setActiveItemId(item.id);
-                                                    setIsWebDevFullScreen(false);
-                                                    setIsTestFullScreen(false);
+                                                setIsTestFullScreen(true);
+                                                document.documentElement.requestFullscreen().catch(err => console.error(err));
+                                            }}
+                                            className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700 transition-colors"
+                                        >
+                                            {lastTestResult && !lastTestResult.passed ? "Try Again" : "Start Test"}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                        <TestPlayer
+                                            duration={activeItem.testDuration || 30}
+                                            passingScore={activeItem.testPassingScore || 60}
+                                            problems={activeItem.testProblems || []}
+                                            onComplete={(passed, score) => {
+                                                if (document.fullscreenElement) {
+                                                    document.exitFullscreen().catch(err => console.error(err));
+                                                }
+                                                setIsTestFullScreen(false);
+                                                setLastTestResult({ passed, score });
+                                                if (passed) {
+                                                    completeItem(activeItem.id);
                                                 }
                                             }}
-                                            disabled={module.status === "LOCKED"}
-                                            className={`flex w-full items-center gap-3 rounded px-3 py-2 text-sm transition-colors ${activeItemId === item.id && activeModuleId === module.id
-                                                ? "bg-blue-900/30 text-blue-400"
-                                                : "text-gray-400 hover:bg-[#1e1e1e] hover:text-white"
-                                                } ${module.status === "LOCKED" ? "cursor-not-allowed opacity-50" : ""}`}
-                                        >
-                                            {item.isCompleted ? (
-                                                <CheckCircle size={14} className="text-green-500" />
-                                            ) : item.type === "VIDEO" ? (
-                                                <Video size={16} className="text-blue-400" />
-                                            ) : item.type === "AI_INTERVIEW" ? (
-                                                <Brain size={16} className="text-pink-400" />
-                                            ) : item.type === "TEST" ? (
-                                                <Code size={16} className="text-yellow-400" />
-                                            ) : item.type === "WEB_DEV" ? (
-                                                <Layout size={16} className="text-orange-400" />
-                                            ) : item.type === "LEETCODE" ? (
-                                                <Code size={16} className="text-green-400" />
-                                            ) : (
-                                                <FileText size={16} className="text-purple-400" />
-                                            )}
-                                            <span className="truncate">{item.title}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </aside>
-            )}
-
-            {/* Main Content */}
-            <main className={`flex-1 overflow-y-auto ${showPractice || isWebDevFullScreen || isTestFullScreen ? "p-0" : "p-8"}`}>
-                {activeModule && activeModule.status === "LOCKED" ? (
-                    <div className="flex h-full flex-col items-center justify-center text-center">
-                        <Lock size={48} className="mb-4 text-gray-600" />
-                        <h2 className="text-xl font-bold">Module Locked</h2>
-                        <p className="text-gray-400">Complete the previous module to unlock this one.</p>
-                    </div>
-                ) : activeModule && activeModule.status === "IN_PROGRESS" && !activeModule.startedAt ? (
-                    <div className="flex h-full flex-col items-center justify-center text-center">
-                        <h2 className="text-xl font-bold mb-4">{activeModule.title}</h2>
-                        <p className="text-gray-400 mb-6">You have {Math.round(activeModule.timeLimit / 60)} hours to complete this module once started.</p>
-                        <button
-                            onClick={() => startModule(activeModule.id)}
-                            className="rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700"
-                        >
-                            Start Module & Timer
-                        </button>
-                    </div>
-                ) : activeItem ? (
-                    <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen || isTestFullScreen ? "max-w-full" : "max-w-4xl"}`}>
-                        {!isWebDevFullScreen && !isTestFullScreen && (
-                            <div className="mb-6 flex items-center justify-between">
-                                <h1 className="text-2xl font-bold">{activeItem.title}</h1>
-                                <div className="flex items-center gap-4">
-                                    {activeItem.type === "VIDEO" && (
-                                        <button
-                                            onClick={() => setShowPractice(!showPractice)}
-                                            className={`flex items-center gap-2 rounded px-3 py-1 text-sm font-medium transition-colors ${showPractice ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
-                                                }`}
-                                        >
-                                            <Code size={16} />
-                                            {showPractice ? "Hide Practice" : "Practice Mode"}
-                                        </button>
-                                    )}
-                                    {timeLeft && (
-                                        <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
-                                            <Clock size={16} />
-                                            <span className="font-mono font-bold">{timeLeft}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        <div
-                            ref={containerRef}
-                            className={`flex-1 overflow-hidden ${!isWebDevFullScreen && !isTestFullScreen ? "mb-8" : ""} ${showPractice ? "flex gap-4" : ""}`}
-                        >
-                            <div
-                                className={`overflow-hidden bg-[#111111] ${isWebDevFullScreen || isTestFullScreen ? "h-full border-0 rounded-none" : "h-full rounded-lg border border-gray-800"}`}
-                                style={{ width: showPractice ? `${splitRatio}%` : "100%" }}
-                            >
-                                {activeItem.type === "VIDEO" ? (
-                                    <div className="h-full w-full bg-black flex items-center justify-center">
-                                        {activeItem.content?.includes("cloudinary.com") || activeItem.content?.includes("r2.cloudflarestorage.com") || activeItem.content?.includes("backblazeb2.com") || activeItem.content?.endsWith(".mp4") ? (
-                                            <video
-                                                src={signedVideoUrl || activeItem.content}
-                                                controls
-                                                playsInline
-                                                className="max-h-full max-w-full object-contain"
-                                            />
-                                        ) : (
-                                            <iframe
-                                                src={activeItem.content?.replace("watch?v=", "embed/")}
-                                                className="h-full w-full"
-                                                allowFullScreen
-                                            />
-                                        )}
-                                    </div>
-                                ) : activeItem.type === "AI_INTERVIEW" ? (
-                                    <div className="h-full w-full overflow-y-auto bg-[#0e0e0e]">
-                                        <AIInterviewPlayer
-                                            topic={activeItem.aiInterviewTopic || "General"}
-                                            questionCountLimit={activeItem.aiQuestionsCount || 5}
-                                            difficulty={activeItem.aiDifficulty}
-                                            reviewStatus={activeItem.reviewStatus}
-                                            onComplete={() => completeItem(activeItem.id)}
-                                            onSubmitReview={(messages) => submitInterviewReview(activeItem.id, messages)}
                                         />
                                     </div>
-                                ) : activeItem.type === "TEST" ? (
-                                    !isTestFullScreen ? (
-                                        <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                                            <Code className="h-16 w-16 text-yellow-400" />
-                                            <h2 className="text-xl font-bold">Coding Test</h2>
-
-                                            {lastTestResult && (
-                                                <div className={`mb-2 rounded-lg border px-6 py-3 ${lastTestResult.passed
-                                                    ? "border-green-900 bg-green-900/20 text-green-400"
-                                                    : "border-red-900 bg-red-900/20 text-red-400"
-                                                    }`}>
-                                                    <p className="font-bold text-lg">{lastTestResult.passed ? "Test Passed!" : "Test Failed"}</p>
-                                                    <p>Score: {lastTestResult.score.toFixed(1)}%</p>
-                                                    {!lastTestResult.passed && (
-                                                        <p className="text-sm opacity-80 mt-1">
-                                                            Required: {activeItem.testPassingScore || 60}%
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            <p className="text-gray-400">
-                                                You have {activeItem.testDuration || 30} minutes to complete this test.
-                                                <br />
-                                                Passing Score: {activeItem.testPassingScore || 60}%
-                                            </p>
-                                            <button
-                                                onClick={() => {
-                                                    setIsTestFullScreen(true);
-                                                    document.documentElement.requestFullscreen().catch(err => console.error(err));
-                                                }}
-                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700 transition-colors"
-                                            >
-                                                {lastTestResult && !lastTestResult.passed ? "Try Again" : "Start Test"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
-                                            <TestPlayer
-                                                duration={activeItem.testDuration || 30}
-                                                passingScore={activeItem.testPassingScore || 60}
-                                                problems={activeItem.testProblems || []}
-                                                onComplete={(passed, score) => {
-                                                    if (document.fullscreenElement) {
-                                                        document.exitFullscreen().catch(err => console.error(err));
-                                                    }
-                                                    setIsTestFullScreen(false);
-                                                    setLastTestResult({ passed, score });
-                                                    if (passed) {
-                                                        completeItem(activeItem.id);
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    )
-                                ) : activeItem.type === "ASSIGNMENT" ? (
-                                    activeItem.assignment?.problems?.[0]?.leetcodeUrl ? (
-                                        <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
-                                            {/* ... LeetCode UI ... */}
-                                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
-                                                <Code className="h-10 w-10 text-yellow-500" />
-                                            </div>
-
-                                            <div className="space-y-2">
-                                                <h2 className="text-2xl font-bold">{activeItem.title}</h2>
-                                                <p className="text-gray-400 max-w-md mx-auto">
-                                                    Solve this problem on LeetCode and verify your submission here.
-                                                </p>
-                                            </div>
-
-                                            <div className="flex flex-col gap-4 w-full max-w-sm">
-                                                <a
-                                                    href={activeItem.assignment.problems[0].leetcodeUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
-                                                >
-                                                    Solve on LeetCode <Unlock size={16} />
-                                                </a>
-
-                                                <div className="relative">
-                                                    <div className="absolute inset-0 flex items-center">
-                                                        <span className="w-full border-t border-gray-800" />
-                                                    </div>
-                                                    <div className="relative flex justify-center text-xs uppercase">
-                                                        <span className="bg-[#0e0e0e] px-2 text-gray-500">Then</span>
-                                                    </div>
-                                                </div>
-
-                                                <LeetCodeVerifier
-                                                    problemSlug={activeItem.assignment.problems[0].slug || activeItem.assignment.problems[0].leetcodeUrl.split("/problems/")[1]?.split("/")[0] || ""}
-                                                    onVerified={() => completeItem(activeItem.id)}
-                                                />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                                            <FileText className="h-16 w-16 text-gray-600" />
-                                            <h2 className="text-xl font-bold">Coding Assignment</h2>
-                                            <p className="text-gray-400">
-                                                This module contains a coding assignment. Click below to start.
-                                            </p>
-                                            <Link
-                                                href={`/assignment/${activeItem.assignmentId}`}
-                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
-                                            >
-                                                Start Assignment
-                                            </Link>
-
-
-                                        </div>
-                                    )
-                                ) : activeItem.type === "WEB_DEV" ? (
-                                    !isWebDevFullScreen ? (
-                                        <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-                                            <Layout className="h-16 w-16 text-gray-600" />
-                                            <h2 className="text-xl font-bold">Web Development Project</h2>
-                                            <p className="text-gray-400">
-                                                This module contains a web development assignment. Click below to start.
-                                            </p>
-                                            <button
-                                                onClick={() => {
-                                                    setIsWebDevFullScreen(true);
-                                                    document.documentElement.requestFullscreen().catch(err => {
-                                                        console.error("Error entering fullscreen:", err);
-                                                    });
-                                                }}
-                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
-                                            >
-                                                Start Assignment
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
-                                            <WebDevPlayer
-                                                instructions={activeItem.webDevInstructions || ""}
-                                                initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
-                                                savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
-                                                onComplete={(submission) => submitWebDev(activeItem.id, submission)}
-                                                onBack={() => {
-                                                    setIsWebDevFullScreen(false);
-                                                    if (document.fullscreenElement) {
-                                                        document.exitFullscreen().catch(err => console.error(err));
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    )
-                                ) : activeItem.type === "LEETCODE" ? (
+                                )
+                            ) : activeItem.type === "ASSIGNMENT" ? (
+                                activeItem.assignment?.problems?.[0]?.leetcodeUrl ? (
                                     <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+                                        {/* ... LeetCode UI ... */}
                                         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
                                             <Code className="h-10 w-10 text-yellow-500" />
                                         </div>
@@ -724,13 +690,9 @@ export default function CoursePlayerPage() {
 
                                         <div className="flex flex-col gap-4 w-full max-w-sm">
                                             <a
-                                                href={activeItem.assignment?.problems?.[0]?.leetcodeUrl}
+                                                href={activeItem.assignment.problems[0].leetcodeUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                onClick={() => {
-                                                    fetch(`/api/modules/items/${activeItem.id}/start`, { method: "POST" })
-                                                        .then(() => fetchCourseData());
-                                                }}
                                                 className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
                                             >
                                                 Solve on LeetCode <Unlock size={16} />
@@ -746,137 +708,232 @@ export default function CoursePlayerPage() {
                                             </div>
 
                                             <LeetCodeVerifier
-                                                problemSlug={activeItem.assignment?.problems?.[0]?.slug || activeItem.assignment?.problems?.[0]?.leetcodeUrl?.split("/problems/")[1]?.split("/")[0] || ""}
+                                                problemSlug={activeItem.assignment.problems[0].slug || activeItem.assignment.problems[0].leetcodeUrl.split("/problems/")[1]?.split("/")[0] || ""}
                                                 onVerified={() => completeItem(activeItem.id)}
                                             />
-
-                                            {activeItem.assignment?.problems?.[0]?.videoSolution && (
-                                                <div className="mt-4 border-t border-gray-800 pt-4">
-                                                    {!activeItem.startedAt ? (
-                                                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                                                            <Lock size={14} />
-                                                            <span>Solution video unlocks 20m after starting</span>
-                                                        </div>
-                                                    ) : (
-                                                        (() => {
-                                                            const startTime = new Date(activeItem.startedAt!).getTime();
-                                                            const unlockTime = startTime + 20 * 60 * 1000;
-                                                            const now = new Date().getTime();
-                                                            const isUnlocked = now >= unlockTime;
-
-                                                            if (isUnlocked) {
-                                                                return (
-                                                                    <div className="space-y-2">
-                                                                        <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
-                                                                        <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-                                                                            {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.includes("r2.cloudflarestorage.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.endsWith(".mp4") ? (
-                                                                                <video
-                                                                                    src={signedSolutionUrl || activeItem.assignment?.problems?.[0]?.videoSolution}
-                                                                                    controls
-                                                                                    className="h-full w-full object-contain"
-                                                                                />
-                                                                            ) : (
-                                                                                <iframe
-                                                                                    src={activeItem.assignment?.problems?.[0]?.videoSolution?.replace("watch?v=", "embed/")}
-                                                                                    className="h-full w-full"
-                                                                                    allowFullScreen
-                                                                                />
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            } else {
-                                                                const diff = unlockTime - now;
-                                                                const minutes = Math.floor(diff / (1000 * 60));
-                                                                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                                                                return (
-                                                                    <div className="flex items-center justify-center gap-2 rounded bg-[#1a1a1a] p-3 text-sm text-yellow-500">
-                                                                        <Clock size={16} />
-                                                                        <span>Solution unlocks in {minutes}m {seconds}s</span>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                        })()
-                                                    )}
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
-                                ) : null}
-                            </div>
+                                ) : (
+                                    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                        <FileText className="h-16 w-16 text-gray-600" />
+                                        <h2 className="text-xl font-bold">Coding Assignment</h2>
+                                        <p className="text-gray-400">
+                                            This module contains a coding assignment. Click below to start.
+                                        </p>
+                                        <Link
+                                            href={`/assignment/${activeItem.assignmentId}`}
+                                            className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                        >
+                                            Start Assignment
+                                        </Link>
 
-                            {showPractice && activeItem.type === "VIDEO" && (
-                                <>
-                                    {/* Drag Handle */}
-                                    <div
-                                        className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors rounded"
-                                        onMouseDown={startResizing}
-                                    />
 
-                                    <div
-                                        className="flex flex-col gap-4"
-                                        style={{ width: `calc(${100 - splitRatio}% - 1rem)` }}
-                                    >
-                                        <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
-                                            <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
-                                                <select
-                                                    value={practiceLanguage}
-                                                    onChange={(e) => setPracticeLanguage(e.target.value as Language)}
-                                                    className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none"
-                                                >
-                                                    <option value="python">Python</option>
-                                                    <option value="cpp">C++</option>
-                                                    <option value="java">Java</option>
-                                                </select>
-                                                <button
-                                                    onClick={runPracticeCode}
-                                                    disabled={isRunning}
-                                                    className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
-                                                >
-                                                    {isRunning ? "Running..." : "Run Code"}
-                                                </button>
-                                                <button
-                                                    onClick={savePracticeCode}
-                                                    className="ml-2 rounded bg-purple-600 px-3 py-1 text-xs font-bold hover:bg-purple-700"
-                                                >
-                                                    Save
-                                                </button>
+                                    </div>
+                                )
+                            ) : activeItem.type === "WEB_DEV" ? (
+                                !isWebDevFullScreen ? (
+                                    <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+                                        <Layout className="h-16 w-16 text-gray-600" />
+                                        <h2 className="text-xl font-bold">Web Development Project</h2>
+                                        <p className="text-gray-400">
+                                            This module contains a web development assignment. Click below to start.
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setIsWebDevFullScreen(true);
+                                                document.documentElement.requestFullscreen().catch(err => {
+                                                    console.error("Error entering fullscreen:", err);
+                                                });
+                                            }}
+                                            className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                        >
+                                            Start Assignment
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="h-full w-full overflow-hidden bg-[#0e0e0e]">
+                                        <WebDevPlayer
+                                            instructions={activeItem.webDevInstructions || ""}
+                                            initialCode={typeof activeItem.webDevInitialCode === 'string' ? JSON.parse(activeItem.webDevInitialCode) : { html: "", css: "", js: "" }}
+                                            savedSubmission={typeof activeItem.webDevSubmission === 'string' ? JSON.parse(activeItem.webDevSubmission) : undefined}
+                                            onComplete={(submission) => submitWebDev(activeItem.id, submission)}
+                                            onBack={() => {
+                                                setIsWebDevFullScreen(false);
+                                                if (document.fullscreenElement) {
+                                                    document.exitFullscreen().catch(err => console.error(err));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                )
+                            ) : activeItem.type === "LEETCODE" ? (
+                                <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+                                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
+                                        <Code className="h-10 w-10 text-yellow-500" />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <h2 className="text-2xl font-bold">{activeItem.title}</h2>
+                                        <p className="text-gray-400 max-w-md mx-auto">
+                                            Solve this problem on LeetCode and verify your submission here.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-4 w-full max-w-sm">
+                                        <a
+                                            href={activeItem.assignment?.problems?.[0]?.leetcodeUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={() => {
+                                                fetch(`/api/modules/items/${activeItem.id}/start`, { method: "POST" })
+                                                    .then(() => fetchCourseData());
+                                            }}
+                                            className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
+                                        >
+                                            Solve on LeetCode <Unlock size={16} />
+                                        </a>
+
+                                        <div className="relative">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <span className="w-full border-t border-gray-800" />
                                             </div>
-                                            <div className="h-[calc(100%-40px)]">
-                                                <CodeEditor
-                                                    language={practiceLanguage}
-                                                    code={practiceCode}
-                                                    onChange={(val) => setPracticeCode(val || "")}
-                                                />
+                                            <div className="relative flex justify-center text-xs uppercase">
+                                                <span className="bg-[#0e0e0e] px-2 text-gray-500">Then</span>
                                             </div>
                                         </div>
-                                        <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
-                                            <Console
-                                                output={practiceOutput}
-                                                status={runStatus}
-                                                onInput={setCustomInput}
+
+                                        <LeetCodeVerifier
+                                            problemSlug={activeItem.assignment?.problems?.[0]?.slug || activeItem.assignment?.problems?.[0]?.leetcodeUrl?.split("/problems/")[1]?.split("/")[0] || ""}
+                                            onVerified={() => completeItem(activeItem.id)}
+                                        />
+
+                                        {activeItem.assignment?.problems?.[0]?.videoSolution && (
+                                            <div className="mt-4 border-t border-gray-800 pt-4">
+                                                {!activeItem.startedAt ? (
+                                                    <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                                        <Lock size={14} />
+                                                        <span>Solution video unlocks 20m after starting</span>
+                                                    </div>
+                                                ) : (
+                                                    (() => {
+                                                        const startTime = new Date(activeItem.startedAt!).getTime();
+                                                        const unlockTime = startTime + 20 * 60 * 1000;
+                                                        const now = new Date().getTime();
+                                                        const isUnlocked = now >= unlockTime;
+
+                                                        if (isUnlocked) {
+                                                            return (
+                                                                <div className="space-y-2">
+                                                                    <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
+                                                                    <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                                                        {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.includes("r2.cloudflarestorage.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.endsWith(".mp4") ? (
+                                                                            <video
+                                                                                src={signedSolutionUrl || activeItem.assignment?.problems?.[0]?.videoSolution}
+                                                                                controls
+                                                                                className="h-full w-full object-contain"
+                                                                            />
+                                                                        ) : (
+                                                                            <iframe
+                                                                                src={activeItem.assignment?.problems?.[0]?.videoSolution?.replace("watch?v=", "embed/")}
+                                                                                className="h-full w-full"
+                                                                                allowFullScreen
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        } else {
+                                                            const diff = unlockTime - now;
+                                                            const minutes = Math.floor(diff / (1000 * 60));
+                                                            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                                                            return (
+                                                                <div className="flex items-center justify-center gap-2 rounded bg-[#1a1a1a] p-3 text-sm text-yellow-500">
+                                                                    <Clock size={16} />
+                                                                    <span>Solution unlocks in {minutes}m {seconds}s</span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                    })()
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : null}
+                        </div>
+
+                        {showPractice && activeItem.type === "VIDEO" && (
+                            <>
+                                {/* Drag Handle */}
+                                <div
+                                    className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors rounded"
+                                    onMouseDown={startResizing}
+                                />
+
+                                <div
+                                    className="flex flex-col gap-4"
+                                    style={{ width: `calc(${100 - splitRatio}% - 1rem)` }}
+                                >
+                                    <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
+                                        <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
+                                            <select
+                                                value={practiceLanguage}
+                                                onChange={(e) => setPracticeLanguage(e.target.value as Language)}
+                                                className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none"
+                                            >
+                                                <option value="python">Python</option>
+                                                <option value="cpp">C++</option>
+                                                <option value="java">Java</option>
+                                            </select>
+                                            <button
+                                                onClick={runPracticeCode}
+                                                disabled={isRunning}
+                                                className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
+                                            >
+                                                {isRunning ? "Running..." : "Run Code"}
+                                            </button>
+                                            <button
+                                                onClick={savePracticeCode}
+                                                className="ml-2 rounded bg-purple-600 px-3 py-1 text-xs font-bold hover:bg-purple-700"
+                                            >
+                                                Save
+                                            </button>
+                                        </div>
+                                        <div className="h-[calc(100%-40px)]">
+                                            <CodeEditor
+                                                language={practiceLanguage}
+                                                code={practiceCode}
+                                                onChange={(val) => setPracticeCode(val || "")}
                                             />
                                         </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="flex justify-end pb-8">
-                            {!activeItem.isCompleted && activeItem.type === "VIDEO" && (
-                                <button
-                                    onClick={() => completeItem(activeItem.id)}
-                                    className="rounded bg-green-600 px-6 py-2 font-medium hover:bg-green-700"
-                                >
-                                    Mark as Completed
-                                </button>
-                            )}
-                        </div>
+                                    <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
+                                        <Console
+                                            output={practiceOutput}
+                                            status={runStatus}
+                                            onInput={setCustomInput}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
-                ) : (
-                    <div className="text-center text-gray-400">Select an item to view</div>
-                )}
-            </main>
-        </div>
-    );
+
+                    <div className="flex justify-end pb-8">
+                        {!activeItem.isCompleted && activeItem.type === "VIDEO" && (
+                            <button
+                                onClick={() => completeItem(activeItem.id)}
+                                className="rounded bg-green-600 px-6 py-2 font-medium hover:bg-green-700"
+                            >
+                                Mark as Completed
+                            </button>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center text-gray-400">Select an item to view</div>
+            )}
+        </main>
+    </div>
+);
 }

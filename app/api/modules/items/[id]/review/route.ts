@@ -13,7 +13,7 @@ export async function POST(
         }
 
         const { id: moduleItemId } = await params;
-        const { messages } = await req.json();
+        const { messages, duration } = await req.json(); // Get duration from body
         const userId = session.user.id;
 
         // Create or update progress with PENDING status
@@ -28,6 +28,7 @@ export async function POST(
                 aiSubmission: messages,
                 reviewStatus: "PENDING",
                 isCompleted: false, // Ensure it's not marked as complete yet
+                duration: duration ? parseInt(duration) : undefined // Update duration if provided
             },
             create: {
                 userId,
@@ -35,6 +36,7 @@ export async function POST(
                 aiSubmission: messages,
                 reviewStatus: "PENDING",
                 isCompleted: false,
+                duration: duration ? parseInt(duration) : 0
             },
         });
 

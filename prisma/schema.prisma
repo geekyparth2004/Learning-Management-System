@@ -243,6 +243,8 @@ model ModuleItemProgress {
   // Web Dev Submission
   webDevSubmission String? // Was Json. Store as JSON string.
 
+  duration         Int        @default(0) // actual time spent in seconds
+
   @@unique([userId, moduleItemId])
 }
 

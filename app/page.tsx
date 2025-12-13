@@ -38,7 +38,7 @@ export default async function Home() {
       where: { id: userId },
       select: { leetcodeUsername: true, codeforcesUsername: true, gfgUsername: true }
     });
-    const moduleSeconds = completedItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
+    const moduleSeconds = completedItems.reduce((acc, curr) => acc + (curr.duration || curr.moduleItem.duration || 0), 0);
 
     // 2. Fetch Contests & Hackathons Stats (Only Started)
     const contestsEntered = await db.contestRegistration.count({

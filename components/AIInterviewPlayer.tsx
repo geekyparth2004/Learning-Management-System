@@ -11,7 +11,8 @@ interface AIInterviewPlayerProps {
     difficulty?: string;
     reviewStatus?: string; // "PENDING" | "APPROVED" | "REJECTED" | null
     onComplete: () => void;
-    onSubmitReview: (messages: any[]) => void;
+
+    onSubmitReview: (messages: any[], duration: number) => void;
 }
 
 export default function AIInterviewPlayer({
@@ -28,6 +29,24 @@ export default function AIInterviewPlayer({
     const [isLoading, setIsLoading] = useState(false);
     const [questionCount, setQuestionCount] = useState(0);
     const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
+
+    // Timer State
+    const [duration, setDuration] = useState(0);
+
+    // Timer
+    useEffect(() => {
+        if (!hasStarted) return;
+        const timer = setInterval(() => {
+            setDuration(prev => prev + 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [hasStarted]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
     // UI State
     const [isSpeaking, setIsSpeaking] = useState(false);
@@ -154,10 +173,9 @@ export default function AIInterviewPlayer({
 
             setTranscribedText("");
 
-            // Check if we should end the interview
             if (questionCount >= questionCountLimit) {
                 // Add the last assistant message (if any) or just submit
-                onSubmitReview(updatedMessages);
+                onSubmitReview(updatedMessages, duration);
                 return;
             }
 
@@ -248,8 +266,14 @@ export default function AIInterviewPlayer({
             {/* Header */}
             <div className="mb-8 flex items-center justify-between shrink-0">
                 <span className="text-sm font-medium text-indigo-500">{topic} Round</span>
-                <div className="text-sm font-medium text-gray-400">
-                    Q{questionCount}/{questionCountLimit}
+                <div className="flex items-center space-x-4">
+                    <div className="flex items-center text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                        <Clock className="w-4 h-4 mr-2 text-violet-400" />
+                        <span className="font-mono text-sm">{formatTime(duration)}</span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-400">
+                        Q{questionCount}/{questionCountLimit}
+                    </div>
                 </div>
             </div>
 

@@ -13,9 +13,23 @@ export async function POST(
         }
 
         const { id: moduleItemId } = await params;
+        const { duration, increment } = await req.json(); // Get duration and increment flag
         const userId = session.user.id;
 
-        // 1. Mark item as completed
+        // 1. Mark item as completed & Update Duration
+        const updateData: any = {
+            isCompleted: true,
+            completedAt: new Date(),
+        };
+
+        if (duration !== undefined) {
+            if (increment) {
+                updateData.duration = { increment: parseInt(duration) };
+            } else {
+                updateData.duration = parseInt(duration);
+            }
+        }
+
         await db.moduleItemProgress.upsert({
             where: {
                 userId_moduleItemId: {
@@ -23,15 +37,13 @@ export async function POST(
                     moduleItemId,
                 },
             },
-            update: {
-                isCompleted: true,
-                completedAt: new Date(),
-            },
+            update: updateData,
             create: {
                 userId,
                 moduleItemId,
                 isCompleted: true,
                 completedAt: new Date(),
+                duration: duration ? parseInt(duration) : 0
             },
         });
 

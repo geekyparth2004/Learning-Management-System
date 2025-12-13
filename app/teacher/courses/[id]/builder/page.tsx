@@ -45,7 +45,7 @@ export default function CourseBuilderPage() {
     const [newItemType, setNewItemType] = useState<"VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV">("VIDEO");
     const [newItemTitle, setNewItemTitle] = useState("");
     const [newItemContent, setNewItemContent] = useState(""); // URL or Assignment ID
-    const [newItemDuration, setNewItemDuration] = useState(0); // Duration in minutes
+    // const [newItemDuration, setNewItemDuration] = useState(0); // Removed Manual Duration
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
@@ -332,14 +332,14 @@ export default function CourseBuilderPage() {
                     title: newItemTitle,
                     type: newItemType,
                     content: content,
-                    duration: newItemDuration.toString()
+                    duration: "0" // Default to 0 for actual tracking
                 }),
             });
             if (res.ok) {
                 setActiveModuleId(null);
                 setNewItemTitle("");
                 setNewItemContent("");
-                setNewItemDuration(0);
+                // setNewItemDuration(0);
                 setVideoFile(null);
                 setAiTopic("");
                 setAiCount(5);
@@ -594,18 +594,13 @@ export default function CourseBuilderPage() {
                                                                         />
                                                                         {videoFile ? (
                                                                             <div className="w-full space-y-2">
-                                                                                <video
-                                                                                    src={URL.createObjectURL(videoFile)}
-                                                                                    controls
-                                                                                    className="max-h-[300px] w-full rounded bg-black"
-                                                                                />
-                                                                                <div className="flex items-center justify-between">
-                                                                                    <span className="text-sm font-medium text-blue-400">{videoFile.name}</span>
+                                                                                <div className="flex items-center justify-between p-4 bg-[#1e1e1e] rounded border border-gray-800">
+                                                                                    <span className="text-sm font-medium text-blue-400 truncate max-w-[200px]">{videoFile.name}</span>
                                                                                     <label
                                                                                         htmlFor="video-upload"
-                                                                                        className="cursor-pointer text-xs text-gray-400 hover:text-white"
+                                                                                        className="cursor-pointer text-xs text-gray-400 hover:text-white bg-gray-800 px-2 py-1 rounded"
                                                                                     >
-                                                                                        Change Video
+                                                                                        Change
                                                                                     </label>
                                                                                 </div>
                                                                             </div>
@@ -630,16 +625,7 @@ export default function CourseBuilderPage() {
                                                                             <span className="text-xs text-gray-400">{uploadProgress}%</span>
                                                                         </div>
                                                                     )}
-                                                                    <div className="space-y-1">
-                                                                        <label className="text-xs text-gray-400">Duration (minutes)</label>
-                                                                        <input
-                                                                            type="number"
-                                                                            placeholder="e.g. 60"
-                                                                            value={newItemDuration}
-                                                                            onChange={(e) => setNewItemDuration(parseInt(e.target.value) || 0)}
-                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm"
-                                                                        />
-                                                                    </div>
+                                                                    {/* Duration Input Removed */}
                                                                 </div>
                                                             ) : newItemType === "AI_INTERVIEW" ? (
                                                                 <div className="space-y-2">

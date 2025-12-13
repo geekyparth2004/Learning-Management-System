@@ -38,11 +38,12 @@ interface TestPlayerProps {
     duration: number; // minutes
     passingScore: number; // percentage
     problems: Problem[];
-    onComplete: (passed: boolean, score: number) => void;
+    onComplete: (passed: boolean, score: number, durationSpent: number) => void;
 }
 
 export default function TestPlayer({ duration, passingScore, problems, onComplete }: TestPlayerProps) {
     const [timeLeft, setTimeLeft] = useState(duration * 60);
+
     const [activeProblemIndex, setActiveProblemIndex] = useState(0);
     const [language, setLanguage] = useState<"python" | "cpp" | "java">("java");
 
@@ -221,7 +222,9 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         const score = (solvedCount / problems.length) * 100;
         const passed = score >= passingScore;
 
-        onComplete(passed, score);
+        const durationSpent = (duration * 60) - timeLeft; // Calculate time spent in seconds
+
+        onComplete(passed, score, durationSpent);
     };
 
     const nextProblem = () => {
