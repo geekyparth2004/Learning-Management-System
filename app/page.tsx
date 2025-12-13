@@ -103,8 +103,12 @@ export default async function Home() {
       if (now >= start && now <= end) {
         return "border-red-500 bg-red-900/10 animate-pulse shadow-[0_0_20px_rgba(220,38,38,0.3)]";
       }
-      // Upcoming (within 1 hour): Blue
-      if (diff > 0 && diff <= oneHour) {
+      // Upcoming (within 2 hours): Yellow
+      if (diff > 0 && diff <= 2 * oneHour) {
+        return "border-yellow-500 bg-yellow-900/20";
+      }
+      // Upcoming (within 24 hours): Blue
+      if (diff > 2 * oneHour && diff <= 24 * oneHour) {
         return "border-blue-500 bg-blue-900/20";
       }
       return "";

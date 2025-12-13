@@ -113,11 +113,24 @@ export default async function HackathonPage() {
 function ContestCard({ contest, status, registration }: { contest: any, status: "LIVE" | "UPCOMING" | "PAST", registration?: any }) {
     const isExternal = contest.type === "EXTERNAL";
 
+    const now = new Date();
+    const start = new Date(contest.startTime);
+    const diff = start.getTime() - now.getTime();
+    const hoursAway = diff / (1000 * 60 * 60);
+
+    let borderColor = "border-gray-800 bg-[#161616] hover:border-gray-600";
+    if (status === "LIVE") {
+        borderColor = "border-red-500 bg-red-900/10 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.2)]";
+    } else if (status === "UPCOMING") {
+        if (hoursAway <= 2) {
+            borderColor = "border-yellow-500 bg-yellow-900/10 hover:border-yellow-400";
+        } else if (hoursAway <= 24) {
+            borderColor = "border-blue-500 bg-blue-900/10 hover:border-blue-400";
+        }
+    }
+
     return (
-        <div className={`flex flex-col rounded-xl border p-6 transition-all ${status === "LIVE"
-            ? "border-green-900 bg-green-900/10 hover:border-green-500"
-            : "border-gray-800 bg-[#161616] hover:border-gray-600"
-            }`}>
+        <div className={`flex flex-col rounded-xl border p-6 transition-all ${borderColor}`}>
             <div className="mb-4">
                 <div className="flex items-start justify-between">
                     <h3 className="font-bold text-lg line-clamp-1" title={contest.title}>{contest.title}</h3>
