@@ -250,31 +250,26 @@ export default function PracticePlayerPage() {
         const interval = setInterval(() => {
             const now = Date.now();
 
-            // Hints
+            // Hints - Progressive Unlocking (Every 2 minutes)
             setProblem(prev => {
                 if (!prev) return prev;
                 let changed = false;
-                const updatedHints = prev.hints.map(h => {
-                    // For practice, lets say hints unlock relative to start time?
-                    // Or keep original absolute time logic if "unlockTime" is a future date.
-                    // But usually for practice, hints are locked by duration 
-                    // Let's assume unlockTime is passed from DB. 
-                    // If DB doesn't have per-user hint unlock times, we might need a local logic.
-                    // For simplicity, let's behave as if they are available or already unlocked.
-
-                    const isLocked = new Date(h.unlockTime).getTime() > now;
-                    // If unlockTime is invalid/past, it unlocks.
+                const updatedHints = prev.hints.map((h, index) => {
+                    // Unlock Hint i at: startTime + (index + 1) * 2 minutes
+                    const unlockTimestamp = startTime + (index + 1) * 2 * 60 * 1000;
+                    const isLocked = now < unlockTimestamp;
 
                     if (isLocked !== h.locked) changed = true;
-                    return { ...h, locked: isLocked };
+
+                    // Calculate formatting for display if needed, but we just use locked status
+                    return { ...h, locked: isLocked, unlockTime: new Date(unlockTimestamp).toISOString() };
                 });
 
                 if (!changed) return prev;
                 return { ...prev, hints: updatedHints };
             });
 
-            // Ask AI Timer (7 minutes) - Start from when user STARTED the session (startTime)
-            // Just use local startTime state since we don't have server-side session start for practice items usually
+            // Ask AI Timer (7 minutes)
             const unlockTime = startTime + 7 * 60 * 1000;
             const remaining = unlockTime - now;
 
@@ -758,13 +753,15 @@ export default function PracticePlayerPage() {
                                 Test Results
                             </button>
                             <button
-                                onClick={() => setActiveTab("ask-ai")}
+                                onClick={() => canAskAi && setActiveTab("ask-ai")}
                                 className={cn(
                                     "px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2",
-                                    activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                    activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]",
+                                    !canAskAi && "opacity-50 cursor-not-allowed hover:text-gray-400 hover:bg-transparent"
                                 )}
                             >
                                 Ask AI
+                                {!canAskAi && <span className="text-xs">({timeToAi})</span>}
                                 {!canAskAi && <Lock size={12} />}
                             </button>
                         </div>

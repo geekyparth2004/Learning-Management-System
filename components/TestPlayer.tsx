@@ -42,7 +42,7 @@ interface TestPlayerProps {
 }
 
 export default function TestPlayer({ duration, passingScore, problems, onComplete }: TestPlayerProps) {
-    const [timeLeft, setTimeLeft] = useState(duration * 60);
+    const [elapsedTime, setElapsedTime] = useState(0);
 
     const [activeProblemIndex, setActiveProblemIndex] = useState(0);
     const [language, setLanguage] = useState<"python" | "cpp" | "java">("java");
@@ -140,17 +140,10 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         }
     }, [language, activeProblem]);
 
-    // Timer
+    // Timer (Stopwatch)
     useEffect(() => {
         const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    handleSubmitTest(true); // Auto submit
-                    return 0;
-                }
-                return prev - 1;
-            });
+            setElapsedTime(prev => prev + 1);
         }, 1000);
         return () => clearInterval(timer);
     }, []);
@@ -246,7 +239,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         const score = (solvedCount / problems.length) * 100;
         const passed = score >= passingScore;
 
-        const durationSpent = (duration * 60) - timeLeft; // Calculate time spent in seconds
+        const durationSpent = elapsedTime; // Use actual elapsed time
 
         onComplete(passed, score, durationSpent);
     };
@@ -298,7 +291,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-1 text-sm font-medium text-yellow-400">
                         <Clock size={16} />
-                        {formatTime(timeLeft)}
+                        {formatTime(elapsedTime)}
                     </div>
 
                     {activeProblem.type !== "WEB_DEV" && (

@@ -647,14 +647,14 @@ export default function CoursePlayerPage() {
                                                 duration={activeItem.testDuration || 30}
                                                 passingScore={activeItem.testPassingScore || 60}
                                                 problems={activeItem.testProblems || []}
-                                                onComplete={(passed, score) => {
+                                                onComplete={(passed, score, durationSpent) => {
                                                     if (document.fullscreenElement) {
                                                         document.exitFullscreen().catch(err => console.error(err));
                                                     }
                                                     setIsTestFullScreen(false);
                                                     setLastTestResult({ passed, score });
                                                     if (passed) {
-                                                        completeItem(activeItem.id);
+                                                        completeItem(activeItem.id, durationSpent);
                                                     }
                                                 }}
                                             />
