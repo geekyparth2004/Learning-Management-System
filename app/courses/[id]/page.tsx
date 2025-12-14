@@ -649,8 +649,29 @@ export default function CoursePlayerPage() {
                                                         onTimeUpdate={handleVideoTimeUpdate}
                                                         onPause={saveVideoProgress}
                                                         onError={(e) => {
-                                                            console.error("Video Error:", e.currentTarget.error);
-                                                            alert(`Video failed to load. Error: ${e.currentTarget.error?.message || e.currentTarget.error?.code || "Unknown"}`);
+                                                            const target = e.currentTarget;
+                                                            console.error("Video Error:", target.error);
+
+                                                            // Retry logic: If it was a signed URL failure, try fetching a fresh one
+                                                            if (signedVideoUrl && activeItem.content && !target.dataset.retried) {
+                                                                console.log("Attempting to re-sign video URL...");
+                                                                target.dataset.retried = "true";
+                                                                fetch("/api/video/sign", {
+                                                                    method: "POST",
+                                                                    headers: { "Content-Type": "application/json" },
+                                                                    body: JSON.stringify({ url: activeItem.content })
+                                                                })
+                                                                    .then(res => res.json())
+                                                                    .then(data => {
+                                                                        if (data.signedUrl) {
+                                                                            setSignedVideoUrl(data.signedUrl);
+                                                                        }
+                                                                    })
+                                                                    .catch(err => console.error("Retry failed", err));
+                                                                return;
+                                                            }
+
+                                                            alert(`Video failed to load. Please verify your connection.\nCode: ${target.error?.code || "Unknown"}`);
                                                         }}
                                                         onEnded={() => {
                                                             saveVideoProgress();
