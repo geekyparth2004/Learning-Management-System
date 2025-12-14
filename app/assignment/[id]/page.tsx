@@ -547,13 +547,12 @@ export default function AssignmentPage() {
                     <span className="text-sm text-gray-400">{problem.difficulty}</span>
                 </div>
                 <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-2 text-sm font-medium text-white border border-gray-700">
+                        <Clock size={16} className="text-yellow-400" />
+                        {formatElapsedTime(elapsedTime)}
+                    </div>
                     {!problem.leetcodeUrl && (
                         <>
-                            <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-2 text-sm font-medium text-yellow-400">
-                                <Clock size={16} />
-                                {formatElapsedTime(elapsedTime)}
-                            </div>
-
                             <select
                                 value={language}
                                 onChange={e => setLanguage(e.target.value as Language)}
