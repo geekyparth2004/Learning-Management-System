@@ -43,22 +43,9 @@ export async function signR2Url(fileUrl: string) {
         const command = new GetObjectCommand({
             Bucket: bucketName,
             Key: key,
-            ResponseCacheControl: "max-age=3600",
-            ResponseContentDisposition: "inline",
-            ResponseContentType: "video/mp4",
         });
 
-        const command = new GetObjectCommand({
-            Bucket: bucketName,
-            Key: key,
-            ResponseCacheControl: "max-age=3600",
-            ResponseContentDisposition: "inline",
-            ResponseContentType: "video/mp4",
-        });
-
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-        // Critical: URL encoding for '#' is required so browsers don't truncate the path as a fragment
-        return signedUrl.replace(/#/g, "%23");
+        return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     } catch (error) {
         console.error("Error signing R2 URL:", error);
         return fileUrl;
