@@ -370,8 +370,10 @@ export default function CoursePlayerPage() {
                 body
             });
             if (res.ok) {
-                if (res.ok) {
-                    fetchCourseData();
+                // Only refresh data if the item is fully marked as complete
+                // This prevents video reloads during periodic progress saves
+                if (completed) {
+                    fetchCourseData(true);
                 }
             }
         } catch (error) {
