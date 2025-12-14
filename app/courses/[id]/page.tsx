@@ -641,11 +641,16 @@ export default function CoursePlayerPage() {
                                                     <video
                                                         src={signedVideoUrl || activeItem.content}
                                                         controls
+                                                        autoPlay
                                                         preload="auto"
                                                         playsInline
                                                         className="max-h-full max-w-full object-contain"
                                                         onTimeUpdate={handleVideoTimeUpdate}
                                                         onPause={saveVideoProgress}
+                                                        onError={(e) => {
+                                                            console.error("Video Error:", e.currentTarget.error);
+                                                            alert(`Video failed to load. Error: ${e.currentTarget.error?.message || e.currentTarget.error?.code || "Unknown"}`);
+                                                        }}
                                                         onEnded={() => {
                                                             saveVideoProgress();
                                                             completeItem(activeItem.id);
