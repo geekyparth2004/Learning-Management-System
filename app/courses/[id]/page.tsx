@@ -10,7 +10,7 @@ import WebDevPlayer from "@/components/WebDevPlayer";
 import LeetCodeVerifier from "@/components/LeetCodeVerifier";
 
 import CodeEditor from "@/components/CodeEditor";
-import Console from "@/components/Console";
+import Terminal from "@/components/Terminal";
 import { Language } from "@/types";
 
 interface ModuleItem {
@@ -1060,10 +1060,12 @@ export default function CoursePlayerPage() {
                                         </div>
                                         <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
                                             {practiceType === "dsa" ? (
-                                                <Console
+                                                <Terminal
                                                     output={practiceOutput}
+                                                    error={undefined} // We can pass error if we separate it, but currently page.tsx mixes them or manages runStatus
                                                     status={runStatus}
-                                                    onInput={setCustomInput}
+                                                    stdin={customInput}
+                                                    onStdinChange={setCustomInput}
                                                 />
                                             ) : (
                                                 <div className="h-full w-full flex flex-col">
