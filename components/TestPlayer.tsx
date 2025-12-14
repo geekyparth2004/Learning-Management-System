@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle, Lock, Video } from "lucide-react";
+import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle, Lock, Video, RefreshCw } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import WebDevEditor from "./WebDevEditor";
@@ -449,6 +449,27 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             {isRunning ? "Running..." : "Run"}
                         </button>
                     )}
+
+                    <button
+                        onClick={() => {
+                            if (confirm("Reset code to default? Your changes will be lost.")) {
+                                if (activeProblem.type === "WEB_DEV") {
+                                    handleWebDevFilesChange([
+                                        { name: "index.html", language: "html", content: activeProblem.webDevInitialCode?.html || "" },
+                                        { name: "styles.css", language: "css", content: activeProblem.webDevInitialCode?.css || "" },
+                                        { name: "script.js", language: "javascript", content: activeProblem.webDevInitialCode?.js || "" }
+                                    ]);
+                                    setActiveFileName("index.html");
+                                } else {
+                                    handleCodeChange(activeProblem.defaultCode?.[language]);
+                                }
+                            }
+                        }}
+                        className="rounded p-2 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                        title="Reset Code"
+                    >
+                        <RefreshCw size={20} />
+                    </button>
 
                     <button
                         onClick={() => handleSubmitTest(false)}
