@@ -690,7 +690,7 @@ export default function CoursePlayerPage() {
                                                         preload="metadata"
                                                         crossOrigin="anonymous"
                                                         playsInline
-                                                        className="max-h-full max-w-full object-contain"
+                                                        className="h-full w-full object-contain"
                                                         onTimeUpdate={handleVideoTimeUpdate}
                                                         onPause={saveVideoProgress}
                                                         onEnded={() => {
