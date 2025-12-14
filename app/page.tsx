@@ -125,7 +125,8 @@ export default async function Home() {
     // Calculate Total Hours Learned
     const grandTotalSeconds = moduleSeconds + practiceSeconds + contestSeconds;
 
-    const hoursLearned = Math.round(grandTotalSeconds / 3600);
+    const rawHours = grandTotalSeconds / 3600;
+    const hoursLearned = rawHours < 100 ? rawHours.toFixed(1) : Math.round(rawHours);
 
     // 5. Calculate "Today's" Stats (Strict IST Midnight)
     const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata", year: 'numeric', month: '2-digit', day: '2-digit' };
