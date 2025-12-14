@@ -327,11 +327,8 @@ export default async function Home() {
         <NewContestBanner />
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="KodeCraft Logo" className="h-10 w-auto object-contain" />
-              <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
-                KodeCraft
-              </div>
+            <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+              KodeCraft
             </div>
 
             <div className="flex items-center gap-4">
@@ -449,11 +446,8 @@ export default async function Home() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="KodeCraft Logo" className="h-10 w-auto object-contain" />
-              <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
-                KodeCraft
-              </div>
+            <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+              KodeCraft
             </div>
             {!isTeacher && session && (
               <nav className="hidden md:flex items-center gap-6">
