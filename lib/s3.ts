@@ -26,14 +26,17 @@ export async function signR2Url(fileUrl: string) {
         if (!bucketName) return fileUrl;
 
         const urlObj = new URL(fileUrl);
-        const pathParts = urlObj.pathname.split("/");
+        // Important: Handled filenames containing # (which parsed as hash)
+        // by appending urlObj.hash to the pathname.
+        const fullPath = urlObj.pathname + (urlObj.hash || "");
+        const pathParts = fullPath.split("/");
         let key = "";
 
         if (pathParts.includes(bucketName)) {
             const bucketIndex = pathParts.indexOf(bucketName);
             key = pathParts.slice(bucketIndex + 1).join("/");
         } else {
-            key = urlObj.pathname.substring(1);
+            key = fullPath.substring(1);
         }
         key = decodeURIComponent(key);
 
