@@ -162,12 +162,28 @@ export default function CoursePlayerPage() {
 
     useEffect(() => {
         const fetchSignedUrl = async () => {
-            // Check if pre-signed URL is available
+            if (!activeItem?.id) return;
+
+            // Strict Stabilization:
+            // If we are switching items, reset the URL immediately.
+            // If we are on the same item, KEEP the old URL until the new one is ready to prevent flickering.
+            if (lastSignedItemId.current !== activeItem.id) {
+                setSignedVideoUrl(null);
+                setSignedSolutionUrl(null);
+                lastSignedItemId.current = activeItem.id;
+            }
+
+            // 1. Pre-signed available?
             if ((activeItem as any)?.signedUrl) {
                 setSignedVideoUrl((activeItem as any).signedUrl);
+                return;
             }
-            // Sign main video content if not pre-signed
-            else if (activeItem?.type === "VIDEO" && activeItem.content && !activeItem.content.includes("cloudinary.com") && !activeItem.content.includes("youtube")) {
+
+            // 2. Needs signing?
+            const isCloudinary = activeItem.content?.includes("cloudinary.com");
+            const isYoutube = activeItem.content?.includes("youtube");
+
+            if (activeItem.type === "VIDEO" && activeItem.content && !isCloudinary && !isYoutube) {
                 try {
                     const res = await fetch("/api/video/sign", {
                         method: "POST",
@@ -175,21 +191,22 @@ export default function CoursePlayerPage() {
                         body: JSON.stringify({ url: activeItem.content })
                     });
                     const data = await res.json();
-                    if (data.signedUrl && data.signedUrl !== signedVideoUrl) {
-                        setSignedVideoUrl(data.signedUrl);
+                    // Only update if the result is valid and we are still on the same item
+                    if (data.signedUrl && lastSignedItemId.current === activeItem.id) {
+                        setSignedVideoUrl(prev => data.signedUrl !== prev ? data.signedUrl : prev);
                     }
                 } catch (e) {
                     console.error("Failed to sign video URL", e);
                 }
-            } else {
-                setSignedVideoUrl(null);
             }
+            // If it doesn't need signing (e.g. Cloudinary), usually we just use content directly.
+            // But if we previously had a signed URL (from a different item), we cleared it above.
 
-            // Sign solution video content
-            const solutionUrl = activeItem?.type === "LEETCODE"
-                ? activeItem?.assignment?.problems?.[0]?.videoSolution
-                : activeItem?.type === "WEB_DEV"
-                    ? activeItem?.content
+            // 3. Solution Video Signing
+            const solutionUrl = activeItem.type === "LEETCODE"
+                ? activeItem.assignment?.problems?.[0]?.videoSolution
+                : activeItem.type === "WEB_DEV"
+                    ? activeItem.content
                     : null;
 
             if (solutionUrl && !solutionUrl.includes("cloudinary.com") && !solutionUrl.includes("youtube")) {
@@ -200,22 +217,21 @@ export default function CoursePlayerPage() {
                         body: JSON.stringify({ url: solutionUrl })
                     });
                     const data = await res.json();
-                    if (data.signedUrl) {
-                        setSignedSolutionUrl(data.signedUrl);
+                    if (data.signedUrl && lastSignedItemId.current === activeItem.id) {
+                        setSignedSolutionUrl(prev => data.signedUrl !== prev ? data.signedUrl : prev);
                     }
                 } catch (e) {
                     console.error("Failed to sign solution URL", e);
                 }
-            } else {
-                setSignedSolutionUrl(null);
             }
         };
         fetchSignedUrl();
-    }, [activeItem?.id, activeItem?.content, activeItem?.type, (activeItem as any)?.signedUrl]);
+    }, [activeItem?.id, (activeItem as any)?.signedUrl]);
 
     // Video Watch Time Tracking
     const [accumulatedTime, setAccumulatedTime] = useState(0);
     const lastTimeRef = useRef(0);
+    const lastSignedItemId = useRef<string | null>(null);
 
     const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
         const currentTime = e.currentTarget.currentTime;
