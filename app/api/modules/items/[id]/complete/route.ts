@@ -13,14 +13,19 @@ export async function POST(
         }
 
         const { id: moduleItemId } = await params;
-        const { duration, increment } = await req.json(); // Get duration and increment flag
+        const { duration, increment, completed } = await req.json(); // Get duration, increment flag, and completed status
         const userId = session.user.id;
 
         // 1. Mark item as completed & Update Duration
         const updateData: any = {
-            isCompleted: true,
             completedAt: new Date(),
         };
+
+        // Only mark as completed if 'completed' is typically true (default) or explicitly true
+        // If completed is false (e.g. just saving progress), don't mark isCompleted=true
+        if (completed !== false) {
+            updateData.isCompleted = true;
+        }
 
         if (duration !== undefined) {
             if (increment) {
@@ -41,7 +46,7 @@ export async function POST(
             create: {
                 userId,
                 moduleItemId,
-                isCompleted: true,
+                isCompleted: completed !== false, // If creating new, and completed is false, create as incomplete
                 completedAt: new Date(),
                 duration: duration ? parseInt(duration) : 0
             },

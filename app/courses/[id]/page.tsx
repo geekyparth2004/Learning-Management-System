@@ -81,6 +81,44 @@ export default function CoursePlayerPage() {
     const [isTestFullScreen, setIsTestFullScreen] = useState(false);
     const [lastTestResult, setLastTestResult] = useState<{ passed: boolean; score: number } | null>(null);
 
+    // Web Dev Practice State
+    const [practiceType, setPracticeType] = useState<"dsa" | "web">("dsa");
+    const [webFiles, setWebFiles] = useState([
+        { name: "index.html", language: "html", content: "<!-- HTML goes here -->\n<h1>Hello User</h1>" },
+        { name: "styles.css", language: "css", content: "/* CSS goes here */\nbody {\n  color: white;\n  background: #111;\n  font-family: sans-serif;\n}" },
+        { name: "script.js", language: "javascript", content: "// JavaScript goes here\nconsole.log('Hello from JS');" }
+    ]);
+    const [activeWebFile, setActiveWebFile] = useState("index.html");
+    const [webSrcDoc, setWebSrcDoc] = useState("");
+
+    // Generate srcDoc for Web Dev
+    useEffect(() => {
+        const html = webFiles.find(f => f.name === "index.html")?.content || "";
+        const css = webFiles.find(f => f.name === "styles.css")?.content || "";
+        const js = webFiles.find(f => f.name === "script.js")?.content || "";
+
+        setWebSrcDoc(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <style>
+                        ${css}
+                    </style>
+                </head>
+                <body>
+                    ${html}
+                    <script>
+                        try {
+                            ${js}
+                        } catch(e) {
+                            console.error(e);
+                        }
+                    </script>
+                </body>
+            </html>
+        `);
+    }, [webFiles]);
+
     // Split View State
     const [splitRatio, setSplitRatio] = useState(65); // Default 65% for video
     const [isResizing, setIsResizing] = useState(false);
@@ -187,7 +225,7 @@ export default function CoursePlayerPage() {
         if (accumulatedTime < 1) return;
         try {
             if (activeItem) {
-                await completeItem(activeItem.id, Math.floor(accumulatedTime), true);
+                await completeItem(activeItem.id, Math.floor(accumulatedTime), true, false);
                 setAccumulatedTime(0);
             }
         } catch (err) {
@@ -315,9 +353,9 @@ export default function CoursePlayerPage() {
         }
     };
 
-    const completeItem = async (itemId: string, duration?: number, increment = false) => {
+    const completeItem = async (itemId: string, duration?: number, increment = false, completed = true) => {
         try {
-            const body = JSON.stringify({ duration, increment });
+            const body = JSON.stringify({ duration, increment, completed });
             const res = await fetch(`/api/modules/items/${itemId}/complete`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -884,43 +922,113 @@ export default function CoursePlayerPage() {
                                     >
                                         <div className="flex-1 overflow-hidden rounded-lg border border-gray-800 bg-[#1e1e1e]">
                                             <div className="flex items-center justify-between border-b border-gray-700 bg-[#111111] px-4 py-2">
-                                                <select
-                                                    value={practiceLanguage}
-                                                    onChange={(e) => setPracticeLanguage(e.target.value as Language)}
-                                                    className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none"
-                                                >
-                                                    <option value="python">Python</option>
-                                                    <option value="cpp">C++</option>
-                                                    <option value="java">Java</option>
-                                                </select>
-                                                <button
-                                                    onClick={runPracticeCode}
-                                                    disabled={isRunning}
-                                                    className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
-                                                >
-                                                    {isRunning ? "Running..." : "Run Code"}
-                                                </button>
-                                                <button
-                                                    onClick={savePracticeCode}
-                                                    className="ml-2 rounded bg-purple-600 px-3 py-1 text-xs font-bold hover:bg-purple-700"
-                                                >
-                                                    Save
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    {/* Mode Toggle */}
+                                                    <div className="flex rounded bg-[#1e1e1e] p-1">
+                                                        <button
+                                                            onClick={() => setPracticeType("dsa")}
+                                                            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${practiceType === "dsa" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
+                                                        >
+                                                            DSA
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setPracticeType("web")}
+                                                            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${practiceType === "web" ? "bg-orange-500 text-white" : "text-gray-400 hover:text-white"}`}
+                                                        >
+                                                            Dev
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Controls based on mode */}
+                                                    {practiceType === "dsa" ? (
+                                                        <select
+                                                            value={practiceLanguage}
+                                                            onChange={(e) => setPracticeLanguage(e.target.value as Language)}
+                                                            className="rounded bg-[#1e1e1e] px-2 py-1 text-xs text-white focus:outline-none border border-gray-700"
+                                                        >
+                                                            <option value="python">Python</option>
+                                                            <option value="cpp">C++</option>
+                                                            <option value="java">Java</option>
+                                                        </select>
+                                                    ) : (
+                                                        <div className="flex gap-1">
+                                                            {webFiles.map(f => (
+                                                                <button
+                                                                    key={f.name}
+                                                                    onClick={() => setActiveWebFile(f.name)}
+                                                                    className={`px-3 py-1 text-xs font-medium rounded transition-colors ${activeWebFile === f.name ? "bg-[#1e1e1e] text-orange-400 border border-orange-400/30" : "text-gray-400 hover:text-white"}`}
+                                                                >
+                                                                    {f.name}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    {practiceType === "dsa" && (
+                                                        <button
+                                                            onClick={runPracticeCode}
+                                                            disabled={isRunning}
+                                                            className="rounded bg-green-600 px-3 py-1 text-xs font-bold hover:bg-green-700 disabled:opacity-50"
+                                                        >
+                                                            {isRunning ? "Running..." : "Run Code"}
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={savePracticeCode} // Reusing save for now, could act differently for web
+                                                        className="rounded bg-purple-600 px-3 py-1 text-xs font-bold hover:bg-purple-700"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="h-[calc(100%-40px)]">
-                                                <CodeEditor
-                                                    language={practiceLanguage}
-                                                    code={practiceCode}
-                                                    onChange={(val) => setPracticeCode(val || "")}
-                                                />
+                                            <div className="h-[calc(100%-44px)]">
+                                                {practiceType === "dsa" ? (
+                                                    <CodeEditor
+                                                        language={practiceLanguage}
+                                                        code={practiceCode}
+                                                        onChange={(val) => setPracticeCode(val || "")}
+                                                    />
+                                                ) : (
+                                                    <CodeEditor
+                                                        key={activeWebFile}
+                                                        language={webFiles.find(f => f.name === activeWebFile)?.language as any}
+                                                        code={webFiles.find(f => f.name === activeWebFile)?.content || ""}
+                                                        onChange={(val) => {
+                                                            setWebFiles(files => files.map(f => f.name === activeWebFile ? { ...f, content: val || "" } : f));
+                                                        }}
+                                                    />
+                                                )}
                                             </div>
                                         </div>
                                         <div className="h-1/3 overflow-hidden rounded-lg border border-gray-800 bg-[#111111]">
-                                            <Console
-                                                output={practiceOutput}
-                                                status={runStatus}
-                                                onInput={setCustomInput}
-                                            />
+                                            {practiceType === "dsa" ? (
+                                                <Console
+                                                    output={practiceOutput}
+                                                    status={runStatus}
+                                                    onInput={setCustomInput}
+                                                />
+                                            ) : (
+                                                <div className="h-full w-full flex flex-col">
+                                                    <div className="bg-[#161616] px-3 py-1 text-xs font-bold text-gray-400 border-b border-gray-800 flex justify-between items-center">
+                                                        <span>Live Preview</span>
+                                                        <div className="flex gap-2">
+                                                            <div className="h-2 w-2 rounded-full bg-red-500" />
+                                                            <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                                                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex-1 bg-white">
+                                                        <iframe
+                                                            srcDoc={webSrcDoc}
+                                                            title="preview"
+                                                            className="h-full w-full border-0"
+                                                            sandbox="allow-scripts"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </>
