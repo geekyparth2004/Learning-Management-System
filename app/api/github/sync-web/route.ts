@@ -40,8 +40,7 @@ export async function POST(req: Request) {
 
         const parentPath = `${sanitizedModuleTitle}/${sanitizedVideoTitle}`;
 
-        // Import the new function (make sure to update imports at top of file)
-        const { getNextFolderSequence } = require("@/lib/github");
+
 
         // Calculate next sequence number ONCE for the batch
         const nextSeq = await getNextFolderSequence(
