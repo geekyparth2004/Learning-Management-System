@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut } from "lucide-react";
+import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock } from "lucide-react";
 
 import CodeEditor from "@/components/CodeEditor";
 import Console from "@/components/Console";
@@ -87,10 +86,19 @@ export default function AssignmentPage() {
     // Initialize based on URL to avoid flash
     const [showFocusOverlay, setShowFocusOverlay] = useState(isFocusMode);
     const [startTime, setStartTime] = useState<number>(Date.now());
+    const [elapsedTime, setElapsedTime] = useState(0);
+
+    // Timer format helper
+    const formatElapsedTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
 
     useEffect(() => {
         // Reset timer on problem load/change
         setStartTime(Date.now());
+        setElapsedTime(0);
     }, [assignmentId]);
 
     useEffect(() => {
@@ -208,6 +216,7 @@ export default function AssignmentPage() {
         if (!problem) return;
         const interval = setInterval(() => {
             const now = Date.now();
+            setElapsedTime(Math.floor((now - startTime) / 1000));
 
             // Hints
             setProblem(prev => {
@@ -246,7 +255,7 @@ export default function AssignmentPage() {
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, [problem?.id, problem?.startedAt]);
+    }, [problem?.id, problem?.startedAt, startTime]);
 
     const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
         if (lang === "python") {
@@ -540,6 +549,11 @@ export default function AssignmentPage() {
                 <div className="flex items-center gap-4">
                     {!problem.leetcodeUrl && (
                         <>
+                            <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-2 text-sm font-medium text-yellow-400">
+                                <Clock size={16} />
+                                {formatElapsedTime(elapsedTime)}
+                            </div>
+
                             <select
                                 value={language}
                                 onChange={e => setLanguage(e.target.value as Language)}
