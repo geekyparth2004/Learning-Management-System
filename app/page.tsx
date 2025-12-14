@@ -307,7 +307,7 @@ export default async function Home() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-4 text-center">
         <div className="space-y-4">
-          <h1 className="text-4xl font-bold text-white">Welcome to Learning Platform</h1>
+          <h1 className="text-4xl font-bold text-white">Welcome to KodeCraft</h1>
           <p className="text-gray-400">Please sign in to access your dashboard.</p>
           <Link
             href="/login"
@@ -327,8 +327,11 @@ export default async function Home() {
         <NewContestBanner />
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="mb-8 flex items-center justify-between">
-            <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
-              LMS Platform
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="KodeCraft Logo" className="h-10 w-auto object-contain" />
+              <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+                KodeCraft
+              </div>
             </div>
 
             <div className="flex items-center gap-4">
@@ -446,8 +449,11 @@ export default async function Home() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
-              LMS Platform
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="KodeCraft Logo" className="h-10 w-auto object-contain" />
+              <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+                KodeCraft
+              </div>
             </div>
             {!isTeacher && session && (
               <nav className="hidden md:flex items-center gap-6">

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Learning Platform",
+  title: "KodeCraft - Learn to Code",
   description: "Coding assignments with auto-grading",
 };
 
