@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TestCase {
@@ -83,6 +83,44 @@ export default function ContestProblemBuilder({ onSave, onCancel }: ContestProbl
         });
     };
 
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            // 1. Get presigned URL
+            const res = await fetch("/api/upload/image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filename: file.name, contentType: file.type }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            // 2. Upload to S3/R2
+            const uploadRes = await fetch(data.uploadUrl, {
+                method: "PUT",
+                body: file,
+                headers: { "Content-Type": file.type },
+            });
+            if (!uploadRes.ok) throw new Error("Failed to upload image to storage");
+
+            // 3. Append Markdown to description
+            const imageUrl = data.publicUrl;
+            const markdownImage = `![${file.name}](${imageUrl})`;
+
+            if (problemType === "CODING" || problemType === "LEETCODE") {
+                setDescription(prev => prev + "\n" + markdownImage + "\n");
+            } else if (problemType === "WEB_DEV") {
+                setWebDevInstructions(prev => prev + "\n" + markdownImage + "\n");
+            }
+
+        } catch (error) {
+            console.error("Image upload failed:", error);
+            alert("Failed to upload image");
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
             <div className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-gray-800 bg-[#0e0e0e] shadow-2xl">
@@ -138,12 +176,24 @@ export default function ContestProblemBuilder({ onSave, onCancel }: ContestProbl
                         ) : problemType === "CODING" ? (
                             <>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-300">Problem Description</label>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-300">Problem Description</label>
+                                        <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1 text-xs font-medium text-blue-400 hover:bg-gray-700 hover:text-blue-300 transition-colors">
+                                            <Upload size={14} />
+                                            Add Image
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
                                     <textarea
                                         placeholder="Describe the problem statement, input format, output format, and constraints..."
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                        className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none font-mono text-sm"
                                     />
                                 </div>
 
@@ -200,12 +250,24 @@ export default function ContestProblemBuilder({ onSave, onCancel }: ContestProbl
                         ) : (
                             <>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-300">Instructions</label>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-300">Instructions</label>
+                                        <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1 text-xs font-medium text-blue-400 hover:bg-gray-700 hover:text-blue-300 transition-colors">
+                                            <Upload size={14} />
+                                            Add Image
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
                                     <textarea
                                         placeholder="Enter assignment instructions..."
                                         value={webDevInstructions}
                                         onChange={(e) => setWebDevInstructions(e.target.value)}
-                                        className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                                        className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none font-mono text-sm"
                                     />
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">

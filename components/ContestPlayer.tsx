@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, ChevronDown, Trophy } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import { Language } from "@/types";
@@ -319,7 +321,9 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                     <div className="flex-1 overflow-y-auto p-6">
                         <h2 className="text-xl font-bold mb-4">{activeProblem?.title}</h2>
                         <div className="mb-2 text-xs font-bold text-gray-500 uppercase">Description</div>
-                        <p className="text-gray-300 whitespace-pre-wrap leading-relaxed mb-8">{activeProblem?.description}</p>
+                        <div className="prose prose-invert max-w-none text-sm text-gray-300 mb-8">
+                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{activeProblem?.description}</ReactMarkdown>
+                        </div>
 
                         {/* Test Cases display like TestPlayer */}
                         <h2 className="mb-4 text-lg font-bold">Test Cases</h2>

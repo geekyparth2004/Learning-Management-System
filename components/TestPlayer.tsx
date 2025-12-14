@@ -5,6 +5,8 @@ import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircl
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import WebDevEditor from "./WebDevEditor";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 
 interface File {
     name: string;
@@ -491,7 +493,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                     <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-300">
                         <h2 className="mb-4 text-lg font-bold text-white">{problems[activeProblemIndex].title}</h2>
                         <div className="prose prose-invert max-w-none">
-                            <p>{problems[activeProblemIndex].description}</p>
+                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{problems[activeProblemIndex].description}</ReactMarkdown>
                         </div>
 
                         <div className="mt-8 space-y-4">

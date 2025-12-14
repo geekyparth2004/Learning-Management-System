@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Layout, Code, Eye, RefreshCw, CheckCircle, ArrowLeft } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 
 interface File {
     name: string;
@@ -125,7 +127,9 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                     {leftPanelTab === "problem" ? (
                         <div className="p-6 prose prose-invert max-w-none text-sm">
                             <h3 className="text-lg font-bold mb-4">Instructions</h3>
-                            <div className="whitespace-pre-wrap text-gray-300">{instructions}</div>
+                            <div className="prose prose-invert max-w-none text-sm text-gray-300">
+                                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{instructions}</ReactMarkdown>
+                            </div>
                         </div>
                     ) : leftPanelTab === "preview" ? (
                         <div className="h-full w-full bg-white">
