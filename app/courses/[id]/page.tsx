@@ -84,9 +84,9 @@ export default function CoursePlayerPage() {
     // Web Dev Practice State
     const [practiceType, setPracticeType] = useState<"dsa" | "web">("dsa");
     const [webFiles, setWebFiles] = useState([
-        { name: "index.html", language: "html", content: "<!-- HTML goes here -->\n<h1>Hello User</h1>" },
-        { name: "styles.css", language: "css", content: "/* CSS goes here */\nbody {\n  color: white;\n  background: #111;\n  font-family: sans-serif;\n}" },
-        { name: "script.js", language: "javascript", content: "// JavaScript goes here\nconsole.log('Hello from JS');" }
+        { name: "index.html", language: "html", content: "" },
+        { name: "styles.css", language: "css", content: "" },
+        { name: "script.js", language: "javascript", content: "" }
     ]);
     const [activeWebFile, setActiveWebFile] = useState("index.html");
     const [webSrcDoc, setWebSrcDoc] = useState("");

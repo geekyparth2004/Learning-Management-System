@@ -126,4 +126,49 @@ export const getNextSequenceNumber = async (
         console.error("Error getting sequence number:", error);
         return 1;
     }
-};
+    // ... existing getNextSequenceNumber ...
+
+    export const getNextFolderSequence = async (
+        accessToken: string,
+        repoName: string,
+        parentPath: string,
+        folderPrefix: string
+    ) => {
+        const octokit = new Octokit({ auth: accessToken });
+        try {
+            const owner = (await octokit.rest.users.getAuthenticated()).data.login;
+
+            let maxNum = 0;
+
+            try {
+                const { data } = await octokit.rest.repos.getContent({
+                    owner,
+                    repo: repoName,
+                    path: parentPath,
+                });
+
+                if (Array.isArray(data)) {
+                    const regex = new RegExp(`^${folderPrefix} - (\\d+)$`);
+
+                    data.forEach((item: any) => {
+                        if (item.type === "dir") {
+                            const match = item.name.match(regex);
+                            if (match) {
+                                const num = parseInt(match[1]);
+                                if (!isNaN(num) && num > maxNum) {
+                                    maxNum = num;
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                // Parent folder doesn't exist, start at 0
+            }
+
+            return maxNum + 1;
+        } catch (error) {
+            console.error("Error getting folder sequence:", error);
+            return 1;
+        }
+    };

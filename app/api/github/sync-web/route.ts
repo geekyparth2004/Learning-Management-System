@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { createOrUpdateFile } from "@/lib/github";
+import { createOrUpdateFile, getNextFolderSequence } from "@/lib/github";
 
 export async function POST(req: Request) {
     try {
@@ -31,25 +31,36 @@ export async function POST(req: Request) {
         const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${user.id.slice(-4)}`;
 
         // 3. Sync Files
+        // Folder Structure: Module Name / Video Name / Practice - N / file_name
+
+        // Use sanitize for module title
+        const sanitizedModuleTitle = moduleTitle.trim();
+        // Use videoTitle directly as request
+        const sanitizedVideoTitle = videoTitle.trim().replace(/\//g, "-");
+
+        const parentPath = `${sanitizedModuleTitle}/${sanitizedVideoTitle}`;
+
+        // Import the new function (make sure to update imports at top of file)
+        const { getNextFolderSequence } = require("@/lib/github");
+
+        // Calculate next sequence number ONCE for the batch
+        const nextSeq = await getNextFolderSequence(
+            user.githubAccessToken!,
+            repoName,
+            parentPath,
+            "Practice"
+        );
+
+        const folderName = `Practice - ${nextSeq}`;
+        const finalPath = `${parentPath}/${folderName}`;
+
         const results = await Promise.all(files.map(async (file: { name: string, content: string }) => {
-            // Folder Structure: Module Name / Video - {Order} / {filename}
-            // Use sanitize for module title just in case
-            const sanitizedModuleTitle = moduleTitle.trim();
-            // Video - {Order} only as per user request (or Video - {Order} - {Title}?)
-            // User request: "folder name of video - 1,2,3,4, and so on"
-            // Let's stick to "Video - {videoOrder}" as requested, but maybe add title for clarity if possible.
-            // User said "folder with the folder name of video - 1,2,3,4, and so on".
-            // Literally "Video - 1", "Video - 2".
-            const folderName = `Video - ${videoOrder}`;
-
-            const path = `${sanitizedModuleTitle}/${folderName}/${file.name}`;
-
             return createOrUpdateFile(
                 user.githubAccessToken!,
                 repoName,
-                path,
+                `${finalPath}/${file.name}`,
                 file.content,
-                `Update ${file.name} for ${folderName}`
+                `Add ${file.name} to ${folderName}`
             );
         }));
 
