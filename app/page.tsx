@@ -27,9 +27,9 @@ export default async function Home() {
     const userId = session.user.id;
     const now = new Date();
 
-    // 1. Fetch Completed Modules (and duration)
-    const completedItems = await db.moduleItemProgress.findMany({
-      where: { userId, isCompleted: true },
+    // 1. Fetch Module Progress (Completed + In-Progress)
+    const moduleProgressItems = await db.moduleItemProgress.findMany({
+      where: { userId }, // Removed isCompleted: true to track partial progress
       include: { moduleItem: { select: { duration: true, title: true } } }
     });
 
@@ -38,7 +38,15 @@ export default async function Home() {
       where: { id: userId },
       select: { leetcodeUsername: true, codeforcesUsername: true, gfgUsername: true }
     });
-    const moduleSeconds = completedItems.reduce((acc, curr) => acc + (curr.duration || curr.moduleItem.duration || 0), 0);
+
+    const moduleSeconds = moduleProgressItems.reduce((acc, curr) => {
+      // If completed, use tracked duration OR fallback to full length
+      if (curr.isCompleted) {
+        return acc + (curr.duration || curr.moduleItem.duration || 0);
+      }
+      // If in-progress, ONLY use tracked duration
+      return acc + (curr.duration || 0);
+    }, 0);
 
     // 2. Fetch Contests & Hackathons Stats (Only Started)
     const contestsEntered = await db.contestRegistration.count({
@@ -131,11 +139,17 @@ export default async function Home() {
     const todayStart = new Date(`${year}-${month}-${day}T00:00:00+05:30`);
 
     // Modules Today
-    const todayItems = completedItems.filter(item => {
+    // Modules Today (Activity updates completedAt even for in-progress)
+    const todayItems = moduleProgressItems.filter(item => {
       if (!item.completedAt) return false;
       return new Date(item.completedAt) >= todayStart;
     });
-    const todayModuleSeconds = todayItems.reduce((acc, curr) => acc + (curr.moduleItem.duration || 0), 0);
+    const todayModuleSeconds = todayItems.reduce((acc, curr) => {
+      if (curr.isCompleted) {
+        return acc + (curr.duration || curr.moduleItem.duration || 0);
+      }
+      return acc + (curr.duration || 0);
+    }, 0);
 
     // Practice Today
     const todayPracticeSeconds = solvedProblems.filter(s => {
@@ -202,8 +216,8 @@ export default async function Home() {
         return sDate >= startRange && sDate < endRange;
       }).length;
 
-      const itemsCompletedToday = completedItems.filter(item => {
-        if (!item.completedAt) return false;
+      const itemsCompletedToday = moduleProgressItems.filter(item => {
+        if (!item.completedAt || !item.isCompleted) return false; // Only count fully completed items for Activity Graph
         const cDate = new Date(item.completedAt);
         return cDate >= startRange && cDate < endRange;
       }).length;
@@ -214,8 +228,8 @@ export default async function Home() {
 
     // 7. Recent Activity (Top 5 for Today)
     // Module Completions
-    const recentModules = completedItems
-      .filter(i => i.completedAt && new Date(i.completedAt) >= todayStart)
+    const recentModules = moduleProgressItems
+      .filter(i => i.isCompleted && i.completedAt && new Date(i.completedAt) >= todayStart)
       .map(i => ({
         id: i.id,
         type: "MODULE_ITEM" as const,
