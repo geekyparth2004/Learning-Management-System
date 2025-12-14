@@ -654,7 +654,7 @@ export default function CoursePlayerPage() {
                                                     setIsTestFullScreen(false);
                                                     setLastTestResult({ passed, score });
                                                     if (passed) {
-                                                        completeItem(activeItem.id, durationSpent);
+                                                        completeItem(activeItem.id, durationSpent, true);
                                                     }
                                                 }}
                                             />
