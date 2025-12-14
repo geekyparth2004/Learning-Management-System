@@ -152,7 +152,7 @@ export default function CoursePlayerPage() {
     }, [isResizing]);
 
     useEffect(() => {
-        fetchCourseData();
+        fetchCourseData(false, "Initial Load/CourseId Change");
     }, [courseId]);
 
     const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
@@ -175,7 +175,7 @@ export default function CoursePlayerPage() {
                         body: JSON.stringify({ url: activeItem.content })
                     });
                     const data = await res.json();
-                    if (data.signedUrl) {
+                    if (data.signedUrl && data.signedUrl !== signedVideoUrl) {
                         setSignedVideoUrl(data.signedUrl);
                     }
                 } catch (e) {
@@ -280,23 +280,20 @@ export default function CoursePlayerPage() {
         return () => clearInterval(interval);
     }, []);
 
-    const fetchCourseData = async () => {
-        if (!courseId) {
-            console.log("No courseId, skipping fetch");
-            return;
-        }
-        console.log("Fetching course data for:", courseId);
+    const fetchCourseData = async (refresh = false, reason = "unknown") => {
+        if (!courseId) return;
         try {
             const res = await fetch(`/api/courses/${courseId}/player`);
-            console.log("Fetch response status:", res.status);
-            if (!res.ok) {
-                const text = await res.text();
-                console.error("Fetch failed:", text);
-                throw new Error("Failed to fetch course");
-            }
+            if (!res.ok) throw new Error("Failed to fetch course");
             const data = await res.json();
-            console.log("Course data received:", data);
+
+            // Optimization: Only update course if data actually changed significantly
+            // But for now, just setting it is standard.
             setCourse(data);
+
+            if (!activeModuleId && data.modules.length > 0) {
+                // ... (keep existing logic)
+            }
 
             // Set active module/item if enrolled
             // Set active module/item if enrolled and NONE selected (initial load)
@@ -373,7 +370,7 @@ export default function CoursePlayerPage() {
                 // Only refresh data if the item is fully marked as complete
                 // This prevents video reloads during periodic progress saves
                 if (completed) {
-                    fetchCourseData(true);
+                    fetchCourseData(true, "Item Completion");
                 }
             }
         } catch (error) {
