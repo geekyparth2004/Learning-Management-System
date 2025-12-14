@@ -620,7 +620,12 @@ export default function CoursePlayerPage() {
                                 style={{ width: showPractice ? `${splitRatio}%` : "100%" }}
                             >
                                 {activeItem.type === "VIDEO" ? (
-                                    <div className="h-full w-full bg-black flex items-center justify-center">
+                                    <div className="h-full w-full bg-black flex flex-col items-center justify-center">
+                                         <div className="bg-red-800 text-white p-2 text-xs absolute top-0 left-0 z-50 opacity-90">
+                                            <p><strong>Debug Info:</strong></p>
+                                            <p>Original: {activeItem.content}</p>
+                                            <p>Signed: {signedVideoUrl}</p>
+                                        </div>
                                         {(() => {
                                             const isCloudinary = activeItem.content?.includes("cloudinary.com");
                                             const isR2 = activeItem.content?.includes("r2.cloudflarestorage.com") || activeItem.content?.includes("backblazeb2.com");
