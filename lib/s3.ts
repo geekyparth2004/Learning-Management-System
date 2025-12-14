@@ -43,6 +43,9 @@ export async function signR2Url(fileUrl: string) {
         const command = new GetObjectCommand({
             Bucket: bucketName,
             Key: key,
+            ResponseCacheControl: "max-age=3600",
+            ResponseContentDisposition: "inline",
+            ResponseContentType: "video/mp4",
         });
 
         return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
