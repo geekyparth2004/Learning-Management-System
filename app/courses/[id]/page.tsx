@@ -573,26 +573,47 @@ export default function CoursePlayerPage() {
                             >
                                 {activeItem.type === "VIDEO" ? (
                                     <div className="h-full w-full bg-black flex items-center justify-center">
-                                        {activeItem.content?.includes("cloudinary.com") || activeItem.content?.includes("r2.cloudflarestorage.com") || activeItem.content?.includes("backblazeb2.com") || activeItem.content?.endsWith(".mp4") ? (
-                                            <video
-                                                src={signedVideoUrl || activeItem.content}
-                                                controls
-                                                playsInline
-                                                className="max-h-full max-w-full object-contain"
-                                                onTimeUpdate={handleVideoTimeUpdate}
-                                                onPause={saveVideoProgress}
-                                                onEnded={() => {
-                                                    saveVideoProgress();
-                                                    completeItem(activeItem.id);
-                                                }}
-                                            />
-                                        ) : (
-                                            <iframe
-                                                src={activeItem.content?.replace("watch?v=", "embed/")}
-                                                className="h-full w-full"
-                                                allowFullScreen
-                                            />
-                                        )}
+                                        {(() => {
+                                            const isCloudinary = activeItem.content?.includes("cloudinary.com");
+                                            const isR2 = activeItem.content?.includes("r2.cloudflarestorage.com") || activeItem.content?.includes("backblazeb2.com");
+                                            const isMp4 = activeItem.content?.endsWith(".mp4");
+                                            const needsSigning = !isCloudinary && !activeItem.content?.includes("youtube");
+
+                                            if (needsSigning && !signedVideoUrl) {
+                                                return (
+                                                    <div className="flex flex-col items-center justify-center gap-4 text-gray-400">
+                                                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-600 border-t-blue-500" />
+                                                        <p className="text-sm">Loading secure video...</p>
+                                                    </div>
+                                                );
+                                            }
+
+                                            if (isCloudinary || isR2 || isMp4 || needsSigning) {
+                                                return (
+                                                    <video
+                                                        src={signedVideoUrl || activeItem.content}
+                                                        controls
+                                                        preload="auto"
+                                                        playsInline
+                                                        className="max-h-full max-w-full object-contain"
+                                                        onTimeUpdate={handleVideoTimeUpdate}
+                                                        onPause={saveVideoProgress}
+                                                        onEnded={() => {
+                                                            saveVideoProgress();
+                                                            completeItem(activeItem.id);
+                                                        }}
+                                                    />
+                                                );
+                                            }
+
+                                            return null; // Fallback handled by iframe check below
+                                        })() || (
+                                                <iframe
+                                                    src={activeItem.content?.replace("watch?v=", "embed/")}
+                                                    className="h-full w-full"
+                                                    allowFullScreen
+                                                />
+                                            )}
                                     </div>
                                 ) : activeItem.type === "AI_INTERVIEW" ? (
                                     <div className="h-full w-full overflow-y-auto bg-[#0e0e0e]">
