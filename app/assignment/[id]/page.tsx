@@ -194,7 +194,7 @@ export default function AssignmentPage() {
                 // Ensure startedAt is present (it comes from the API now)
                 const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
                 setProblem(fullProblemData);
-                setCode(problemData.defaultCode[language]);
+                setCode(problemData.defaultCode[language as keyof typeof problemData.defaultCode]);
             } catch (e) {
                 console.error("Error fetching assignment:", e);
             }
@@ -206,7 +206,7 @@ export default function AssignmentPage() {
     const prevLanguageRef = useRef<Language>(language);
     useEffect(() => {
         if (problem && prevLanguageRef.current !== language) {
-            setCode(problem.defaultCode[language]);
+            setCode(problem.defaultCode[language as keyof typeof problem.defaultCode]);
             prevLanguageRef.current = language;
         }
     }, [language, problem]);
