@@ -226,7 +226,7 @@ export default function PracticePlayerPage() {
                 problemData.hints = hints;
 
                 setProblem(problemData);
-                setCode(problemData.defaultCode[language]);
+                setCode(problemData.defaultCode[language as keyof typeof problemData.defaultCode]);
             } catch (e) {
                 console.error("Error fetching problem:", e);
                 // router.push("/practice");
@@ -239,7 +239,7 @@ export default function PracticePlayerPage() {
     const prevLanguageRef = useRef<Language>(language);
     useEffect(() => {
         if (problem && prevLanguageRef.current !== language) {
-            setCode(problem.defaultCode[language]);
+            setCode(problem.defaultCode[language as keyof typeof problem.defaultCode]);
             prevLanguageRef.current = language;
         }
     }, [language, problem]);
