@@ -642,6 +642,7 @@ export default function CoursePlayerPage() {
                                                         src={signedVideoUrl || activeItem.content}
                                                         controls
                                                         autoPlay
+                                                        muted
                                                         preload="auto"
                                                         playsInline
                                                         className="max-h-full max-w-full object-contain"
