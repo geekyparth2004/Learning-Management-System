@@ -10,6 +10,7 @@ import WebDevPlayer from "@/components/WebDevPlayer";
 import LeetCodeVerifier from "@/components/LeetCodeVerifier";
 
 import CodeEditor from "@/components/CodeEditor";
+import WebDevCodeEditor from "@/components/WebDevCodeEditor";
 import Console from "@/components/Console";
 import { Language } from "@/types";
 
@@ -997,7 +998,7 @@ export default function CoursePlayerPage() {
                                                         onChange={(val) => setPracticeCode(val || "")}
                                                     />
                                                 ) : (
-                                                    <CodeEditor
+                                                    <WebDevCodeEditor
                                                         key={activeWebFile}
                                                         language={webFiles.find(f => f.name === activeWebFile)?.language as any}
                                                         code={webFiles.find(f => f.name === activeWebFile)?.content || ""}

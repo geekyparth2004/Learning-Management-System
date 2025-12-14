@@ -23,7 +23,7 @@ export interface Assignment {
     problems: Problem[];
 }
 
-export type Language = "cpp" | "python" | "java";
+export type Language = "cpp" | "python" | "java" | "html" | "css" | "javascript";
 
 export interface ExecutionResult {
     output: string;
