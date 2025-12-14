@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { signR2Url } from "@/lib/s3";
 
 export async function GET(
     req: Request,
@@ -76,7 +77,7 @@ export async function GET(
                     where: { userId, moduleItem: { module: { courseId: id } } },
                 });
 
-                modulesWithProgress = course.modules.map((m, index) => {
+                modulesWithProgress = await Promise.all(course.modules.map(async (m, index) => {
                     const progress = moduleProgress.find(mp => mp.moduleId === m.id);
                     let status = progress?.status || "LOCKED";
 
@@ -95,14 +96,20 @@ export async function GET(
                     }
 
                     // Map items
-                    const items = m.items.map(i => {
+                    const items = await Promise.all(m.items.map(async i => {
                         const ip = itemProgress.find(p => p.moduleItemId === i.id);
+                        let signedUrl = null;
+                        if (i.content && (i.content.includes("r2.cloudflarestorage.com") || i.content.includes("backblazeb2.com"))) {
+                            signedUrl = await signR2Url(i.content);
+                        }
+
                         return {
                             ...i,
                             isCompleted: ip?.isCompleted || false,
-                            startedAt: ip?.startedAt || null
+                            startedAt: ip?.startedAt || null,
+                            signedUrl
                         };
-                    });
+                    }));
 
                     return {
                         ...m,
@@ -111,7 +118,7 @@ export async function GET(
                         completedAt: progress?.completedAt || null,
                         items,
                     };
-                });
+                }));
 
                 // Logic to ensure correct locking
                 // If Module N is COMPLETED, Module N+1 should be IN_PROGRESS (or ready to start)

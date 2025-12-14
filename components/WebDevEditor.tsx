@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Layout, Code, Eye, RefreshCw, CheckCircle, ArrowLeft } from "lucide-react";
-import Editor from "@monaco-editor/react";
+import CodeEditor from "@/components/CodeEditor";
 
 interface File {
     name: string;
@@ -190,20 +190,11 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
 
                 <div className="flex-1 relative">
                     {activeFile && (
-                        <Editor
+                        <CodeEditor
                             key={activeFile.name} // Force re-mount on file change to ensure correct language/content
-                            height="100%"
-                            language={activeFile.language}
-                            value={activeFile.content}
+                            language={activeFile.language as any}
+                            code={activeFile.content}
                             onChange={(value) => updateFileContent(value || "")}
-                            theme="vs-dark"
-                            options={{
-                                minimap: { enabled: false },
-                                fontSize: 14,
-                                wordWrap: "on",
-                                automaticLayout: true,
-                                padding: { top: 16 },
-                            }}
                         />
                     )}
                 </div>

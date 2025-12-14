@@ -10,7 +10,6 @@ import WebDevPlayer from "@/components/WebDevPlayer";
 import LeetCodeVerifier from "@/components/LeetCodeVerifier";
 
 import CodeEditor from "@/components/CodeEditor";
-import WebDevCodeEditor from "@/components/WebDevCodeEditor";
 import Console from "@/components/Console";
 import { Language } from "@/types";
 
@@ -163,8 +162,12 @@ export default function CoursePlayerPage() {
 
     useEffect(() => {
         const fetchSignedUrl = async () => {
-            // Sign main video content
-            if (activeItem?.type === "VIDEO" && activeItem.content && !activeItem.content.includes("cloudinary.com") && !activeItem.content.includes("youtube")) {
+            // Check if pre-signed URL is available
+            if ((activeItem as any)?.signedUrl) {
+                setSignedVideoUrl((activeItem as any).signedUrl);
+            }
+            // Sign main video content if not pre-signed
+            else if (activeItem?.type === "VIDEO" && activeItem.content && !activeItem.content.includes("cloudinary.com") && !activeItem.content.includes("youtube")) {
                 try {
                     const res = await fetch("/api/video/sign", {
                         method: "POST",
@@ -208,7 +211,7 @@ export default function CoursePlayerPage() {
             }
         };
         fetchSignedUrl();
-    }, [activeItem?.id, activeItem?.content, activeItem?.type]);
+    }, [activeItem?.id, activeItem?.content, activeItem?.type, (activeItem as any)?.signedUrl]);
 
     // Video Watch Time Tracking
     const [accumulatedTime, setAccumulatedTime] = useState(0);
@@ -367,7 +370,7 @@ export default function CoursePlayerPage() {
                 body
             });
             if (res.ok) {
-                if (completed) {
+                if (res.ok) {
                     fetchCourseData();
                 }
             }
@@ -998,7 +1001,7 @@ export default function CoursePlayerPage() {
                                                         onChange={(val) => setPracticeCode(val || "")}
                                                     />
                                                 ) : (
-                                                    <WebDevCodeEditor
+                                                    <CodeEditor
                                                         key={activeWebFile}
                                                         language={webFiles.find(f => f.name === activeWebFile)?.language as any}
                                                         code={webFiles.find(f => f.name === activeWebFile)?.content || ""}
