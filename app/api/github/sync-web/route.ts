@@ -1,0 +1,67 @@
+
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { auth } from "@/auth";
+import { createOrUpdateFile } from "@/lib/github";
+
+export async function POST(req: Request) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { files, courseId, moduleTitle, videoOrder, videoTitle } = await req.json();
+
+        // 1. Get User with GitHub Token
+        const user = await db.user.findUnique({
+            where: { id: session.user.id }
+        });
+
+        if (!user?.githubAccessToken) {
+            return NextResponse.json({ error: "GitHub not connected" }, { status: 400 });
+        }
+
+        // 2. Get Course to determine Repo Name
+        const course = await db.course.findUnique({ where: { id: courseId } });
+        if (!course) {
+            return NextResponse.json({ error: "Course not found" }, { status: 404 });
+        }
+
+        const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${user.id.slice(-4)}`;
+
+        // 3. Sync Files
+        const results = await Promise.all(files.map(async (file: { name: string, content: string }) => {
+            // Folder Structure: Module Name / Video - {Order} / {filename}
+            // Use sanitize for module title just in case
+            const sanitizedModuleTitle = moduleTitle.trim();
+            // Video - {Order} only as per user request (or Video - {Order} - {Title}?)
+            // User request: "folder name of video - 1,2,3,4, and so on"
+            // Let's stick to "Video - {videoOrder}" as requested, but maybe add title for clarity if possible.
+            // User said "folder with the folder name of video - 1,2,3,4, and so on".
+            // Literally "Video - 1", "Video - 2".
+            const folderName = `Video - ${videoOrder}`;
+
+            const path = `${sanitizedModuleTitle}/${folderName}/${file.name}`;
+
+            return createOrUpdateFile(
+                user.githubAccessToken!,
+                repoName,
+                path,
+                file.content,
+                `Update ${file.name} for ${folderName}`
+            );
+        }));
+
+        const failures = results.filter(r => !r.success);
+        if (failures.length > 0) {
+            return NextResponse.json({ error: "Some files failed to sync", details: failures }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, repoName });
+
+    } catch (error) {
+        console.error("Error syncing to GitHub:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
