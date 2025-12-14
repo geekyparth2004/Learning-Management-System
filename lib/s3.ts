@@ -14,7 +14,12 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function signR2Url(fileUrl: string) {
-    if (!fileUrl || !fileUrl.includes("r2.cloudflarestorage.com")) return fileUrl;
+    if (!fileUrl) return fileUrl;
+    // Allow R2 and Backblaze
+    if (!fileUrl.includes("r2.cloudflarestorage.com") && !fileUrl.includes("backblazeb2.com") && !fileUrl.includes("s3")) {
+        // If it's not a known storage URL, return it as is.
+        return fileUrl;
+    }
 
     try {
         const bucketName = process.env.AWS_BUCKET_NAME;
