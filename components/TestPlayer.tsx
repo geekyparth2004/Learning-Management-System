@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle, Lock, Video, RefreshCw } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
+import { Language } from "@/types";
 import WebDevEditor from "./WebDevEditor";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
