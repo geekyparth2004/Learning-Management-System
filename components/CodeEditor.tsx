@@ -175,15 +175,8 @@ export default function CodeEditor({
                 }))
             ];
 
-            languages.registerCompletionItemProvider('java', {
-                provideCompletionItems: (model: any, position: any) => {
-                    return { suggestions: suggestionsSnippets };
-                }
-            });
-
-            // --- Provider 2: Member Access (Triggered by dot) ---
+            // --- Common Methods (Scanner, String, List, etc.) ---
             const suggestionsMethods = [
-                // --- Common Methods (Scanner, String, List, etc.) ---
                 ...['nextInt', 'nextDouble', 'nextFloat', 'nextBoolean', 'nextLine', 'next', 'hasNext', 'close',
                     'length', 'charAt', 'substring', 'equals', 'equalsIgnoreCase', 'contains', 'indexOf', 'lastIndexOf', 'isEmpty', 'trim', 'replace', 'split',
                     'add', 'remove', 'get', 'set', 'size', 'clear', 'isEmpty', 'contains', 'addAll',
@@ -196,10 +189,19 @@ export default function CodeEditor({
                     }))
             ];
 
+            // Combine all suggestions
+            const allSuggestions = [
+                ...suggestionsSnippets,
+                ...suggestionsMethods
+            ];
+
             languages.registerCompletionItemProvider('java', {
                 triggerCharacters: ['.'],
                 provideCompletionItems: (model: any, position: any) => {
-                    return { suggestions: suggestionsMethods };
+                    // We could improve this by checking if the previous character is a dot
+                    // const word = model.getWordUntilPosition(position);
+                    // To keep it robust, we return everything and let Monaco filter
+                    return { suggestions: allSuggestions };
                 }
             });
 

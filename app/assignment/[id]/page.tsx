@@ -337,7 +337,8 @@ export default function AssignmentPage() {
                 });
                 const data = await res.json();
                 if (data.error) {
-                    // setErrorLine(parseErrorLine(data.error, language)); // Error line is for editor, not test results
+                    const line = parseErrorLine(data.error, language);
+                    if (line) setErrorLine(line);
                     results.push({ id: tc.id, passed: false, actualOutput: data.error, expectedOutput: tc.expectedOutput });
                 } else {
                     const actual = normalizeOutput(data.output || "");
