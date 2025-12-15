@@ -384,9 +384,30 @@ export default function CoursePlayerPage() {
             });
             if (res.ok) {
                 // Only refresh data if the item is fully marked as complete
-                // This prevents video reloads during periodic progress saves
                 if (completed) {
-                    fetchCourseData(true, "Item Completion");
+                    await fetchCourseData(true, "Item Completion");
+
+                    // Auto-advance logic
+                    if (course && activeModuleId) {
+                        const currentModuleIndex = course.modules.findIndex(m => m.id === activeModuleId);
+                        if (currentModuleIndex !== -1) {
+                            const currentModule = course.modules[currentModuleIndex];
+                            const currentItemIndex = currentModule.items.findIndex(i => i.id === itemId);
+
+                            if (currentItemIndex !== -1 && currentItemIndex < currentModule.items.length - 1) {
+                                // Go to next item in same module
+                                const nextItem = currentModule.items[currentItemIndex + 1];
+                                setActiveItemId(nextItem.id);
+                            } else if (currentModuleIndex < course.modules.length - 1) {
+                                // Go to next module
+                                const nextModule = course.modules[currentModuleIndex + 1];
+                                setActiveModuleId(nextModule.id);
+                                if (nextModule.items.length > 0) {
+                                    setActiveItemId(nextModule.items[0].id);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         } catch (error) {
