@@ -693,9 +693,13 @@ export default function CoursePlayerPage() {
                                                         className="h-full w-full object-contain"
                                                         onTimeUpdate={handleVideoTimeUpdate}
                                                         onPause={saveVideoProgress}
-                                                        onEnded={() => {
-                                                            saveVideoProgress();
-                                                            completeItem(activeItem.id);
+                                                        onEnded={(e) => {
+                                                            const video = e.currentTarget;
+                                                            // Only mark complete if we are actually at the end (tolerance for some browser quirks)
+                                                            if (video.duration && video.currentTime >= video.duration - 1) {
+                                                                saveVideoProgress();
+                                                                completeItem(activeItem.id);
+                                                            }
                                                         }}
                                                     />
                                                 );

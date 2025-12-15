@@ -17,14 +17,13 @@ export async function POST(
         const userId = session.user.id;
 
         // 1. Mark item as completed & Update Duration
-        const updateData: any = {
-            completedAt: new Date(),
-        };
+        const updateData: any = {};
 
         // Only mark as completed if 'completed' is typically true (default) or explicitly true
         // If completed is false (e.g. just saving progress), don't mark isCompleted=true
         if (completed !== false) {
             updateData.isCompleted = true;
+            updateData.completedAt = new Date();
         }
 
         if (duration !== undefined) {
@@ -47,7 +46,7 @@ export async function POST(
                 userId,
                 moduleItemId,
                 isCompleted: completed !== false, // If creating new, and completed is false, create as incomplete
-                completedAt: new Date(),
+                completedAt: completed !== false ? new Date() : null,
                 duration: duration ? parseInt(duration) : 0
             },
         });
