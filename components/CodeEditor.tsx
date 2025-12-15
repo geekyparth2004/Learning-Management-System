@@ -38,14 +38,6 @@ export default function CodeEditor({
         }
 
         // Register custom snippets for C++/Java/Python
-        // We use a simple check to avoid duplicate registration if possible, or just register every time (Monaco handles it but it might duplicate suggestions if not careful).
-        // Best practice: Register globally once. But we are in a component.
-        // We will simple add a "disposable" to the editor instance if possible, or just rely on the fact that we mount rarely.
-        // Actually, languages.registerCompletionItemProvider is global.
-        // Let's check if we can add it to the 'editor' instance specifically? No, it's global.
-        // So we should do it outside the component or in a Once effect.
-
-        // For now, defining them inline for the active language.
         const { languages } = monaco;
 
         // Python Snippets
@@ -180,18 +172,18 @@ export default function CodeEditor({
 
     return (
         <div className="relative h-full w-full overflow-hidden rounded-md border border-gray-800 bg-[#1e1e1e]">
-            {/* Inject minimal CSS for the error line if Tailwind doesn't penetrate or if we want custom look */}
-            <style jsx global>{`
+            {/* Inject minimal CSS for the error line */}
+            <style>{`
                 .red-error-line {
-                    background-color: rgba(69, 10, 10, 0.4); /* red-900/40 */
-                    border-left: 2px solid #ef4444; /* red-500 */
+                    background-color: rgba(69, 10, 10, 0.4);
+                    border-left: 2px solid #ef4444;
                 }
                 .red-error-glyph {
-                    background-color: #ef4444; /* red-500 */
-                    width: 8px; /* w-2 */
-                    height: 8px; /* h-2 */
-                    border-radius: 9999px; /* rounded-full */
-                    margin-left: 4px; /* ml-1 */
+                    background-color: #ef4444;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 9999px;
+                    margin-left: 4px;
                 }
             `}</style>
 
@@ -216,7 +208,7 @@ export default function CodeEditor({
                     wordBasedSuggestions: "currentDocument",
                     fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
                     fontLigatures: true,
-                    glyphMargin: true, // Enable glyph margin for error indicators
+                    glyphMargin: true,
                 }}
             />
         </div>
