@@ -587,7 +587,7 @@ export default function CourseBuilderPage() {
                                                                     <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
                                                                         <input
                                                                             type="file"
-                                                                            accept="video/*"
+                                                                            accept="video/*,.mkv,video/x-matroska"
                                                                             onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
                                                                             className="hidden"
                                                                             id="video-upload"
@@ -780,7 +780,7 @@ export default function CourseBuilderPage() {
                                                                         <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
                                                                             <input
                                                                                 type="file"
-                                                                                accept="video/*"
+                                                                                accept="video/*,.mkv,video/x-matroska"
                                                                                 onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
                                                                                 className="hidden"
                                                                                 id="leetcode-video-upload"

@@ -451,7 +451,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                                 Choose file
                                                                 <input
                                                                     type="file"
-                                                                    accept="video/*"
+                                                                    accept="video/*,.mkv,video/x-matroska"
                                                                     onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
                                                                     className="hidden"
                                                                 />
