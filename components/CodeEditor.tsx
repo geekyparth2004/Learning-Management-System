@@ -85,7 +85,8 @@ export default function CodeEditor({
             // For now, simple registration. To prevent duplicates on re-mount, we return disposable in useEffect usually, 
             // but here we are in onMount execution. Ideally we scope this.
 
-            const suggestions = [
+            // --- Provider 1: Keywords & Snippets (No trigger characters, relies on typing) ---
+            const suggestionsSnippets = [
                 // --- Snippets ---
                 {
                     label: 'main',
@@ -158,7 +159,7 @@ export default function CodeEditor({
                     insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet
                 },
 
-                // --- Keywords (simplified manual list, though Monaco handles basic syntax, adding explicitly ensures they pop up) ---
+                // --- Keywords ---
                 ...['abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum', 'extends', 'final', 'finally', 'float', 'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'native', 'new', 'package', 'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'try', 'void', 'volatile', 'while', 'true', 'false', 'null'].map(k => ({
                     label: k,
                     kind: monaco.languages.CompletionItemKind.Keyword,
@@ -174,11 +175,31 @@ export default function CodeEditor({
                 }))
             ];
 
-            const provider = languages.registerCompletionItemProvider('java', {
+            languages.registerCompletionItemProvider('java', {
                 provideCompletionItems: (model: any, position: any) => {
-                    // Simple logic: return all suggestions
-                    // A real LSP would check context, but this mimics "basic" IntelliSense
-                    return { suggestions: suggestions };
+                    return { suggestions: suggestionsSnippets };
+                }
+            });
+
+            // --- Provider 2: Member Access (Triggered by dot) ---
+            const suggestionsMethods = [
+                // --- Common Methods (Scanner, String, List, etc.) ---
+                ...['nextInt', 'nextDouble', 'nextFloat', 'nextBoolean', 'nextLine', 'next', 'hasNext', 'close',
+                    'length', 'charAt', 'substring', 'equals', 'equalsIgnoreCase', 'contains', 'indexOf', 'lastIndexOf', 'isEmpty', 'trim', 'replace', 'split',
+                    'add', 'remove', 'get', 'set', 'size', 'clear', 'isEmpty', 'contains', 'addAll',
+                    'put', 'containsKey', 'containsValue', 'keySet', 'values', 'entrySet',
+                    'max', 'min', 'abs', 'sqrt', 'pow', 'random'].map(m => ({
+                        label: m,
+                        kind: monaco.languages.CompletionItemKind.Method,
+                        insertText: m,
+                        documentation: 'Common Java Method'
+                    }))
+            ];
+
+            languages.registerCompletionItemProvider('java', {
+                triggerCharacters: ['.'],
+                provideCompletionItems: (model: any, position: any) => {
+                    return { suggestions: suggestionsMethods };
                 }
             });
 
