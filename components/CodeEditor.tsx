@@ -149,46 +149,34 @@ export default function CodeEditor({
         }
     };
 
+    // Error Line Highlighting with Decorations
+    const decorationsRef = React.useRef<any[]>([]);
+
     React.useEffect(() => {
-        if (editorRef.current && monacoRef.current) {
-            const model = editorRef.current.getModel();
-            if (model) {
-                if (errorLine) {
-                    monacoRef.current.editor.setModelMarkers(model, "owner", [
-                        {
-                            startLineNumber: errorLine,
-                            startColumn: 1,
-                            endLineNumber: errorLine,
-                            endColumn: 1000,
-                            message: errorMessage || "Error here",
-                            severity: monacoRef.current.MarkerSeverity.Error,
-                        },
-                    ]);
-                } else {
-                    if (!editorRef.current || !monacoRef.current) return;
+        if (!editorRef.current || !monacoRef.current) return;
 
-                    const editor = editorRef.current;
-                    const monaco = monacoRef.current;
+        const editor = editorRef.current;
+        const monaco = monacoRef.current;
 
-                    if (errorLine) {
-                        // Add decoration
-                        decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
-                            {
-                                range: new monaco.Range(errorLine, 1, errorLine, 1),
-                                options: {
-                                    isWholeLine: true,
-                                    className: "red-error-line",
-                                    glyphMarginClassName: "red-error-glyph",
-                                },
-                            },
-                        ]);
-                        // Scroll to error
-                        editor.revealLineInCenter(errorLine);
-                    } else {
-                        // Clear decorations
-                        decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
-                    }
-                }, [errorLine]);
+        if (errorLine) {
+            // Add decoration
+            decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
+                {
+                    range: new monaco.Range(errorLine, 1, errorLine, 1),
+                    options: {
+                        isWholeLine: true,
+                        className: "red-error-line",
+                        glyphMarginClassName: "red-error-glyph",
+                    },
+                },
+            ]);
+            // Scroll to error
+            editor.revealLineInCenter(errorLine);
+        } else {
+            // Clear decorations
+            decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+        }
+    }, [errorLine]);
 
     return (
         <div className="relative h-full w-full overflow-hidden rounded-md border border-gray-800 bg-[#1e1e1e]">
