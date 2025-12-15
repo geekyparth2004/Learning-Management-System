@@ -8,11 +8,18 @@ interface TestCase {
     isHidden: boolean;
 }
 
+
+interface HintItem {
+    type: "text" | "video";
+    content: string; // Text content or Video URL
+    videoFile?: File | null;
+}
+
 interface ProblemData {
     title: string;
     description: string;
     testCases: TestCase[];
-    hints: string[];
+    hints: any[]; // Changed to allow object array
     videoSolution?: string;
     type: "CODING" | "WEB_DEV" | "LEETCODE";
     webDevInstructions?: string;
@@ -38,7 +45,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [testCases, setTestCases] = useState<TestCase[]>([{ input: "", expectedOutput: "", isHidden: false }]);
-    const [hints, setHints] = useState<string[]>([]);
+    const [hints, setHints] = useState<HintItem[]>([]);
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState("");
     const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE">("CODING");
@@ -46,6 +53,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     const [webDevHtml, setWebDevHtml] = useState("<!-- Write your HTML here -->");
     const [webDevCss, setWebDevCss] = useState("/* Write your CSS here */");
     const [webDevJs, setWebDevJs] = useState("// Write your JS here");
+    const [uploadingState, setUploadingState] = useState(false);
 
     const handleAddTestCase = () => {
         setTestCases([...testCases, { input: "", expectedOutput: "", isHidden: false }]);
@@ -62,8 +70,8 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     };
 
     const handleAddHint = () => {
-        if (hints.length < 4) {
-            setHints([...hints, ""]);
+        if (hints.length < 5) { // Increased limit slightly or keep 4 but flexible
+            setHints([...hints, { type: "text", content: "" }]);
         }
     };
 
@@ -71,9 +79,9 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
         setHints(hints.filter((_, i) => i !== index));
     };
 
-    const handleHintChange = (index: number, value: string) => {
+    const handleHintChange = (index: number, field: keyof HintItem, value: any) => {
         const newHints = [...hints];
-        newHints[index] = value;
+        newHints[index] = { ...newHints[index], [field]: value };
         setHints(newHints);
     };
 
@@ -93,32 +101,55 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
             return;
         }
 
-        let finalVideoUrl = videoUrl;
-        if (videoFile) {
-            try {
-                finalVideoUrl = await uploadVideo(videoFile);
-            } catch (error: any) {
-                console.error("Video upload failed", error);
-                alert(`Failed to upload video: ${error.message}`);
-                return;
-            }
-        }
+        setUploadingState(true);
 
-        onSave({
-            title,
-            description: problemType === "CODING" ? description : problemType === "WEB_DEV" ? webDevInstructions : "",
-            testCases: problemType === "CODING" ? testCases : [],
-            hints,
-            videoSolution: finalVideoUrl || undefined,
-            type: problemType,
-            leetcodeUrl: problemType === "LEETCODE" ? description : undefined,
-            webDevInstructions: problemType === "WEB_DEV" ? webDevInstructions : undefined,
-            webDevInitialCode: problemType === "WEB_DEV" ? {
-                html: webDevHtml,
-                css: webDevCss,
-                js: webDevJs
-            } : undefined
-        });
+        try {
+            // Upload main solution video if any (User might still use this for LeetCode)
+            let finalVideoUrl = videoUrl;
+            if (videoFile) {
+                try {
+                    finalVideoUrl = await uploadVideo(videoFile);
+                } catch (error: any) {
+                    console.error("Video upload failed", error);
+                    alert(`Failed to upload video: ${error.message}`);
+                    setUploadingState(false);
+                    return;
+                }
+            }
+
+            // Upload Hint Videos
+            const processedHints = await Promise.all(hints.map(async (hint) => {
+                if (hint.type === "video" && hint.videoFile) {
+                     try {
+                        const url = await uploadVideo(hint.videoFile);
+                        return { type: "video", content: url };
+                    } catch (error: any) {
+                        throw new Error(`Failed to upload hint video: ${error.message}`);
+                    }
+                }
+                return { type: hint.type, content: hint.content };
+            }));
+
+            onSave({
+                title,
+                description: problemType === "CODING" ? description : problemType === "WEB_DEV" ? webDevInstructions : "",
+                testCases: problemType === "CODING" ? testCases : [],
+                hints: processedHints,
+                videoSolution: finalVideoUrl || undefined,
+                type: problemType,
+                leetcodeUrl: problemType === "LEETCODE" ? description : undefined,
+                webDevInstructions: problemType === "WEB_DEV" ? webDevInstructions : undefined,
+                webDevInitialCode: problemType === "WEB_DEV" ? {
+                    html: webDevHtml,
+                    css: webDevCss,
+                    js: webDevJs
+                } : undefined
+            });
+        } catch (e: any) {
+            alert(e.message);
+        } finally {
+            setUploadingState(false);
+        }
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -391,15 +422,13 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                     ) : (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold text-white">Hints (Max 4)</h3>
-                                {hints.length < 4 && (
-                                    <button
-                                        onClick={handleAddHint}
-                                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                                    >
-                                        <Plus size={16} /> Add Hint
-                                    </button>
-                                )}
+                                <h3 className="text-lg font-semibold text-white">Hints</h3>
+                                <button
+                                    onClick={handleAddHint}
+                                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                                >
+                                    <Plus size={16} /> Add Hint
+                                </button>
                             </div>
 
                             {hints.length === 0 ? (
@@ -415,13 +444,22 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                     {hints.map((hint, idx) => (
                                         <div key={idx} className="rounded-lg border border-gray-800 bg-[#161616] p-4">
                                             <div className="mb-3 flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-4">
                                                     <span className="font-semibold text-white">Hint {idx + 1}</span>
-                                                    {idx === 3 && (
-                                                        <span className="rounded bg-purple-900/50 px-2 py-0.5 text-xs font-medium text-purple-400">
-                                                            Solution Video
-                                                        </span>
-                                                    )}
+                                                    <div className="flex bg-[#111111] rounded p-0.5 border border-gray-700">
+                                                        <button 
+                                                            onClick={() => handleHintChange(idx, "type", "text")}
+                                                            className={cn("px-2 py-0.5 text-xs rounded transition-colors", hint.type === "text" ? "bg-gray-700 text-white" : "text-gray-400")}
+                                                        >
+                                                            Text
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleHintChange(idx, "type", "video")}
+                                                            className={cn("px-2 py-0.5 text-xs rounded transition-colors", hint.type === "video" ? "bg-gray-700 text-white" : "text-gray-400")}
+                                                        >
+                                                            Video
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <button
                                                     onClick={() => handleRemoveHint(idx)}
@@ -432,34 +470,37 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                             </div>
 
                                             <div className="space-y-3">
-                                                <div className="space-y-1">
-                                                    <label className="text-xs text-gray-500">Hint Text (Required)</label>
-                                                    <textarea
-                                                        value={hint}
-                                                        onChange={(e) => handleHintChange(idx, e.target.value)}
-                                                        className="h-24 w-full rounded border border-gray-700 bg-[#1e1e1e] px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-                                                        placeholder={idx === 3 ? "Optional hint text for the solution video" : "Enter hint text"}
-                                                    />
-                                                </div>
-
-                                                {idx === 3 && (
+                                                {hint.type === "text" ? (
                                                     <div className="space-y-1">
-                                                        <label className="text-xs text-gray-500">Solution Video (Required for last hint)</label>
+                                                        <label className="text-xs text-gray-500">Hint Text</label>
+                                                        <textarea
+                                                            value={hint.content}
+                                                            onChange={(e) => handleHintChange(idx, "content", e.target.value)}
+                                                            className="h-24 w-full rounded border border-gray-700 bg-[#1e1e1e] px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                                                            placeholder="Enter hint text"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs text-gray-500">Video File</label>
                                                         <div className="flex items-center gap-4 rounded border border-gray-700 bg-[#1e1e1e] p-3">
                                                             <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1.5 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
                                                                 <Upload size={16} />
-                                                                Choose file
+                                                                Choose Video
                                                                 <input
                                                                     type="file"
                                                                     accept="video/*,.mkv,video/x-matroska"
-                                                                    onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                                                                    onChange={(e) => handleHintChange(idx, "videoFile", e.target.files?.[0] || null)}
                                                                     className="hidden"
                                                                 />
                                                             </label>
-                                                            <span className="text-sm text-gray-400">
-                                                                {videoFile ? videoFile.name : "No file chosen"}
+                                                            <span className="text-sm text-gray-400 truncate max-w-[200px]">
+                                                                {hint.videoFile ? hint.videoFile.name : (hint.content ? "Existing Video" : "No file chosen")}
                                                             </span>
                                                         </div>
+                                                        {hint.content && !hint.videoFile && (
+                                                            <p className="text-xs text-green-400 mt-1">Video currently set.</p>
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -490,13 +531,14 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={isUploading}
+                        disabled={isUploading || uploadingState}
                         className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
                     >
-                        {isUploading ? "Uploading..." : "Save Problem"}
+                        {isUploading || uploadingState ? "Uploading..." : "Save Problem"}
                     </button>
                 </div>
             </div>
         </div>
     );
 }
+
