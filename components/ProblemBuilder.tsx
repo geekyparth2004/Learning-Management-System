@@ -120,7 +120,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
             // Upload Hint Videos
             const processedHints = await Promise.all(hints.map(async (hint) => {
                 if (hint.type === "video" && hint.videoFile) {
-                     try {
+                    try {
                         const url = await uploadVideo(hint.videoFile);
                         return { type: "video", content: url };
                     } catch (error: any) {
@@ -447,13 +447,13 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                 <div className="flex items-center gap-4">
                                                     <span className="font-semibold text-white">Hint {idx + 1}</span>
                                                     <div className="flex bg-[#111111] rounded p-0.5 border border-gray-700">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleHintChange(idx, "type", "text")}
                                                             className={cn("px-2 py-0.5 text-xs rounded transition-colors", hint.type === "text" ? "bg-gray-700 text-white" : "text-gray-400")}
                                                         >
                                                             Text
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleHintChange(idx, "type", "video")}
                                                             className={cn("px-2 py-0.5 text-xs rounded transition-colors", hint.type === "video" ? "bg-gray-700 text-white" : "text-gray-400")}
                                                         >
@@ -507,9 +507,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                 <div className="flex items-center gap-2 text-xs text-gray-500">
                                                     <Clock size={12} />
                                                     <span>
-                                                        {idx === 0
-                                                            ? "Unlocks immediately"
-                                                            : `Unlocks after ${idx * 5} minutes`}
+                                                        Unlocks after {(idx + 1) * 2} minutes
                                                     </span>
                                                 </div>
                                             </div>
