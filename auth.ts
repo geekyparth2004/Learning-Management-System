@@ -12,6 +12,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     adapter: PrismaAdapter(db),
     session: { strategy: "jwt" },
     ...authConfig,
+    trustHost: true,
     providers: [
         GitHub({
             clientId: process.env.AUTH_GITHUB_ID,
