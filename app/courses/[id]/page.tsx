@@ -449,10 +449,25 @@ export default function CoursePlayerPage() {
         }
     };
 
+    // Parse Error Line
+    const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
+        if (lang === "python") {
+            const matches = [...errorMessage.matchAll(/line (\d+)/gi)];
+            if (matches.length > 0) return parseInt(matches[matches.length - 1][1], 10);
+            return null;
+        } else if (lang === "cpp") {
+            const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
+            return match ? parseInt(match[1], 10) : null;
+        }
+        return null;
+    };
+    const [errorLine, setErrorLine] = useState<number | null>(null);
+
     const runPracticeCode = async () => {
         setIsRunning(true);
         setRunStatus("running");
         setPracticeOutput("");
+        setErrorLine(null);
         try {
             const res = await fetch("/api/compile", {
                 method: "POST",
@@ -467,6 +482,8 @@ export default function CoursePlayerPage() {
             if (data.error) {
                 setRunStatus("error");
                 setPracticeOutput(data.error);
+                const line = parseErrorLine(data.error, practiceLanguage);
+                if (line) setErrorLine(line);
             } else {
                 setRunStatus("success");
                 setPracticeOutput(data.output || "No output");
@@ -1071,6 +1088,7 @@ export default function CoursePlayerPage() {
                                                         language={practiceLanguage}
                                                         code={practiceCode}
                                                         onChange={(val) => setPracticeCode(val || "")}
+                                                        errorLine={errorLine}
                                                     />
                                                 ) : (
                                                     <CodeEditor

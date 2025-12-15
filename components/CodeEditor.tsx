@@ -165,14 +165,48 @@ export default function CodeEditor({
                         },
                     ]);
                 } else {
-                    monacoRef.current.editor.setModelMarkers(model, "owner", []);
-                }
-            }
-        }
-    }, [errorLine, errorMessage]);
+                    if (!editorRef.current || !monacoRef.current) return;
+
+                    const editor = editorRef.current;
+                    const monaco = monacoRef.current;
+
+                    if (errorLine) {
+                        // Add decoration
+                        decorationsRef.current = editor.deltaDecorations(decorationsRef.current, [
+                            {
+                                range: new monaco.Range(errorLine, 1, errorLine, 1),
+                                options: {
+                                    isWholeLine: true,
+                                    className: "red-error-line",
+                                    glyphMarginClassName: "red-error-glyph",
+                                },
+                            },
+                        ]);
+                        // Scroll to error
+                        editor.revealLineInCenter(errorLine);
+                    } else {
+                        // Clear decorations
+                        decorationsRef.current = editor.deltaDecorations(decorationsRef.current, []);
+                    }
+                }, [errorLine]);
 
     return (
-        <div className="h-full w-full overflow-hidden rounded-md border border-gray-700 bg-[#1e1e1e]">
+        <div className="relative h-full w-full overflow-hidden rounded-md border border-gray-800 bg-[#1e1e1e]">
+            {/* Inject minimal CSS for the error line if Tailwind doesn't penetrate or if we want custom look */}
+            <style jsx global>{`
+                .red-error-line {
+                    background-color: rgba(69, 10, 10, 0.4); /* red-900/40 */
+                    border-left: 2px solid #ef4444; /* red-500 */
+                }
+                .red-error-glyph {
+                    background-color: #ef4444; /* red-500 */
+                    width: 8px; /* w-2 */
+                    height: 8px; /* h-2 */
+                    border-radius: 9999px; /* rounded-full */
+                    margin-left: 4px; /* ml-1 */
+                }
+            `}</style>
+
             <Editor
                 height="100%"
                 language={language}
@@ -183,16 +217,20 @@ export default function CodeEditor({
                 options={{
                     minimap: { enabled: false },
                     fontSize: 14,
+                    lineNumbers: "on",
                     scrollBeyondLastLine: false,
                     automaticLayout: true,
                     padding: { top: 16, bottom: 16 },
                     readOnly: readOnly,
+                    domReadOnly: readOnly,
                     quickSuggestions: true,
                     suggestOnTriggerCharacters: true,
                     wordBasedSuggestions: "currentDocument",
+                    fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+                    fontLigatures: true,
+                    glyphMargin: true, // Enable glyph margin for error indicators
                 }}
             />
         </div>
     );
-
 }

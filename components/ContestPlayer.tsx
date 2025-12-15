@@ -145,11 +145,26 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
     }, [activeProblem, language, userCodes, mounted]);
 
 
+    // Parse Error Line
+    const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
+        if (lang === "python") {
+            const matches = [...errorMessage.matchAll(/line (\d+)/gi)];
+            if (matches.length > 0) return parseInt(matches[matches.length - 1][1], 10);
+            return null;
+        } else if (lang === "cpp") {
+            const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
+            return match ? parseInt(match[1], 10) : null;
+        }
+        return null;
+    };
+    const [errorLine, setErrorLine] = useState<number | null>(null);
+
     const handleRun = async () => {
         setIsRunning(true);
         setStatus("running");
         setOutput("Running test cases...");
         setActiveTab("results");
+        setErrorLine(null);
 
         const code = userCodes[activeProblem.id];
         let allPassed = true;
@@ -170,6 +185,8 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                 if (data.error) {
                     log += `Case ${idx + 1}: Error\n${data.error}\n\n`;
                     allPassed = false;
+                    const line = parseErrorLine(data.error, language);
+                    if (line) setErrorLine(line);
                 } else if (actual !== expected) {
                     log += `Case ${idx + 1}: Failed\nInput: ${tc.input}\nExpected: ${expected}\nActual: ${actual}\n\n`;
                     allPassed = false;
@@ -379,6 +396,7 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                                 language={language}
                                 code={userCodes[activeProblem.id] || ""}
                                 onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
+                                errorLine={errorLine}
                             />
                         </div>
 

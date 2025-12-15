@@ -260,13 +260,26 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         setUserCodes(prev => ({ ...prev, [activeProblem.id]: files }));
     };
 
-    const handleRun = async () => {
-        if (activeProblem.type === "WEB_DEV") return;
+    // Parse Error Line
+    const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
+        if (lang === "python") {
+            const matches = [...errorMessage.matchAll(/line (\d+)/gi)];
+            if (matches.length > 0) return parseInt(matches[matches.length - 1][1], 10);
+            return null;
+        } else if (lang === "cpp") {
+            const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
+            return match ? parseInt(match[1], 10) : null;
+        }
+        return null;
+    };
+    const [errorLine, setErrorLine] = useState<number | null>(null);
 
+    const handleRun = async () => {
         setIsRunning(true);
         setStatus("running");
         setOutput("Running test cases...");
         setActiveTab("results");
+        setErrorLine(null);
 
         const code = userCodes[activeProblem.id];
         let allPassed = true;
@@ -281,23 +294,23 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                     body: JSON.stringify({ language, code, input: tc.input }),
                 });
                 const data = await res.json();
-
                 const actual = (data.output || "").trim();
                 const expected = tc.expectedOutput.trim();
-                const passed = !data.error && actual === expected;
-
-                if (!passed) allPassed = false;
 
                 if (data.error) {
                     log += `Case ${idx + 1}: Error\n${data.error}\n\n`;
-                } else if (!passed) {
+                    allPassed = false;
+                    const line = parseErrorLine(data.error, language);
+                    if (line) setErrorLine(line);
+                } else if (actual !== expected) {
                     log += `Case ${idx + 1}: Failed\nInput: ${tc.input}\nExpected: ${expected}\nActual: ${actual}\n\n`;
+                    allPassed = false;
                 } else {
                     log += `Case ${idx + 1}: Passed\n`;
                 }
 
                 detailedResults.push({
-                    passed,
+                    passed: !data.error && actual === expected,
                     input: tc.input,
                     expected: tc.expectedOutput,
                     actual: data.error || actual
@@ -588,11 +601,14 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             </div>
                         </div>
                         <div className="flex-1 overflow-hidden relative">
-                            <CodeEditor
-                                language={language as any}
-                                code={userCodes[activeProblem.id] as string || ""}
-                                onChange={handleCodeChange}
-                            />
+                            <div className="h-full w-full">
+                                <CodeEditor
+                                    language={language}
+                                    code={userCodes[activeProblem.id] as string || ""}
+                                    onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
+                                    errorLine={errorLine}
+                                />
+                            </div>
                             {/* Run Button Floating or fixed in header? Header is better but let's keep consistent */}
                             <div className="absolute bottom-4 right-4 z-10">
                                 <button
