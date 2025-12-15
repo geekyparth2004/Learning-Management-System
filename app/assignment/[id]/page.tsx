@@ -259,16 +259,15 @@ export default function AssignmentPage() {
 
     const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
         if (lang === "python") {
-            // Find all matches for "line <number>"
             const matches = [...errorMessage.matchAll(/line (\d+)/gi)];
-            if (matches.length > 0) {
-                // Return the last match as it's usually the most relevant in a traceback
-                return parseInt(matches[matches.length - 1][1], 10);
-            }
+            if (matches.length > 0) return parseInt(matches[matches.length - 1][1], 10);
             return null;
         } else if (lang === "cpp") {
-            // Matches :line:col: error:
             const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
+            return match ? parseInt(match[1], 10) : null;
+        } else if (lang === "java") {
+            // Java errors usually look like "Main.java:5: error: ..."
+            const match = errorMessage.match(/.java:(\d+): error:/i);
             return match ? parseInt(match[1], 10) : null;
         }
         return null;

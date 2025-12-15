@@ -261,7 +261,6 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         setUserCodes(prev => ({ ...prev, [activeProblem.id]: files }));
     };
 
-    // Parse Error Line
     const parseErrorLine = (errorMessage: string, lang: Language): number | null => {
         if (lang === "python") {
             const matches = [...errorMessage.matchAll(/line (\d+)/gi)];
@@ -269,6 +268,9 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
             return null;
         } else if (lang === "cpp") {
             const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
+            return match ? parseInt(match[1], 10) : null;
+        } else if (lang === "java") {
+            const match = errorMessage.match(/.java:(\d+): error:/i);
             return match ? parseInt(match[1], 10) : null;
         }
         return null;

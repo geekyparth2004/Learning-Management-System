@@ -154,6 +154,9 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
         } else if (lang === "cpp") {
             const match = errorMessage.match(/:(\d+):\d+: error:/i) || errorMessage.match(/:(\d+):.*error:/i);
             return match ? parseInt(match[1], 10) : null;
+        } else if (lang === "java") {
+            const match = errorMessage.match(/.java:(\d+): error:/i);
+            return match ? parseInt(match[1], 10) : null;
         }
         return null;
     };
