@@ -210,7 +210,16 @@ export default function CodeEditor({
         disposablesRef.current.push(languages.registerCompletionItemProvider('java', {
             triggerCharacters: ['.'],
             provideCompletionItems: (model: any, position: any) => {
-                return { suggestions: allJavaSuggestions };
+                const word = model.getWordUntilPosition(position);
+                const range = {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: word.startColumn,
+                    endColumn: word.endColumn
+                };
+                return {
+                    suggestions: allJavaSuggestions.map((item: any) => ({ ...item, range }))
+                };
             }
         }));
 
