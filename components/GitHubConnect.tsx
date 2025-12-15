@@ -15,7 +15,7 @@ export default function GitHubConnect({ isConnected }: { isConnected: boolean })
 
     return (
         <button
-            onClick={() => signIn("github", { callbackUrl: window.location.href })}
+            onClick={() => signIn("github")}
             className="flex items-center gap-2 rounded-full border border-gray-800 bg-[#161616] px-4 py-2 text-sm hover:bg-gray-800 transition-colors"
         >
             <Github className="h-4 w-4" />
