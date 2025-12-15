@@ -324,7 +324,8 @@ export default function CoursePlayerPage() {
                 }
 
                 if (currentModule.items.length > 0) {
-                    setActiveItemId(currentModule.items[0].id);
+                    const firstIncomplete = currentModule.items.find((i: ModuleItem) => !i.isCompleted);
+                    setActiveItemId(firstIncomplete ? firstIncomplete.id : currentModule.items[0].id);
                     setIsWebDevFullScreen(false);
                     setIsTestFullScreen(false);
                 }
