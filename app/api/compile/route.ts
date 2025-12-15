@@ -7,7 +7,7 @@ export async function POST(request: Request) {
         const { language, code, input } = await request.json();
 
         const pistonLanguage = language === "cpp" ? "c++" : language;
-        const version = language === "cpp" ? "10.2.0" : language === "java" ? "15.0.2" : "3.10.0";
+        const version = language === "cpp" ? "10.2.0" : language === "java" ? "21.0.0" : "3.10.0";
 
         let normalizedInput = input || "";
 

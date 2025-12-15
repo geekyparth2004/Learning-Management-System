@@ -22,8 +22,10 @@ if (content.includes("DATABASE_URL=")) {
 if (!content.includes("AUTH_GITHUB_ID=")) {
     content += `\nAUTH_GITHUB_ID="Ov23liFtlXrfFuFv4fE7"\n`;
 }
-if (!content.includes("AUTH_GITHUB_SECRET=")) {
-    content += `\nAUTH_GITHUB_SECRET="74024f25a48b005540aa8c5d9858ee168682d9db"\n`;
+if (content.includes("AUTH_GITHUB_SECRET=")) {
+    content = content.replace(/AUTH_GITHUB_SECRET=.*/g, `AUTH_GITHUB_SECRET="efb3d052c5d8c41a77be2cc6ef2a6e15676d866e"`);
+} else {
+    content += `\nAUTH_GITHUB_SECRET="efb3d052c5d8c41a77be2cc6ef2a6e15676d866e"\n`;
 }
 if (!content.includes("AUTH_SECRET=")) {
     content += `\nAUTH_SECRET="secret"\n`;
