@@ -4,6 +4,7 @@ import React from "react";
 import Editor from "@monaco-editor/react";
 import { Language } from "@/types";
 
+// Verified: Hints are handled in parent components (TestPlayer/AssignmentPage) wrapping this editor.
 interface CodeEditorProps {
     language: Language;
     code: string;

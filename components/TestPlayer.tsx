@@ -116,8 +116,11 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                     const parsed = JSON.parse(p.hints);
                     rawHints = Array.isArray(parsed) ? parsed : [];
                 } catch (e) {
+                    console.error("Failed to parse hints:", e);
                     rawHints = [];
                 }
+            } else {
+                console.log("No valid hints found for problem:", p.id, p.hints);
             }
 
             // Normalize hints
@@ -126,17 +129,16 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                     return {
                         type: 'text',
                         content: h,
-                        locked: true, // Start locked
-                        unlockTime: new Date().toISOString() // Placeholder, updated in loop
+                        locked: true,
+                        unlockTime: new Date(Date.now() + 300000).toISOString()
                     };
                 }
                 return {
                     type: h.type || 'text',
                     content: h.content || '',
                     locked: true,
-                    unlockTime: h.unlockTime || new Date().toISOString()
+                    unlockTime: h.unlockTime || new Date(Date.now() + 300000).toISOString()
                 };
-                // Normalization complete
             });
 
             // Append video solution if exists and not already in hints
