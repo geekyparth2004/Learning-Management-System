@@ -960,12 +960,12 @@ export default function CoursePlayerPage() {
                                                     {!activeItem.startedAt ? (
                                                         <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                                                             <Lock size={14} />
-                                                            <span>Solution video unlocks 20m after starting</span>
+                                                            <span>Solution video unlocks 5m after starting</span>
                                                         </div>
                                                     ) : (
                                                         (() => {
                                                             const startTime = new Date(activeItem.startedAt!).getTime();
-                                                            const unlockTime = startTime + 20 * 60 * 1000;
+                                                            const unlockTime = startTime + 5 * 60 * 1000;
                                                             const now = new Date().getTime();
                                                             const isUnlocked = now >= unlockTime;
 
@@ -976,7 +976,7 @@ export default function CoursePlayerPage() {
                                                                         <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
                                                                             {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.includes("r2.cloudflarestorage.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.endsWith(".mp4") ? (
                                                                                 <video
-                                                                                    src={signedSolutionUrl || activeItem.assignment?.problems?.[0]?.videoSolution}
+                                                                                    src={activeItem.signedVideoSolution || activeItem.assignment?.problems?.[0]?.videoSolution}
                                                                                     controls
                                                                                     className="h-full w-full object-contain"
                                                                                 />
