@@ -73,16 +73,32 @@ export async function GET(
         const problems = await Promise.all(assignment.problems.map(async (p) => {
             try {
                 const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
-                const processedHints = await Promise.all(hintsRaw.map(async (hintContent: string, index: number) => {
+                const processedHints = await Promise.all(hintsRaw.map(async (hintItem: any, index: number) => {
                     // Unlock schedule: 5, 10, 15... minutes
                     const unlockThreshold = (index + 1) * 5;
                     const isUnlocked = isTeacher || minutesElapsed >= unlockThreshold;
                     const unlockTime = new Date(startedAt.getTime() + unlockThreshold * 60 * 1000);
 
+                    // Handle hint item which could be string or object {type, content}
+                    let type = "text";
+                    let content = "";
+
+                    if (typeof hintItem === 'string') {
+                        content = hintItem;
+                    } else {
+                        type = hintItem.type || "text";
+                        content = hintItem.content || "";
+                    }
+
+                    // Sign URL if video and unlocked
+                    if (type === "video" && isUnlocked && (content.includes("r2.cloudflarestorage.com") || content.includes("backblazeb2.com"))) {
+                        content = await signR2Url(content);
+                    }
+
                     return {
                         id: index,
-                        type: "text",
-                        content: isUnlocked ? hintContent : null,
+                        type,
+                        content: isUnlocked ? content : null,
                         locked: !isUnlocked,
                         unlockTime: unlockTime.toISOString(),
                     };
