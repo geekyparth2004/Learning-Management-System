@@ -117,7 +117,12 @@ export async function POST(
                         create: problems.map((p: any) => ({
                             title: p.title,
                             description: p.description,
-                            defaultCode: JSON.stringify(p.defaultCode || { cpp: "", python: "" }),
+                            defaultCode: p.defaultCode, // Already stringified by builder
+                            hints: p.hints, // Already stringified by builder
+                            videoSolution: p.videoSolution,
+                            leetcodeUrl: p.leetcodeUrl,
+                            slug: p.slug,
+                            difficulty: p.difficulty || "Medium",
                             testCases: {
                                 create: p.testCases.map((tc: any) => ({
                                     input: tc.input,
