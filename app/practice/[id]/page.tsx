@@ -37,6 +37,7 @@ interface Problem {
     leetcodeUrl?: string;
     slug?: string;
     isPractice?: boolean;
+    videoSolution?: string;
 }
 
 interface TestCaseResult {
@@ -211,7 +212,7 @@ export default function PracticePlayerPage() {
                         return {
                             type: 'text',
                             content: h,
-                            locked: false, // Default unlocked for simple hints in practice
+                            locked: false, // Default unlocked for simple hints in practice? Actually let's start locked for progressive
                             unlockTime: new Date().toISOString()
                         };
                     }
@@ -219,10 +220,27 @@ export default function PracticePlayerPage() {
                     return {
                         type: h.type || 'text',
                         content: h.content || '',
-                        locked: h.locked !== undefined ? h.locked : false,
+                        locked: h.locked !== undefined ? h.locked : true, // Default locked
                         unlockTime: h.unlockTime || new Date().toISOString()
                     };
                 });
+
+                // Append video solution if exists and not already in hints
+                if (problemData.videoSolution) {
+                    const hasVideo = hints.some(h => h.type === 'video');
+                    if (!hasVideo) {
+                        // In practice mode, we can set unlock time relative to NOW (load time)
+                        // unlocking 5 mins after the last hint
+                        const unlockTime = Date.now() + (hints.length + 1) * 300000;
+                        hints.push({
+                            type: 'video',
+                            content: problemData.videoSolution,
+                            locked: true,
+                            unlockTime: new Date(unlockTime).toISOString()
+                        });
+                    }
+                }
+
                 problemData.hints = hints;
 
                 setProblem(problemData);
@@ -250,13 +268,13 @@ export default function PracticePlayerPage() {
         const interval = setInterval(() => {
             const now = Date.now();
 
-            // Hints - Progressive Unlocking (Every 2 minutes)
+            // Hints - Progressive Unlocking (Every 5 minutes)
             setProblem(prev => {
                 if (!prev) return prev;
                 let changed = false;
                 const updatedHints = prev.hints.map((h, index) => {
-                    // Unlock Hint i at: startTime + (index + 1) * 2 minutes
-                    const unlockTimestamp = startTime + (index + 1) * 2 * 60 * 1000;
+                    // Unlock Hint i at: startTime + (index + 1) * 5 minutes
+                    const unlockTimestamp = startTime + (index + 1) * 5 * 60 * 1000;
                     const isLocked = now < unlockTimestamp;
 
                     if (isLocked !== h.locked) changed = true;

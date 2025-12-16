@@ -185,6 +185,59 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         setLocalProblems(processed as any);
     }, [problems]);
 
+    // Hint unlocking timer
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = Date.now();
+            setLocalProblems(prev => {
+                return prev.map((p, pIdx) => {
+                    // Only process active problem or all? Let's process all since timers run in background
+                    const startBase = startTimeRef.current; // Use component mount time as base for practice?
+                    // Ideally each problem has a startedAt. For practice, let's assume valid from load.
+                    // But if we switch problems, timer resets?
+                    // Let's use a ref for start time that resets when problem set loads.
+
+                    let changed = false;
+                    const updatedHints = p.hints.map((h, idx) => {
+                        // 5 mins per hint
+                        // Calculate absolute unlock time if not set? 
+                        // We set h.unlockTime in the init effect above based on Date.now().
+                        // Wait, init effect sets new Date().toISOString() for all if passed string.
+                        // But we want progressive.
+
+                        // Re-calculate based on index relative to a fixed start time?
+                        // Or if we already set specific times in init?
+                        // In init loop (lines 136), we set unlockTime: h.unlockTime || new Date().toISOString().
+                        // If we want progressive, we should overlap this logic.
+
+                        // Let's enforce relative timing here if locked.
+                        // We need a stable start time for the SESSION.
+                        const sessionStart = startTimeRef.current;
+                        const targetUnlockTime = sessionStart + (idx + 1) * 300000; // 5 mins * index
+
+                        const isLocked = now < targetUnlockTime;
+                        if (isLocked !== h.locked) changed = true;
+
+                        return {
+                            ...h,
+                            locked: isLocked,
+                            unlockTime: new Date(targetUnlockTime).toISOString()
+                        };
+                    });
+
+                    if (!changed) return p;
+                    return { ...p, hints: updatedHints };
+                });
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const startTimeRef = React.useRef(Date.now());
+    // Reset start time if problems prop changes significantly? 
+    // Usually TestPlayer is mounted for a session.
+
+
     const activeProblem = localProblems[activeProblemIndex] || ({} as Problem);
 
     // Initialize code (Wait for localProblems)
@@ -544,10 +597,14 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                         <span className="text-sm font-bold text-gray-300">Description</span>
                     </div>
                     <div className="flex-1 overflow-y-auto p-4 text-sm text-gray-300">
-                        <h2 className="mb-4 text-lg font-bold text-white">{problems[activeProblemIndex].title}</h2>
-                        <div className="prose prose-invert max-w-none">
-                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{problems[activeProblemIndex].description}</ReactMarkdown>
-                        </div>
+                        {localProblems[activeProblemIndex] && (
+                            <>
+                                <h2 className="mb-4 text-lg font-bold text-white">{localProblems[activeProblemIndex].title}</h2>
+                                <div className="prose prose-invert max-w-none">
+                                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>{localProblems[activeProblemIndex].description}</ReactMarkdown>
+                                </div>
+                            </>
+                        )}
 
                         <div className="mt-8 space-y-4">
                             {/* Test Cases */}
@@ -566,16 +623,16 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             ))}
 
                             {/* Hints */}
-                            {activeProblem.hints && activeProblem.hints.length > 0 && (
+                            {localProblems[activeProblemIndex]?.hints && localProblems[activeProblemIndex].hints.length > 0 && (
                                 <div className="mt-6">
                                     <div className="mb-2 flex items-center gap-2">
                                         <h3 className="text-sm font-bold text-gray-300">Hints</h3>
                                         <span className="rounded-full bg-gray-800 px-2 py-0.5 text-[10px] text-gray-400">
-                                            {activeProblem.hints.filter((h: any) => !h.locked).length}/{activeProblem.hints.length} unlocked
+                                            {localProblems[activeProblemIndex].hints.filter((h: any) => !h.locked).length}/{localProblems[activeProblemIndex].hints.length} unlocked
                                         </span>
                                     </div>
                                     <div className="space-y-2">
-                                        {activeProblem.hints.map((hint: any, idx: number) => (
+                                        {localProblems[activeProblemIndex].hints.map((hint: any, idx: number) => (
                                             <div key={idx} className="overflow-hidden rounded border border-gray-800 bg-[#161616]">
                                                 <button
                                                     onClick={() => toggleHint(idx)}
