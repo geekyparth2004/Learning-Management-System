@@ -38,7 +38,8 @@ interface ModuleItem {
             slug?: string;
             videoSolution?: string;
         }[];
-    }
+    };
+    signedVideoSolution?: string;
 }
 
 interface Module {
