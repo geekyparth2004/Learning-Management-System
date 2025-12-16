@@ -42,6 +42,7 @@ interface Problem {
         css: string;
         js: string;
     };
+    videoSolution?: string;
 }
 
 interface TestPlayerProps {
