@@ -74,28 +74,40 @@ export async function GET(
             try {
                 const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
                 const processedHints = await Promise.all(hintsRaw.map(async (hintContent: string, index: number) => {
-                    // Unlock schedule: 5, 10, 15, 20 minutes
+                    // Unlock schedule: 5, 10, 15... minutes
                     const unlockThreshold = (index + 1) * 5;
                     const isUnlocked = isTeacher || minutesElapsed >= unlockThreshold;
                     const unlockTime = new Date(startedAt.getTime() + unlockThreshold * 60 * 1000);
 
-                    let content = hintContent;
-                    if (index === 3 && p.videoSolution) {
-                        content = p.videoSolution;
-                        // Sign URL if it's an R2 URL and unlocked
-                        if (isUnlocked) {
-                            content = await signR2Url(content);
-                        }
-                    }
-
                     return {
                         id: index,
-                        type: index === 3 && p.videoSolution ? "video" : "text",
-                        content: isUnlocked ? content : null,
+                        type: "text",
+                        content: isUnlocked ? hintContent : null,
                         locked: !isUnlocked,
                         unlockTime: unlockTime.toISOString(),
                     };
                 }));
+
+                // Append video solution if exists
+                if (p.videoSolution) {
+                    const index = hintsRaw.length;
+                    const unlockThreshold = (index + 1) * 5;
+                    const isUnlocked = isTeacher || minutesElapsed >= unlockThreshold;
+                    const unlockTime = new Date(startedAt.getTime() + unlockThreshold * 60 * 1000);
+
+                    let content = p.videoSolution;
+                    if (isUnlocked && (content.includes("r2.cloudflarestorage.com") || content.includes("backblazeb2.com"))) {
+                        content = await signR2Url(content);
+                    }
+
+                    processedHints.push({
+                        id: index,
+                        type: "video",
+                        content: isUnlocked ? content : null,
+                        locked: !isUnlocked,
+                        unlockTime: unlockTime.toISOString(),
+                    });
+                }
 
                 return {
                     ...p,

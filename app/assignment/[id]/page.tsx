@@ -39,6 +39,7 @@ interface Problem {
     leetcodeUrl?: string;
     slug?: string;
     courseId?: string;
+    videoSolution?: string;
 }
 
 interface TestCaseResult {
@@ -191,6 +192,20 @@ export default function AssignmentPage() {
                 }
                 problemData.hints = hints;
 
+                // Manual check: Append video solution if not present in hints
+                if (problemData.videoSolution) {
+                    const hasVideo = hints.some(h => h.type === 'video');
+                    if (!hasVideo) {
+                        const unlockTime = (data.startedAt ? new Date(data.startedAt).getTime() : Date.now()) + (hints.length + 1) * 5 * 60 * 1000;
+                        problemData.hints.push({
+                            type: 'video',
+                            content: problemData.videoSolution,
+                            locked: true,
+                            unlockTime: new Date(unlockTime).toISOString()
+                        });
+                    }
+                }
+
                 // Ensure startedAt is present (it comes from the API now)
                 const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
                 setProblem(fullProblemData);
@@ -223,8 +238,8 @@ export default function AssignmentPage() {
                 if (!prev) return prev;
                 let changed = false;
                 const updatedHints = prev.hints.map((h, idx) => {
-                    // Progressive unlocking: 2 mins per hint
-                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 2 * 60 * 1000;
+                    // Progressive unlocking: 5 mins per hint
+                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 5 * 60 * 1000;
                     const isLocked = now < unlockTime;
 
                     if (isLocked !== h.locked) changed = true;
