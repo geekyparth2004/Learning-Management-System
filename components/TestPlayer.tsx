@@ -157,39 +157,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 defaultCode: p.defaultCode,
                 hints: hints
             };
-            // Use consistent timing logic: 5 mins per hint
-            // Or stick to what's defined for practice? Let's use 5 mins default.
-            // We don't have problem.startedAt here easily for all cases (practice mode start time is complex)
-            // But TestPlayer has internal timer. 
-            // Actually this logic formats data for rendering. Unlock logic is separate usually?
-            // No, TestPlayer usually relies on external time or passes it down.
-            // For now, let's just add it. The unlock logic in render loop handles the time check.
-            // We need to set a relative unlockTime that the separate timer can check against.
-            // Or we can just set it and let the player handle it.
-            // Actually TestPlayer doesn't have an internal "unlock scheduler" loop visible here?
-            // It does generally rely on props or internal state.
-            // Wait, TestPlayer.tsx lines 532+ iterates hints.
-            // Let's just append it. The unlockTime needs to be set properly for the countdown.
-            // If we don't have a startedAt reference here, we might need to rely on the Player to set it or 
-            // set a placeholder that gets updated.
-            // Let's assume relative time or just 0 for now if pre-processed. 
-            // If raw, we set a placeholder.
-
-            hints.push({
-                type: 'video',
-                content: p.videoSolution,
-                locked: true,
-                unlockTime: new Date(Date.now() + (index + 1) * 300000).toISOString() // Default 5 mins relative to NOW (init)
-            });
-        }
-
-            return {
-            ...p,
-            type,
-            defaultCode,
-            webDevInitialCode,
-            hints,
-        };
+        });
     });
     setLocalProblems(processed as any);
 }, [problems]);
@@ -316,14 +284,14 @@ useEffect(() => {
         setTimeToAi(`${mins}:${secs.toString().padStart(2, "0")}`);
     }
 
-    // Progressive Hints Logic (Every 2 mins = 120s)
+    // Progressive Hints Logic (Every 5 mins = 300s)
     setLocalProblems(prevProblems => {
         if (!prevProblems.length) return prevProblems;
         let changed = false;
 
         const newProblems = prevProblems.map(p => {
             const updatedHints = p.hints.map((h, idx) => {
-                const unlockForHint = (idx + 1) * 2 * 60; // 2m, 4m, 6m... (in seconds)
+                const unlockForHint = (idx + 1) * 5 * 60; // 5m, 10m, 15m... (in seconds)
                 const isLocked = elapsedTime < unlockForHint;
 
                 if (isLocked !== h.locked) changed = true;
