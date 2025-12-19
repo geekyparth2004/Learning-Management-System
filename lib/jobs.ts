@@ -14,27 +14,27 @@ const JOB_CATEGORIES = [
     "Python Developer in India"
 ];
 
-// Mock data generator for simulation (Fallback) - Expanded to 30 items
-const MOCK_TITLES = ["Frontend Developer", "Backend Developer", "Full Stack Engineer", "SDE-1", "SDE-2", "DevOps Engineer", "Data Scientist", "System Analyst"];
-const MOCK_COMPANIES = ["Google", "Amazon", "Microsoft", "Flipkart", "Swiggy", "Zomato", "Cred", "Razorpay", "Uber", "Ola"];
-const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Pune", "Gurugram", "Mumbai", "Remote"];
+// Mock data generator for simulation (Fallback) - Uses generic career pages to ensure links work
+const MOCK_TITLES = ["Software Engineer", "Frontend Developer", "Backend Engineer", "Full Stack Developer", "Data Scientist", "Product Manager", "DevOps Engineer"];
+const MOCK_COMPANIES = ["Google", "Amazon", "Microsoft", "Netflix", "Meta", "Apple", "Uber", "Airbnb"];
+const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Remote", "Gurugram", "Mumbai", "Pune"];
 
 const MOCK_JOBS = [
-    { title: "Frontend Developer", company: "Google", location: "Bengaluru", salary: "₹18L - ₹35L", platform: "Careers Page", link: "https://www.google.com/about/careers/applications/jobs/results/?location=India&q=Frontend%20Developer" },
-    { title: "Backend SDE-1", company: "Amazon", location: "Hyderabad", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.amazon.jobs/en/search?base_query=Software+Development+Engineer&loc_query=India" },
-    { title: "Full Stack Engineer", company: "Microsoft", location: "Bengaluru", salary: "₹20L - ₹40L", platform: "Careers Page", link: "https://careers.microsoft.com/us/en/search-results?keywords=Full%20Stack&p=India" },
-    { title: "SDE-2 (Java)", company: "Flipkart", location: "Bengaluru", salary: "₹28L - ₹50L", platform: "Careers Page", link: "https://www.flipkartcareers.com/#!/joblist?keywords=Java" },
-    { title: "Product Engineer", company: "Swiggy", location: "Bengaluru", salary: "₹15L - ₹30L", platform: "Careers Page", link: "https://careers.swiggy.com/#/careers" },
-    { title: "Senior Software Engineer", company: "Zomato", location: "Gurugram", salary: "₹20L - ₹40L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Zomato%20Software%20Engineer" },
-    { title: "Data Scientist", company: "Uber", location: "Bengaluru", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.uber.com/global/en/careers/list/?location=India&department=Data%20Science" },
-    { title: "System Engineer", company: "TCS", location: "Pune", salary: "₹4L - ₹8L", platform: "Naukri", link: "https://www.naukri.com/tcs-jobs" },
-    { title: "Java Developer", company: "Infosys", location: "Mysore", salary: "₹5L - ₹9L", platform: "Naukri", link: "https://www.naukri.com/infosys-jobs" },
-    { title: "DevOps Engineer", company: "Cred", location: "Bengaluru", salary: "₹20L - ₹40L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Cred%20DevOps" },
-    { title: "Software Engineer", company: "Google", location: "Hyderabad", salary: "₹18L - ₹35L", platform: "Careers Page", link: "https://www.google.com/about/careers/applications/jobs/results/?location=India&q=Software%20Engineer" },
-    { title: "SDE-1", company: "Amazon", location: "Bengaluru", salary: "₹20L - ₹35L", platform: "Careers Page", link: "https://www.amazon.jobs/en/search?base_query=SDE&loc_query=India" },
-    { title: "Frontend Engineer", company: "Atlassian", location: "Bengaluru", salary: "₹24L - ₹48L", platform: "Careers Page", link: "https://www.atlassian.com/company/careers/all-jobs?location=Bengaluru&team=Engineering" },
-    { title: "Python Developer", company: "Razorpay", location: "Bengaluru", salary: "₹15L - ₹30L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Razorpay%20Python" },
-    { title: "Android Developer", company: "Hotstar", location: "Mumbai", salary: "₹18L - ₹32L", platform: "Naukri", link: "https://www.naukri.com/hotstar-jobs" }
+    { title: "Software Engineer", company: "Google", location: "Bengaluru", salary: "₹25L - ₹50L", platform: "Careers Page", link: "https://www.google.com/about/careers/applications/jobs/results" },
+    { title: "SDE-1", company: "Amazon", location: "Hyderabad", salary: "₹20L - ₹45L", platform: "Careers Page", link: "https://www.amazon.jobs/en/locations/india" },
+    { title: "Full Stack Developer", company: "Microsoft", location: "Bengaluru", salary: "₹28L - ₹55L", platform: "Careers Page", link: "https://careers.microsoft.com/us/en/search-results?q=India" },
+    { title: "Frontend Engineer", company: "Netflix", location: "Remote", salary: "Undisclosed", platform: "Careers Page", link: "https://jobs.netflix.com/search" },
+    { title: "Backend Engineer", company: "Meta", location: "Gurugram", salary: "₹30L - ₹60L", platform: "Careers Page", link: "https://www.metacareers.com/jobs/" },
+    { title: "iOS Developer", company: "Apple", location: "Bengaluru", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.apple.com/careers/in/" },
+    { title: "Data Scientist", company: "Uber", location: "Bengaluru", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.uber.com/us/en/careers/" },
+    { title: "Senior Software Engineer", company: "Airbnb", location: "Remote", salary: "₹40L - ₹80L", platform: "Careers Page", link: "https://careers.airbnb.com/positions/" },
+    { title: "Product Engineer", company: "Swiggy", location: "Bengaluru", salary: "₹18L - ₹35L", platform: "Careers Page", link: "https://careers.swiggy.com/" },
+    { title: "SDE-2", company: "Zomato", location: "Gurugram", salary: "₹25L - ₹50L", platform: "Careers Page", link: "https://www.zomato.com/careers" },
+    { title: "Tech Lead", company: "Cred", location: "Bengaluru", salary: "₹40L - ₹90L", platform: "Careers Page", link: "https://careers.cred.club/" },
+    { title: "Java Developer", company: "TCS", location: "Pune", salary: "₹5L - ₹10L", platform: "Naukri", link: "https://www.naukri.com/tcs-jobs" },
+    { title: "System Engineer", company: "Infosys", location: "Mysore", salary: "₹4L - ₹8L", platform: "Naukri", link: "https://www.naukri.com/infosys-jobs" },
+    { title: "React Developer", company: "Razorpay", location: "Bengaluru", salary: "₹15L - ₹30L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Razorpay" },
+    { title: "Android Developer", company: "Hotstar", location: "Mumbai", salary: "₹20L - ₹40L", platform: "Naukri", link: "https://www.naukri.com/hotstar-jobs" }
 ].map(j => ({ ...j, postedAt: new Date() }));
 
 async function fetchJobsForQuery(query: string, apiKey: string) {
@@ -90,8 +90,9 @@ export async function refreshJobs() {
             where: { createdAt: { gt: midnightIstInUtc } }
         });
 
-        // ONLY return if we have enough jobs for "Today"
-        if (jobsCount > 10) {
+        // ONLY return if we have enough jobs for "Today" AND we are using real API data.
+        // If we are using Mock Data (no API key), we always refresh to ensure the latest mock structure is used.
+        if (jobsCount > 10 && process.env.RAPID_API_KEY) {
             console.log("Using cached jobs (Fresh for Today IST)");
             return;
         }
