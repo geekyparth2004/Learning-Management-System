@@ -98,7 +98,7 @@ export async function GET(
                     return {
                         id: index,
                         type,
-                        content: isUnlocked ? content : null,
+                        content: content,
                         locked: !isUnlocked,
                         unlockTime: unlockTime.toISOString(),
                     };
