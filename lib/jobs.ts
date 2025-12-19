@@ -3,42 +3,38 @@ import { db } from "@/lib/db";
 // JSearch API Configuration
 const RAPID_API_HOST = "jsearch.p.rapidapi.com";
 
-// User-requested categories
+// User-requested categories: Noida, Freshers, Specific Tech, Walk-ins, Specific Platforms
 const JOB_CATEGORIES = [
-    "C++ Developer",
-    "Java Developer",
-    "Frontend Developer",
-    "Backend Developer",
-    "SQL Developer",
-    "SDE 1",
-    "Python Developer in India"
+    "Walk-in Drive Freshers Noida Naukri",
+    "C++ Developer Entry Level Noida Hirist",
+    "Java Developer Fresher Noida Instahyre",
+    "Frontend Developer Intern Noida Internshala",
+    "SQL Developer Entry Level Noida LinkedIn",
+    "Software Engineer Freshers Noida Careers",
+    "Junior Developer Noida Naukri",
+    "Web Developer Internship Noida Internshala",
+    "Backend Developer Fresher Noida Hirist"
 ];
 
-// Mock data generator for simulation (Fallback) - Uses generic career pages to ensure links work
-const MOCK_TITLES = ["Software Engineer", "Frontend Developer", "Backend Engineer", "Full Stack Developer", "Data Scientist", "Product Manager", "DevOps Engineer"];
-const MOCK_COMPANIES = ["Google", "Amazon", "Microsoft", "Netflix", "Meta", "Apple", "Uber", "Airbnb"];
-const MOCK_LOCATIONS = ["Bengaluru", "Hyderabad", "Remote", "Gurugram", "Mumbai", "Pune"];
+// Mock data generator for simulation (Fallback) - Tuned for Noida/Freshers
+const MOCK_TITLES = ["Junior Software Engineer", "C++ Developer", "Java Developer", "Frontend Intern", "SQL Analyst", "Graduate Trainee"];
+const MOCK_COMPANIES = ["HCL Tech", "Paytm", "Samsung", "Adobe", "InfoEdge", "Oracle", "Cadence"];
+const MOCK_LOCATIONS = ["Noida", "Greater Noida", "Delhi NCR", "Gurugram"];
 
 const MOCK_JOBS = [
-    { title: "Software Engineer", company: "Google", location: "Bengaluru", salary: "₹25L - ₹50L", platform: "Careers Page", link: "https://www.google.com/about/careers/applications/jobs/results" },
-    { title: "SDE-1", company: "Amazon", location: "Hyderabad", salary: "₹20L - ₹45L", platform: "Careers Page", link: "https://www.amazon.jobs/en/locations/india" },
-    { title: "Full Stack Developer", company: "Microsoft", location: "Bengaluru", salary: "₹28L - ₹55L", platform: "Careers Page", link: "https://careers.microsoft.com/us/en/search-results?q=India" },
-    { title: "Frontend Engineer", company: "Netflix", location: "Remote", salary: "Undisclosed", platform: "Careers Page", link: "https://jobs.netflix.com/search" },
-    { title: "Backend Engineer", company: "Meta", location: "Gurugram", salary: "₹30L - ₹60L", platform: "Careers Page", link: "https://www.metacareers.com/jobs/" },
-    { title: "iOS Developer", company: "Apple", location: "Bengaluru", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.apple.com/careers/in/" },
-    { title: "Data Scientist", company: "Uber", location: "Bengaluru", salary: "₹25L - ₹45L", platform: "Careers Page", link: "https://www.uber.com/us/en/careers/" },
-    { title: "Senior Software Engineer", company: "Airbnb", location: "Remote", salary: "₹40L - ₹80L", platform: "Careers Page", link: "https://careers.airbnb.com/positions/" },
-    { title: "Product Engineer", company: "Swiggy", location: "Bengaluru", salary: "₹18L - ₹35L", platform: "Careers Page", link: "https://careers.swiggy.com/" },
-    { title: "SDE-2", company: "Zomato", location: "Gurugram", salary: "₹25L - ₹50L", platform: "Careers Page", link: "https://www.zomato.com/careers" },
-    { title: "Tech Lead", company: "Cred", location: "Bengaluru", salary: "₹40L - ₹90L", platform: "Careers Page", link: "https://careers.cred.club/" },
-    { title: "Java Developer", company: "TCS", location: "Pune", salary: "₹5L - ₹10L", platform: "Naukri", link: "https://www.naukri.com/tcs-jobs" },
-    { title: "System Engineer", company: "Infosys", location: "Mysore", salary: "₹4L - ₹8L", platform: "Naukri", link: "https://www.naukri.com/infosys-jobs" },
-    { title: "React Developer", company: "Razorpay", location: "Bengaluru", salary: "₹15L - ₹30L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search/?keywords=Razorpay" },
-    { title: "Android Developer", company: "Hotstar", location: "Mumbai", salary: "₹20L - ₹40L", platform: "Naukri", link: "https://www.naukri.com/hotstar-jobs" }
+    { title: "C++ Developer (Fresher)", company: "HCL Tech", location: "Noida", salary: "₹4L - ₹6L", platform: "Careers Page", link: "https://www.hcltech.com/careers" },
+    { title: "Java Developer", company: "Paytm", location: "Noida", salary: "₹8L - ₹12L", platform: "Careers Page", link: "https://paytm.com/careers" },
+    { title: "Software Engineer (Entry Level)", company: "Samsung", location: "Noida", salary: "₹12L - ₹18L", platform: "Careers Page", link: "https://www.samsung.com/in/about-us/careers/" },
+    { title: "Frontend Developer", company: "InfoEdge", location: "Noida", salary: "₹6L - ₹10L", platform: "Naukri", link: "https://www.naukri.com/infoedge-jobs" },
+    { title: "SQL Developer", company: "Oracle", location: "Noida", salary: "₹10L - ₹15L", platform: "Careers Page", link: "https://www.oracle.com/in/corporate/careers/" },
+    { title: "Walk-in: Graduate Trainee", company: "Genpact", location: "Noida", salary: "₹3L - ₹5L", platform: "Naukri", link: "https://www.genpact.com/careers" },
+    { title: "Junior Web Developer", company: "Adobe", location: "Noida", salary: "₹15L - ₹25L", platform: "Careers Page", link: "https://careers.adobe.com/us/en" },
+    { title: "C++ Intern", company: "Cadence", location: "Noida", salary: "₹30k/mo", platform: "Careers Page", link: "https://careers.cadence.com/" },
 ].map(j => ({ ...j, postedAt: new Date() }));
 
 async function fetchJobsForQuery(query: string, apiKey: string) {
-    const url = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query + " in India")}&num_pages=1&date_posted=today`;
+    // We search exact query since it already contains "Noida"
+    const url = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query)}&num_pages=1&date_posted=today`;
 
     try {
         const response = await fetch(url, {
@@ -73,31 +69,16 @@ async function fetchJobsForQuery(query: string, apiKey: string) {
 
 export async function refreshJobs() {
     try {
-        // 1. Check if we have recent jobs (Midnight IST Strategy)
-        // We want to fetch new jobs if the current cached jobs were created BEFORE today's midnight IST.
-
-        const now = new Date();
-        // IST is UTC + 5:30. 
-        // We calculate "Midnight IST Today" in UTC time.
-        const istOffset = 5.5 * 60 * 60 * 1000;
-        const istTime = new Date(now.getTime() + istOffset);
-        istTime.setUTCHours(0, 0, 0, 0); // Midnight in IST terms
-
-        // This is the collection cutoff. Any job created BEFORE this timestamp is "yesterday's news".
-        const midnightIstInUtc = new Date(istTime.getTime() - istOffset);
-
-        const jobsCount = await (db as any).job.count({
-            where: { createdAt: { gt: midnightIstInUtc } }
-        });
-
-        // ONLY return if we have enough jobs for "Today" AND we are using real API data.
-        // If we are using Mock Data (no API key), we always refresh to ensure the latest mock structure is used.
-        if (jobsCount > 10 && process.env.RAPID_API_KEY) {
-            console.log("Using cached jobs (Fresh for Today IST)");
-            return;
+        // Force refresh to apply new Noida search criteria
+        // (Skipping the midnight check to ensure user gets new results immediately)
+        /*
+        const jobCountCheck = await (db as any).job.count();
+        if (jobCountCheck > 10 && process.env.RAPID_API_KEY) {
+             return; // Disabled for immediate update
         }
+        */
 
-        console.log("Refreshing job cache (New Day in IST)...");
+        console.log("Refreshing job cache (Forcing Noida Update)...");
         const apiKey = process.env.RAPID_API_KEY;
 
         let newJobs: any[] = [];
@@ -115,16 +96,14 @@ export async function refreshJobs() {
             newJobs = results.flat();
         }
 
-        // 3. Fallback to Mock if API failed or no key or no results
+        // 3. Fallback to Mock if API failed or no key
         if (!newJobs || newJobs.length === 0) {
             console.log("Using Mock Data fallback.");
             newJobs = MOCK_JOBS.map(job => ({ ...job, postedAt: new Date() }));
         }
 
         // 4. Save to DB
-        // Clear previous entries to force fresh start
         await (db as any).job.deleteMany({});
-
         await (db as any).job.createMany({
             data: newJobs,
             skipDuplicates: true
