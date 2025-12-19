@@ -131,9 +131,29 @@
 
     <!-- Personal Details -->
     <div class="section-title">Personal Details</div>
+    <div class="row">
+      <div class="col form-group">
+        <label>First Name</label>
+        <input type="text" id="firstName" placeholder="John">
+      </div>
+      <div class="col form-group">
+        <label>Last Name</label>
+        <input type="text" id="lastName" placeholder="Doe">
+      </div>
+    </div>
     <div class="form-group">
-      <label>Full Name</label>
-      <input type="text" id="fullName" placeholder="John Doe">
+      <label>Full Name (Auto-generated)</label>
+      <input type="text" id="fullName" placeholder="John Doe" readonly style="background:#333; cursor:not-allowed;">
+    </div>
+    <div class="row">
+      <div class="col form-group">
+        <label>Father's Name</label>
+        <input type="text" id="fatherName" placeholder="Robert Doe">
+      </div>
+      <div class="col form-group">
+        <label>Mother's Name</label>
+        <input type="text" id="motherName" placeholder="Mary Doe">
+      </div>
     </div>
     <div class="row">
       <div class="col form-group">
@@ -146,24 +166,45 @@
       </div>
     </div>
     <div class="form-group">
-      <label>Full Address</label>
-      <input type="text" id="address" placeholder="Flat No, Street, Area">
+      <label>Permanent Address</label>
+      <textarea id="address" rows="2" style="width:100%; padding:8px; background:#1f2937; border:1px solid #374151; color:white; border-radius:6px; font-size:12px; resize:vertical;" placeholder="Flat No, Street, Area, City, State, Pincode"></textarea>
+    </div>
+
+    <!-- Identity -->
+    <div class="section-title">Identity & Resume</div>
+    <div class="row">
+      <div class="col form-group">
+        <label>PAN Number</label>
+        <input type="text" id="pan" placeholder="ABCDE1234F">
+      </div>
+      <div class="col form-group">
+        <label>Aadhar Number</label>
+        <input type="text" id="aadhar" placeholder="1234 5678 9012">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Resume Link (Drive/Dropbox)</label>
+      <input type="url" id="resume" placeholder="https://drive.google.com/file/...">
     </div>
 
     <!-- Education: UG -->
     <div class="section-title">Undergraduate (UG)</div>
     <div class="form-group">
-      <label>College/University Name</label>
+      <label>College Name</label>
       <input type="text" id="ugCollege" placeholder="IIT Bombay">
+    </div>
+    <div class="form-group">
+      <label>University Name</label>
+      <input type="text" id="ugUniversity" placeholder="Mumbai University">
     </div>
     <div class="row">
       <div class="col form-group">
-        <label>Degree</label>
+        <label>Course/Degree</label>
         <input type="text" id="ugDegree" placeholder="B.Tech">
       </div>
       <div class="col form-group">
-        <label>Branch/Stream</label>
-        <input type="text" id="ugBranch" placeholder="CSE">
+        <label>Specialization</label>
+        <input type="text" id="ugSpecialization" placeholder="Computer Science">
       </div>
     </div>
     <div class="row">
@@ -172,21 +213,21 @@
         <input type="text" id="ugScore" placeholder="9.5">
       </div>
       <div class="col form-group">
-        <label>Year Passing</label>
-        <input type="number" id="ugYear" placeholder="2024">
+        <label>Duration (Years)</label>
+        <input type="text" id="ugDuration" placeholder="2020-2024">
       </div>
     </div>
 
     <!-- Education: 12th -->
     <div class="section-title">Class 12th (HSC)</div>
     <div class="form-group">
-      <label>School/College Name</label>
+      <label>School Name</label>
       <input type="text" id="twelfthSchool" placeholder="ABC Public School">
     </div>
     <div class="row">
       <div class="col form-group">
-        <label>Board</label>
-        <input type="text" id="twelfthBoard" placeholder="CBSE">
+        <label>Location</label>
+        <input type="text" id="twelfthLocation" placeholder="New Delhi">
       </div>
       <div class="col form-group">
         <label>Percentage</label>
@@ -202,13 +243,45 @@
     </div>
     <div class="row">
       <div class="col form-group">
-        <label>Board</label>
-        <input type="text" id="tenthBoard" placeholder="CBSE">
+        <label>Location</label>
+        <input type="text" id="tenthLocation" placeholder="New Delhi">
       </div>
       <div class="col form-group">
         <label>Percentage</label>
         <input type="text" id="tenthScore" placeholder="98%">
       </div>
+    </div>
+
+    <!-- Internship -->
+    <div class="section-title">Internship Experience</div>
+    <div class="row">
+      <div class="col form-group">
+        <label>Company Name</label>
+        <input type="text" id="internCompany" placeholder="Google">
+      </div>
+      <div class="col form-group">
+        <label>Duration</label>
+        <input type="text" id="internDuration" placeholder="3 Months">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="internDesc" rows="2" style="width:100%; padding:8px; background:#1f2937; border:1px solid #374151; color:white; border-radius:6px; font-size:12px; resize:vertical;" placeholder="Worked on React..."></textarea>
+    </div>
+
+    <!-- Projects -->
+    <div class="section-title">Project Details</div>
+    <div class="form-group">
+      <label>Project Name</label>
+      <input type="text" id="projectName" placeholder="E-Commerce App">
+    </div>
+    <div class="form-group">
+      <label>Tech Stack</label>
+      <input type="text" id="projectStack" placeholder="MERN, Redis, Docker">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="projectDesc" rows="2" style="width:100%; padding:8px; background:#1f2937; border:1px solid #374151; color:white; border-radius:6px; font-size:12px; resize:vertical;" placeholder="Built a full stack app..."></textarea>
     </div>
 
     <!-- Links -->

@@ -1,11 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
     const fields = [
-        'fullName', 'email', 'phone', 'address',
-        'ugCollege', 'ugDegree', 'ugBranch', 'ugScore', 'ugYear',
-        'twelfthSchool', 'twelfthBoard', 'twelfthScore',
-        'tenthSchool', 'tenthBoard', 'tenthScore',
+        'firstName', 'lastName', 'fullName',
+        'fatherName', 'motherName', 'email', 'phone', 'address',
+        'pan', 'aadhar', 'resume',
+        'ugCollege', 'ugUniversity', 'ugDegree', 'ugBranch', 'ugSpecialization', 'ugScore', 'ugDuration',
+        'twelfthSchool', 'twelfthLocation', 'twelfthScore',
+        'tenthSchool', 'tenthLocation', 'tenthScore',
+        'internCompany', 'internDuration', 'internDesc',
+        'projectName', 'projectStack', 'projectDesc',
         'linkedin', 'github', 'portfolio'
     ];
+
+    // Auto-generate Full Name
+    const updateFullName = () => {
+        const first = document.getElementById('firstName').value || '';
+        const last = document.getElementById('lastName').value || '';
+        document.getElementById('fullName').value = `${first} ${last}`.trim();
+    };
+
+    document.getElementById('firstName').addEventListener('input', updateFullName);
+    document.getElementById('lastName').addEventListener('input', updateFullName);
 
     // Load saved data
     chrome.storage.sync.get(['profile'], (result) => {
