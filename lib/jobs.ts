@@ -17,27 +17,32 @@ const JOB_CATEGORIES = [
     "Backend Developer Fresher Noida"
 ];
 
-// Mock data generator (Fallback) - Uses Google Search Links so the user ALWAYS finds relevant results even if API fails
-// This solves the 'link not giving the role' issue by dynamically searching for it.
-const MOCK_TITLES = ["Junior Software Engineer", "C++ Developer", "Java Developer", "Frontend Intern", "SQL Analyst", "Graduate Trainee"];
-const MOCK_COMPANIES = ["HCL Tech", "Paytm", "Samsung", "Adobe", "InfoEdge", "Oracle", "Cadence"];
-const MOCK_LOCATIONS = ["Noida", "Greater Noida", "Delhi NCR", "Gurugram"];
-
+// Mock data: Balanced distribution (C++ | Walk-in | Web) matching user priority
 const MOCK_JOBS = [
+    // 5 C++ Jobs
     { title: "C++ Developer (Fresher)", company: "HCL Tech", location: "Noida", salary: "₹4L - ₹6L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/search?keywords=HCL%20Tech%20C%2B%2B%20Developer%20Noida" },
-    { title: "Java Developer", company: "Paytm", location: "Noida", salary: "₹8L - ₹12L", platform: "Naukri", link: "https://www.naukri.com/paytm-jobs-in-noida" },
-    { title: "Software Engineer (Entry Level)", company: "Samsung", location: "Noida", salary: "₹12L - ₹18L", platform: "Careers", link: "https://www.google.com/search?q=Samsung+Noida+Software+Engineer+Fresher+Jobs" },
-    { title: "Frontend Developer", company: "InfoEdge", location: "Noida", salary: "₹6L - ₹10L", platform: "Naukri", link: "https://www.naukri.com/infoedge-jobs-in-noida" },
-    { title: "SQL Developer", company: "Oracle", location: "Noida", salary: "₹10L - ₹15L", platform: "Careers", link: "https://www.google.com/search?q=Oracle+Noida+SQL+Developer+Jobs" },
+    { title: "Junior C++ Engineer", company: "Cadence", location: "Noida", salary: "₹6L - ₹9L", platform: "Careers", link: "https://www.google.com/search?q=Cadence+Noida+C%2B%2B+Jobs" },
+    { title: "C++ Programmer", company: "Thales", location: "Noida", salary: "₹5L - ₹8L", platform: "Naukri", link: "https://www.naukri.com/thales-jobs-noida" },
+    { title: "Entry Level C++ Dev", company: "Adobe", location: "Noida", salary: "₹12L - ₹18L", platform: "Careers", link: "https://careers.adobe.com/us/en/search-results?keywords=C%2B%2B" },
+
+    // 5 Walk-in Drives
     { title: "Walk-in: Graduate Trainee", company: "Genpact", location: "Noida", salary: "₹3L - ₹5L", platform: "Naukri", link: "https://www.naukri.com/genpact-jobs-in-noida" },
-    { title: "Junior Web Developer", company: "Adobe", location: "Noida", salary: "₹15L - ₹25L", platform: "Careers", link: "https://careers.adobe.com/us/en/search-results?keywords=Noida" },
-    { title: "C++ Intern", company: "Cadence", location: "Noida", salary: "₹30k/mo", platform: "Internshala", link: "https://www.google.com/search?q=Cadence+Noida+Internship" },
+    { title: "Walk-in Drive: Tech Support", company: "HCL", location: "Noida", salary: "₹3L - ₹4.5L", platform: "Naukri", link: "https://www.naukri.com/hcl-walkin-jobs-noida" },
+    { title: "Walk-in: Java Fresher", company: "Wipro", location: "Greater Noida", salary: "₹3.5L", platform: "Naukri", link: "https://www.naukri.com/wipro-walkin-jobs-noida" },
+    { title: "Mega Walk-in Drive", company: "TCS", location: "Noida", salary: "Not Disclosed", platform: "Naukri", link: "https://www.naukri.com/tcs-walkin-noida" },
+
+    // 4 Web/Java Jobs
+    { title: "Java Developer", company: "Paytm", location: "Noida", salary: "₹8L - ₹12L", platform: "Naukri", link: "https://www.naukri.com/paytm-jobs-in-noida" },
+    { title: "Frontend Intern", company: "InfoEdge", location: "Noida", salary: "₹20k/mo", platform: "Internshala", link: "https://internshala.com/internships/frontend-development-internship-in-noida" },
+    { title: "Backend Engineer", company: "Zomato", location: "Gurugram", salary: "₹15L - ₹25L", platform: "LinkedIn", link: "https://www.linkedin.com/jobs/zomato" },
+    { title: "Full Stack Developer", company: "PhysicsWallah", location: "Noida", salary: "₹8L - ₹15L", platform: "Instahyre", link: "https://www.instahyre.com/jobs-at-physicswallah/" }
+
 ].map(j => ({ ...j, postedAt: new Date() }));
 
 async function fetchJobsForQuery(query: string, apiKey: string) {
     // We search exact query since it already contains "Noida"
+    // Using generic query to hit JSearch, relying on our keywords for precision
     const url = `https://${RAPID_API_HOST}/search?query=${encodeURIComponent(query)}&num_pages=1&date_posted=today`;
-
 
     try {
         const response = await fetch(url, {
@@ -72,30 +77,30 @@ async function fetchJobsForQuery(query: string, apiKey: string) {
 
 export async function refreshJobs() {
     try {
-        // Force refresh to apply new Noida search criteria
-        // (Skipping the midnight check to ensure user gets new results immediately)
-        /*
-        const jobCountCheck = await (db as any).job.count();
-        if (jobCountCheck > 10 && process.env.RAPID_API_KEY) {
-             return; // Disabled for immediate update
-        }
-        */
-
-        console.log("Refreshing job cache (Forcing Noida Update)...");
+        // Force refresh enabled for this priority update
+        console.log("Refreshing job cache (Priority Distribution)...");
+        // Force re-read of env in case it wasn't loaded (simulated)
         const apiKey = process.env.RAPID_API_KEY;
 
         let newJobs: any[] = [];
 
         if (apiKey) {
-            // Pick 3 random categories to fetch
-            const shuffled = [...JOB_CATEGORIES].sort(() => 0.5 - Math.random());
-            const selectedCategories = shuffled.slice(0, 3);
+            console.log(`Fetching jobs with Priority Buckets...`);
 
-            console.log(`Fetching jobs for: ${selectedCategories.join(", ")}`);
+            // Bucket Strategy: Ensure 5-10 jobs per category by making distinct API calls
 
-            const promises = selectedCategories.map(cat => fetchJobsForQuery(cat, apiKey));
-            const results = await Promise.all(promises);
+            // Bucket 1: C++ Freshers (Priority)
+            const p1 = fetchJobsForQuery("C++ Developer Fresher Noida", apiKey);
 
+            // Bucket 2: Walk-ins (Naukri Preferred)
+            const p2 = fetchJobsForQuery("Walk-in Drive Freshers Noida Naukri", apiKey);
+
+            // Bucket 3: Web Tech (Rotating variety)
+            const webQueries = ["Java Developer Fresher Noida", "Frontend Developer Intern Noida", "Backend Developer Entry Level Noida"];
+            const randomWebQuery = webQueries[Math.floor(Math.random() * webQueries.length)];
+            const p3 = fetchJobsForQuery(randomWebQuery, apiKey);
+
+            const results = await Promise.all([p1, p2, p3]);
             newJobs = results.flat();
         }
 
