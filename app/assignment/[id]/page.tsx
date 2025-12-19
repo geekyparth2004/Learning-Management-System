@@ -190,7 +190,23 @@ export default function AssignmentPage() {
                         hints = [];
                     }
                 }
-                problemData.hints = hints;
+                // Normalize hints
+                problemData.hints = hints.map((h: any) => {
+                    if (typeof h === 'string') {
+                        return {
+                            type: 'text',
+                            content: h,
+                            locked: true,
+                            unlockTime: new Date().toISOString() // Updated in timer
+                        };
+                    }
+                    return {
+                        type: h.type || 'text',
+                        content: h.content || h.text || h.body || h.description || '',
+                        locked: h.locked !== undefined ? h.locked : true,
+                        unlockTime: h.unlockTime || new Date().toISOString()
+                    };
+                });
 
                 // Manual check: Append video solution if not present in hints
                 if (problemData.videoSolution) {
@@ -701,7 +717,7 @@ export default function AssignmentPage() {
                                         {expandedHints.includes(idx) && !hint.locked && (
                                             <div className="border-t border-gray-800 bg-[#111111] p-4 text-sm text-gray-300">
                                                 {hint.type === "text" ? (
-                                                    hint.content
+                                                    hint.content || <span className="italic text-gray-500">No text content available.</span>
                                                 ) : (
                                                     <video src={hint.content} controls className="w-full rounded" />
                                                 )}

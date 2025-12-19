@@ -219,7 +219,7 @@ export default function PracticePlayerPage() {
                     // Ensure object has required fields
                     return {
                         type: h.type || 'text',
-                        content: h.content || '',
+                        content: h.content || h.text || h.body || h.description || '',
                         locked: h.locked !== undefined ? h.locked : true, // Default locked
                         unlockTime: h.unlockTime || new Date().toISOString()
                     };
@@ -715,7 +715,7 @@ export default function PracticePlayerPage() {
                                             {expandedHints.includes(idx) && !hint.locked && (
                                                 <div className="border-t border-gray-800 bg-[#111111] p-4 text-sm text-gray-300">
                                                     {hint.type === "text" ? (
-                                                        hint.content
+                                                        hint.content || <span className="italic text-gray-500">No text content available.</span>
                                                     ) : (
                                                         <video src={hint.content} controls className="w-full rounded" />
                                                     )}

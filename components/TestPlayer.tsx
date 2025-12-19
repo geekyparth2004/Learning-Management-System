@@ -611,45 +611,42 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                         </span>
                                     </div>
                                     <div className="space-y-2">
-                                        {localProblems[activeProblemIndex].hints.map((hint: any, idx: number) => {
-                                            if (hint.type === 'video') console.log("Rendering Video Hint:", hint);
-                                            return (
-                                                <div key={idx} className="overflow-hidden rounded border border-gray-800 bg-[#161616]">
-                                                    <button
-                                                        onClick={() => toggleHint(idx)}
-                                                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-[#1e1e1e]"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-medium text-gray-300">Hint {idx + 1}</span>
-                                                            {hint.type === "video" && (
-                                                                <span className="flex items-center gap-1 rounded bg-blue-900/30 px-1.5 py-0.5 text-[10px] text-blue-400">
-                                                                    <Video size={10} /> Solution
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            {hint.locked ? (
-                                                                <div className="flex items-center gap-1 text-[10px] text-gray-500">
-                                                                    <Lock size={10} />
-                                                                    <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
-                                                                </div>
-                                                            ) : (
-                                                                <ChevronDown size={14} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
-                                                            )}
-                                                        </div>
-                                                    </button>
-                                                    {expandedHints.includes(idx) && !hint.locked && (
-                                                        <div className="border-t border-gray-800 bg-[#111111] p-3 text-xs text-gray-300">
-                                                            {hint.type === "text" ? (
-                                                                hint.content || <span className="italic text-gray-500">No text content available.</span>
-                                                            ) : (
-                                                                <video src={hint.content} controls className="w-full rounded" />
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+                                        {localProblems[activeProblemIndex].hints.map((hint: any, idx: number) => (
+                                            <div key={idx} className="overflow-hidden rounded border border-gray-800 bg-[#161616]">
+                                                <button
+                                                    onClick={() => toggleHint(idx)}
+                                                    className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-[#1e1e1e]"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-medium text-gray-300">Hint {idx + 1}</span>
+                                                        {hint.type === "video" && (
+                                                            <span className="flex items-center gap-1 rounded bg-blue-900/30 px-1.5 py-0.5 text-[10px] text-blue-400">
+                                                                <Video size={10} /> Solution
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {hint.locked ? (
+                                                            <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                                                                <Lock size={10} />
+                                                                <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <ChevronDown size={14} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
+                                                        )}
+                                                    </div>
+                                                </button>
+                                                {expandedHints.includes(idx) && !hint.locked && (
+                                                    <div className="border-t border-gray-800 bg-[#111111] p-3 text-xs text-gray-300">
+                                                        {hint.type === "text" ? (
+                                                            hint.content || <span className="italic text-gray-500">No text content available.</span>
+                                                        ) : (
+                                                            <video src={hint.content} controls className="w-full rounded" />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -827,6 +824,6 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
