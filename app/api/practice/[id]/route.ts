@@ -59,7 +59,7 @@ export async function GET(
                 content = hintItem;
             } else {
                 type = hintItem.type || "text";
-                content = hintItem.content || "";
+                content = hintItem.content || hintItem.text || hintItem.body || hintItem.description || "";
             }
 
             // Sign URL if video
