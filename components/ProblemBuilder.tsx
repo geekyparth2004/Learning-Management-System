@@ -194,9 +194,9 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
             const markdownImage = `![${file.name}](${imageUrl})`;
 
             if (problemType === "CODING" || problemType === "LEETCODE") {
-                setDescription(prev => prev + "\n" + markdownImage + "\n");
+                setDescription((prev: string) => prev + "\n" + markdownImage + "\n");
             } else if (problemType === "WEB_DEV") {
-                setWebDevInstructions(prev => prev + "\n" + markdownImage + "\n");
+                setWebDevInstructions((prev: string) => prev + "\n" + markdownImage + "\n");
             }
 
         } catch (error) {
