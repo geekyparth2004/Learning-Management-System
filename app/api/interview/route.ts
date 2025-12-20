@@ -172,6 +172,7 @@ export async function POST(req: Request) {
         Current Difficulty Level: ${difficulty}
         
         IMPORTANT: Adjust the complexity of your question to match the "${difficulty}" level.
+        CRITICAL: You MUST return your response in a valid JSON string format.
         `;
 
         // If it's the start of the interview

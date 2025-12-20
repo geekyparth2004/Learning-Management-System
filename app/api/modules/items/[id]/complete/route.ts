@@ -101,6 +101,32 @@ export async function POST(
             }
         }
 
+
+        // 4. If Item is a TEST and Completed, Create Submission Records
+        if (completed !== false) {
+            const testProblems = await db.problem.findMany({
+                where: { moduleItemId: moduleItemId } // Fetch problems linked to this item
+            });
+
+            if (testProblems.length > 0) {
+                // Upsert PASSED submissions for all problems in this test
+                await db.$transaction(
+                    testProblems.map(p =>
+                        db.submission.create({
+                            data: {
+                                userId,
+                                problemId: p.id,
+                                code: p.defaultCode || "// Auto-submitted on Test Completion",
+                                language: "java", // Default or detect? Java is safe for now.
+                                status: "PASSED",
+                                duration: 0 // Duration tracked at item level
+                            }
+                        })
+                    )
+                );
+            }
+        }
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error completing item:", error);
