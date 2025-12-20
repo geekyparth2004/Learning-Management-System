@@ -228,7 +228,7 @@ export default function AssignmentPage() {
                 }
 
                 // Ensure startedAt is present (it comes from the API now)
-                const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId, testDuration: data.testDuration };
+                const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId, testDuration: data.testDuration || 60 };
                 setProblem(fullProblemData);
                 setCode(problemData.defaultCode[language as keyof typeof problemData.defaultCode]);
             } catch (e) {
