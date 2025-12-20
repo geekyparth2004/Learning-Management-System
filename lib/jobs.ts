@@ -69,7 +69,7 @@ async function fetchJobsForQuery(query: string, apiKey: string) {
             platform: job.job_publisher || "LinkedIn",
             postedAt: new Date()
         }));
-    } catch (error) {
+    } catch (error) { 
         console.error(`Failed to fetch for ${query}:`, error);
         return [];
     }
