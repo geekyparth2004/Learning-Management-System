@@ -1,195 +1,126 @@
+
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signR2Url } from "@/lib/s3";
-
 import { auth } from "@/auth";
 
 export async function GET(
-    request: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params;
         const session = await auth();
+        if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
+        const { id } = await params;
 
         const assignment = await db.assignment.findUnique({
             where: { id },
             include: {
                 problems: {
-                    include: { testCases: true },
-                },
-                moduleItems: {
-                    include: {
-                        module: {
-                            select: { courseId: true }
-                        }
-                    }
+                    orderBy: { order: 'asc' }
                 }
-            },
+            }
         });
 
-        if (!assignment) {
-            return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
-        }
+        if (!assignment) return new NextResponse("Not Found", { status: 404 });
 
-        let startedAt = new Date();
-        let isTeacher = false;
-
-        if (session?.user?.id) {
-            // Check if user is teacher
-            const user = await db.user.findUnique({ where: { id: session.user.id } });
-            isTeacher = user?.role === "TEACHER";
-
-            if (!isTeacher) {
-                // Find or create progress for student
-                let progress = await db.assignmentProgress.findUnique({
-                    where: {
-                        userId_assignmentId: {
-                            userId: session.user.id,
-                            assignmentId: id,
-                        },
-                    },
-                });
-
-                if (!progress) {
-                    progress = await db.assignmentProgress.create({
-                        data: {
-                            userId: session.user.id,
-                            assignmentId: id,
-                        },
-                    });
-                }
-                startedAt = progress.startedAt;
-            }
-        }
-
-        const now = new Date();
-        const minutesElapsed = (now.getTime() - startedAt.getTime()) / 1000 / 60;
-
-        // Transform data
-        console.log("Transforming assignment data...");
-        const courseId = assignment.moduleItems[0]?.module?.courseId;
-
-        const problems = await Promise.all(assignment.problems.map(async (p) => {
-            try {
-                const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
-                const processedHints = await Promise.all(hintsRaw.map(async (hintItem: any, index: number) => {
-                    // Unlock schedule: 5, 10, 15... minutes
-                    const unlockThreshold = (index + 1) * 5;
-                    const isUnlocked = isTeacher || minutesElapsed >= unlockThreshold;
-                    const unlockTime = new Date(startedAt.getTime() + unlockThreshold * 60 * 1000);
-
-                    // Handle hint item which could be string or object {type, content}
-                    let type = "text";
-                    let content = "";
-
-                    if (typeof hintItem === 'string') {
-                        content = hintItem;
-                    } else {
-                        type = hintItem.type || "text";
-                        content = hintItem.content || hintItem.text || hintItem.body || hintItem.description || "";
-                    }
-
-                    // Sign URL if video and unlocked
-                    if (type === "video" && isUnlocked && (content.includes("r2.cloudflarestorage.com") || content.includes("backblazeb2.com"))) {
-                        content = await signR2Url(content);
-                    }
-
-                    return {
-                        id: index,
-                        type,
-                        content: content,
-                        locked: !isUnlocked,
-                        unlockTime: unlockTime.toISOString(),
-                    };
-                }));
-
-                // Append video solution if exists
-                if (p.videoSolution) {
-                    const index = hintsRaw.length;
-                    const unlockThreshold = (index + 1) * 5;
-                    const isUnlocked = isTeacher || minutesElapsed >= unlockThreshold;
-                    const unlockTime = new Date(startedAt.getTime() + unlockThreshold * 60 * 1000);
-
-                    let content = p.videoSolution;
-                    if (isUnlocked && (content.includes("r2.cloudflarestorage.com") || content.includes("backblazeb2.com"))) {
-                        content = await signR2Url(content);
-                    }
-
-                    processedHints.push({
-                        id: index,
-                        type: "video",
-                        content: isUnlocked ? content : null,
-                        locked: !isUnlocked,
-                        unlockTime: unlockTime.toISOString(),
-                    });
-                }
-
-                return {
-                    ...p,
-                    defaultCode: p.defaultCode,
-                    hints: processedHints,
-                };
-            } catch (err) {
-                console.error(`Error processing problem ${p.id}:`, err);
-                return p; // Return raw problem if processing fails
-            }
-        }));
-
-        const transformedAssignment = {
-            ...assignment,
-            courseId,
-            startedAt: startedAt.toISOString(),
-            problems,
-        };
-
-        console.log("Assignment data transformed successfully");
-        return NextResponse.json(transformedAssignment);
+        return NextResponse.json(assignment);
     } catch (error) {
-        console.error("Error fetching assignment:", error);
-        return NextResponse.json(
-            { error: "Failed to fetch assignment", details: error instanceof Error ? error.message : String(error) },
-            { status: 500 }
-        );
+        console.error("[ASSIGNMENT_GET]", error);
+        return new NextResponse("Internal Error", { status: 500 });
     }
 }
 
-export async function DELETE(
-    request: Request,
+export async function PUT(
+    req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params;
         const session = await auth();
+        if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
 
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { id } = await params;
+        const { title, problems } = await req.json();
 
-        const user = await db.user.findUnique({ where: { id: session.user.id } });
-        if (user?.role !== "TEACHER") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        // Transaction to update assignment and sync problems
+        await db.$transaction(async (tx) => {
+            // 1. Update Assignment Details
+            await tx.assignment.update({
+                where: { id },
+                data: { title }
+            });
 
-        // Delete assignment (cascade delete should handle problems/test cases if configured, 
-        // but let's check schema or just try deleting)
-        // In schema: Problem has relation to Assignment. 
-        // We need to ensure cascade delete is enabled in schema or delete manually.
-        // Prisma usually handles cascade if defined in schema.
-        // Let's check schema later if it fails, but usually @relation(onDelete: Cascade) is good practice.
-        // Assuming it's set or we delete assignment and it might error if relations exist without cascade.
-        // Let's check schema first? No, let's try deleting.
+            // 2. Sync Problems
+            // Strategy: Delete all existing problems and re-create them. 
+            // Better Strategy: Update existing if ID matches, delete missing, create new.
+            // But since "problems" from frontend often lack IDs if they are new or modified copies, simpler might be re-creation 
+            // OR if we want to preserve submissions, we MUST keep existing IDs.
 
-        await db.assignment.delete({
-            where: { id },
+            // Let's check if we can rely on frontend sending IDs.
+            // Assuming the UI will send 'id' for existing problems.
+
+            // Get existing IDs
+            const existingProblems = await tx.problem.findMany({
+                where: { assignmentId: id },
+                select: { id: true }
+            });
+            const existingIds = existingProblems.map(p => p.id);
+            const incomingIds = problems.filter((p: any) => p.id).map((p: any) => p.id);
+
+            // Delete problems that are not in the incoming list
+            const toDelete = existingIds.filter(pid => !incomingIds.includes(pid));
+            if (toDelete.length > 0) {
+                await tx.problem.deleteMany({
+                    where: { id: { in: toDelete } }
+                });
+            }
+
+            // Upsert incoming problems
+            for (let i = 0; i < problems.length; i++) {
+                const p = problems[i];
+                if (p.id) {
+                    // Update existing
+                    await tx.problem.update({
+                        where: { id: p.id },
+                        data: {
+                            title: p.title,
+                            description: p.description,
+                            type: "CODING", // Enforce CODING type for assignments? Or p.type? Assignments usually coding.
+                            difficulty: p.difficulty || "Medium",
+                            slug: p.slug,
+                            defaultCode: p.defaultCode,
+                            testCases: p.testCases, // JSON
+                            hints: p.hints,
+                            videoSolution: p.videoSolution,
+                            leetcodeUrl: p.leetcodeUrl,
+                            order: i
+                        }
+                    });
+                } else {
+                    // Create new
+                    await tx.problem.create({
+                        data: {
+                            assignmentId: id,
+                            title: p.title,
+                            description: p.description,
+                            type: "CODING",
+                            difficulty: p.difficulty || "Medium",
+                            slug: p.slug,
+                            defaultCode: p.defaultCode,
+                            testCases: p.testCases,
+                            hints: p.hints,
+                            videoSolution: p.videoSolution,
+                            leetcodeUrl: p.leetcodeUrl,
+                            order: i
+                        }
+                    });
+                }
+            }
         });
 
-        return NextResponse.json({ message: "Assignment deleted successfully" });
+        return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Error deleting assignment:", error);
-        return NextResponse.json(
-            { error: "Failed to delete assignment" },
-            { status: 500 }
-        );
+        console.error("[ASSIGNMENT_UPDATE]", error);
+        return new NextResponse("Internal Error", { status: 500 });
     }
 }

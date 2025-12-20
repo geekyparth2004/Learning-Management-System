@@ -35,24 +35,39 @@ interface ProblemBuilderProps {
     onSave: (problem: ProblemData) => void;
     onCancel: () => void;
     uploadVideo: (file: File) => Promise<string>;
+    initialData?: any; // New prop for editing
     isUploading?: boolean;
 }
 
-export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUploading }: ProblemBuilderProps) {
+export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUploading, initialData }: ProblemBuilderProps) {
     const [activeTab, setActiveTab] = useState<"details" | "hints">("details");
 
-    // Form State
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [testCases, setTestCases] = useState<TestCase[]>([{ input: "", expectedOutput: "", isHidden: false }]);
-    const [hints, setHints] = useState<HintItem[]>([]);
+    // Form State (Initialize with initialData if present)
+    const [title, setTitle] = useState(initialData?.title || "");
+    const [description, setDescription] = useState(initialData?.description || "");
+    const [testCases, setTestCases] = useState<TestCase[]>(
+        initialData?.testCases
+            ? (typeof initialData.testCases === 'string' ? JSON.parse(initialData.testCases) : initialData.testCases)
+            : [{ input: "", expectedOutput: "", isHidden: false }]
+    );
+    const [hints, setHints] = useState<HintItem[]>(
+        initialData?.hints
+            ? (typeof initialData.hints === 'string' ? JSON.parse(initialData.hints) : initialData.hints).map((h: any) => ({
+                type: h.type,
+                content: h.content
+            }))
+            : []
+    );
     const [videoFile, setVideoFile] = useState<File | null>(null);
-    const [videoUrl, setVideoUrl] = useState("");
-    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE">("CODING");
-    const [webDevInstructions, setWebDevInstructions] = useState("");
-    const [webDevHtml, setWebDevHtml] = useState("<!-- Write your HTML here -->");
-    const [webDevCss, setWebDevCss] = useState("/* Write your CSS here */");
-    const [webDevJs, setWebDevJs] = useState("// Write your JS here");
+    const [videoUrl, setVideoUrl] = useState(initialData?.videoSolution || "");
+    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE">(initialData?.type || "CODING");
+
+    // Web Dev State
+    const [webDevInstructions, setWebDevInstructions] = useState(initialData?.webDevInstructions || "");
+    const [webDevHtml, setWebDevHtml] = useState(initialData?.webDevInitialCode?.html || "<!-- Write your HTML here -->");
+    const [webDevCss, setWebDevCss] = useState(initialData?.webDevInitialCode?.css || "/* Write your CSS here */");
+    const [webDevJs, setWebDevJs] = useState(initialData?.webDevInitialCode?.js || "// Write your JS here");
+
     const [uploadingState, setUploadingState] = useState(false);
 
     const handleAddTestCase = () => {

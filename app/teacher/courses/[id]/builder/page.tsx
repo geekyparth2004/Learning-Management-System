@@ -537,17 +537,39 @@ export default function CourseBuilderPage() {
                                                                                         <FileCode size={16} className="text-orange-400" />
                                                                                     ) : item.type === "LEETCODE" ? (
                                                                                         <FileCode size={16} className="text-green-400" />
-                                                                                    ) : (
+                                                                                    ) : item.type === "ASSIGNMENT" ? (
                                                                                         <FileCode size={16} className="text-purple-400" />
+                                                                                    ) : (
+                                                                                        <FileCode size={16} className="text-gray-400" />
                                                                                     )}
                                                                                     <span className="text-sm">{item.title}</span>
                                                                                 </div>
-                                                                                <button
-                                                                                    onClick={() => deleteItem(item.id)}
-                                                                                    className="text-gray-500 hover:text-red-400"
-                                                                                >
-                                                                                    <Trash2 size={14} />
-                                                                                </button>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    {item.type === "ASSIGNMENT" && (
+                                                                                        <>
+                                                                                            <Link
+                                                                                                href={`/teacher/courses/${courseId}/assignments/${item.content}/edit`}
+                                                                                                className="text-gray-500 hover:text-blue-400"
+                                                                                                title="Edit Assignment"
+                                                                                            >
+                                                                                                <Edit size={14} />
+                                                                                            </Link>
+                                                                                            <Link
+                                                                                                href={`/teacher/courses/${courseId}/assignments/${item.content}/submissions`}
+                                                                                                className="text-gray-500 hover:text-green-400"
+                                                                                                title="View Submissions"
+                                                                                            >
+                                                                                                <FileCode size={14} />
+                                                                                            </Link>
+                                                                                        </>
+                                                                                    )}
+                                                                                    <button
+                                                                                        onClick={() => deleteItem(item.id)}
+                                                                                        className="text-gray-500 hover:text-red-400"
+                                                                                    >
+                                                                                        <Trash2 size={14} />
+                                                                                    </button>
+                                                                                </div>
                                                                             </div>
                                                                         )}
                                                                     </Draggable>
