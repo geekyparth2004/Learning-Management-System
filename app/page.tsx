@@ -212,7 +212,7 @@ export default async function Home() {
 
         {/* Dashboard Content with Streaming */}
         <Suspense fallback={<StatsSkeleton />}>
-          <StudentDashboard userId={session.user.id} />
+          <StudentDashboard userId={session.user?.id || ""} />
         </Suspense>
       </div>
     </div>
