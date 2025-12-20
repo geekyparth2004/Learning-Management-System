@@ -26,14 +26,19 @@ export default function EditAssignmentPage() {
     useEffect(() => {
         const fetchAssignment = async () => {
             try {
+                console.log("Fetching assignment:", assignmentId);
                 const res = await fetch(`/api/assignments/${assignmentId}`);
-                if (!res.ok) throw new Error("Failed to fetch");
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error("Fetch failed:", res.status, text);
+                    throw new Error(`Failed to fetch: ${res.status} ${text}`);
+                }
                 const data = await res.json();
                 setTitle(data.title);
                 setProblems(data.problems || []);
-            } catch (error) {
-                console.error(error);
-                alert("Failed to load assignment");
+            } catch (error: any) {
+                console.error("Load error:", error);
+                alert(`Failed to load assignment: ${error.message}`);
             } finally {
                 setIsLoading(false);
             }

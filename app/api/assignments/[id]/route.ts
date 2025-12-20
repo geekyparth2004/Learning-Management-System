@@ -12,6 +12,7 @@ export async function GET(
         if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
 
         const { id } = await params;
+        console.log("[ASSIGNMENT_GET] Fetching id:", id);
 
         const assignment = await db.assignment.findUnique({
             where: { id },
@@ -22,7 +23,10 @@ export async function GET(
             }
         });
 
-        if (!assignment) return new NextResponse("Not Found", { status: 404 });
+        if (!assignment) {
+            console.log("[ASSIGNMENT_GET] Not found for id:", id);
+            return new NextResponse("Not Found", { status: 404 });
+        }
 
         return NextResponse.json(assignment);
     } catch (error) {
