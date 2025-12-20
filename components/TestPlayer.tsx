@@ -251,24 +251,68 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         }
     }, [language, activeProblem]);
 
-    // Timer (Stopwatch + Features)
+    // Timer (Countdown + Auto-Submit)
     useEffect(() => {
-        const timer = setInterval(() => {
-            setElapsedTime(prev => prev + 1);
+        // Calculate total duration in seconds
+        const totalDurationSeconds = duration * 60;
 
-            // Ask AI Timer (7 minutes = 420 seconds)
-            const aiUnlockTime = 7 * 60;
-            // Since we use elapsedTime (seconds), compare directly
-            // Wait, elapsedTime starts at 0. So we need to check if current time < 420.
-            // But we need to use a Ref or access state inside interval.
-            // Simplified: Calculate unlocking based on elapsedTime update using setElapsedTime callback?
-            // No, we can just recalculate inside the SetElapsedTime or use a separate effect that depends on elapsedTime (might be too frequent re-renders if we put heavy logic).
-            // Better: Do it all here. But we need access to `elapsedTime` value. 
-            // We can use functional update for setElapsedTime and do side effects? No pure side effects in setter.
-            // Let's rely on `elapsedTime` as dependency for a separate Effect or use Ref for time.
+        // Initialize elapsedTime if 0 (or could be passed from parent if resumed)
+        // For now, we start from 0.
+
+        const timer = setInterval(() => {
+            setElapsedTime(prev => {
+                const newElapsed = prev + 1;
+
+                // Check for Auto-Submit
+                const remaining = totalDurationSeconds - newElapsed;
+                if (remaining <= 0) {
+                    clearInterval(timer); // Stop timer
+                    // Trigger Auto-Submit
+                    if (status !== "success" && status !== "error") { // Prevent double submit if already done
+                        // We need a function that submits current state. 
+                        // handleSubmitTest(true/false) might redirect. 
+                        // Let's call handleSubmitTest(false) to finish.
+                        // But we can't call it directly inside state update if it depends on state.
+                        // Use a side-effect? Or just call it here?
+                        // handleSubmitTest depends on 'userCodes' etc. 
+                        // We can't access latest userCodes easily here inside interval + setElapsedTime.
+                        // Better: Use a separate useEffect that monitors 'elapsedTime'.
+                    }
+                }
+                return newElapsed;
+            });
         }, 1000);
         return () => clearInterval(timer);
-    }, []);
+    }, [duration, status]); // Add dependencies if needed, but be careful of resets.
+
+    // Effect to handle Auto-Submit when time runs out
+    useEffect(() => {
+        const totalDurationSeconds = duration * 60;
+        const remaining = totalDurationSeconds - elapsedTime;
+
+        if (remaining <= 0 && isRunning === false && status !== "success" && status !== "error") {
+            // Time's up! Submit!
+            // Needs to be idempotent.
+            // We use a ref or just rely on 'status' not being final?
+            // Since we redirect on strict submit, this is fine.
+            // We'll call a special auto-submit handler that bypasses confirmation
+            handleAutoSubmit();
+        }
+    }, [elapsedTime, duration]);
+
+    const handleAutoSubmit = async () => {
+        // Submit current code as is, mark as generic fail/completion?
+        // Or just complete.
+        // We calculate score based on CURRENT 'results' state.
+
+        // Calculate score
+        const totalProblems = problems.length;
+        const passedProblems = Object.values(results).filter(Boolean).length;
+        const score = Math.round((passedProblems / totalProblems) * 100);
+        const passed = score >= passingScore;
+
+        onComplete(passed, score, duration); // Submit with full duration
+    };
 
     // Effect for Time-based Unlocking (Hints & AI)
     useEffect(() => {
@@ -510,11 +554,24 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-1 text-sm font-medium text-yellow-400">
+                    <div className={cn(
+                        "flex items-center gap-2 rounded border px-3 py-1 text-sm font-medium transition-colors",
+                        (duration * 60 - elapsedTime) < 300
+                            ? "border-red-900 bg-red-900/20 text-red-400 animate-pulse"
+                            : "border-yellow-900/30 bg-yellow-900/10 text-yellow-400"
+                    )}>
                         <Clock size={16} />
-                        {formatTime(elapsedTime)}
+                        <span className="hidden sm:inline opacity-80">Time Left:</span>
+                        <span className="font-mono">
+                            {(() => {
+                                const remaining = Math.max(0, duration * 60 - elapsedTime);
+                                const hrs = Math.floor(remaining / 3600);
+                                const mins = Math.floor((remaining % 3600) / 60);
+                                const secs = remaining % 60;
+                                return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+                            })()}
+                        </span>
                     </div>
-
                     {activeProblem.type !== "WEB_DEV" && (
                         <select
                             value={language}
@@ -580,7 +637,22 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             <>
                                 <h2 className="mb-4 text-lg font-bold text-white">{localProblems[activeProblemIndex].title}</h2>
                                 <div className="prose prose-invert max-w-none">
-                                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>{localProblems[activeProblemIndex].description}</ReactMarkdown>
+                                    <div className="prose prose-invert max-w-none">
+                                        <ReactMarkdown
+                                            rehypePlugins={[rehypeRaw]}
+                                            components={{
+                                                img: ({ node, ...props }) => (
+                                                    <img
+                                                        {...props}
+                                                        className="max-w-full rounded-lg border border-gray-800 my-4"
+                                                        style={{ display: 'block', maxHeight: '400px' }}
+                                                    />
+                                                )
+                                            }}
+                                        >
+                                            {localProblems[activeProblemIndex].description}
+                                        </ReactMarkdown>
+                                    </div>
                                 </div>
                             </>
                         )}

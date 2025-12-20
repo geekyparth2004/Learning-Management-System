@@ -56,6 +56,19 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
     // Auto-finish when time runs out
     const autoFinish = async () => {
         try {
+            // Attempt to submit current active problem code before finishing
+            if (activeProblem && userCodes[activeProblem.id]) {
+                await fetch(`/api/contest/${contest.id}/submit`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        problemId: activeProblem.id,
+                        code: userCodes[activeProblem.id],
+                        language,
+                        passed: false // Save current state
+                    })
+                });
+            }
             await fetch(`/api/contest/${contest.id}/finish`, { method: "POST" });
         } catch (e) { }
         handleLeave();
@@ -301,9 +314,15 @@ export default function ContestPlayer({ contest, problems, endTime, onLeave }: C
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-1 text-sm font-medium text-yellow-400">
+                    <div className={cn(
+                        "flex items-center gap-2 rounded border px-3 py-1 text-sm font-medium transition-colors",
+                        timeLeft < 300
+                            ? "border-red-900 bg-red-900/20 text-red-400 animate-pulse"
+                            : "border-yellow-900/30 bg-yellow-900/10 text-yellow-400"
+                    )}>
                         <Clock size={16} />
-                        {formatTime(timeLeft)}
+                        <span className="hidden sm:inline opacity-80">Time Left:</span>
+                        <span className="font-mono">{formatTime(timeLeft)}</span>
                     </div>
                     <select
                         value={language}
