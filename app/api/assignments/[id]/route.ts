@@ -72,25 +72,6 @@ export async function GET(
 
         const problems = await Promise.all(assignment.problems.map(async (p) => {
             try {
-                // Process Description for R2 images (Sign URLs)
-                let processedDescription = p.description;
-                if (processedDescription) {
-                    const urlRegex = /(https:\/\/[^\s"'()<>]+?(?:r2\.cloudflarestorage\.com|backblazeb2\.com)[^\s"'()<>]*)/g;
-                    const matches = processedDescription.match(urlRegex);
-                    if (matches) {
-                        const uniqueUrls = [...new Set(matches)];
-                        await Promise.all(uniqueUrls.map(async (url) => {
-                            try {
-                                const signed = await signR2Url(url);
-                                // Global replace of this URL
-                                processedDescription = processedDescription.split(url).join(signed);
-                            } catch (e) {
-                                console.error("Failed to sign URL in description:", url, e);
-                            }
-                        }));
-                    }
-                }
-
                 const hintsRaw = typeof p.hints === 'string' ? JSON.parse(p.hints) : (p.hints || []);
                 const processedHints = await Promise.all(hintsRaw.map(async (hintItem: any, index: number) => {
                     // Unlock schedule: 5, 10, 15... minutes
@@ -146,7 +127,6 @@ export async function GET(
 
                 return {
                     ...p,
-                    description: processedDescription,
                     defaultCode: p.defaultCode,
                     hints: processedHints,
                 };
@@ -159,7 +139,6 @@ export async function GET(
         const transformedAssignment = {
             ...assignment,
             courseId,
-            testDuration: assignment.moduleItems[0]?.testDuration,
             startedAt: startedAt.toISOString(),
             problems,
         };
