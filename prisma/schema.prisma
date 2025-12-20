@@ -148,6 +148,7 @@ model Problem {
   id            String       @id @default(cuid())
   title         String
   description   String
+  type          String       @default("CODING") // "CODING" | "WEB_DEV" | "LEETCODE"
   difficulty    String       @default("Medium")
   slug          String?
   isPractice    Boolean      @default(false)
