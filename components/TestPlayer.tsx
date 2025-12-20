@@ -56,6 +56,8 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [elapsedTime, setElapsedTime] = useState(0);
 
     const [activeProblemIndex, setActiveProblemIndex] = useState(0);
+    const [language, setLanguage] = useState<"python" | "cpp" | "java">("java");
+
     // Stable handler for code changes
     const handleCodeChange = React.useCallback((val: string | undefined) => {
         // Use functional update to avoid dependency on 'activeProblem' object
