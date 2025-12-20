@@ -641,7 +641,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                         rehypePlugins={[rehypeRaw]}
                                         components={{
                                             img: ({ node, ...props }) => {
-                                                let src = props.src || "";
+                                                let src = typeof props.src === 'string' ? props.src : "";
                                                 // Check for raw R2/S3 URL matching our private pattern and rewrite to proxy
                                                 if (src.includes("r2.cloudflarestorage.com") && !src.includes("pub-") && !src.includes("/api/image-proxy")) {
                                                     try {
