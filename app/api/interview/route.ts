@@ -18,7 +18,7 @@ Return your response in this JSON format:
 
 If this is the start of the interview (no user answer provided), just return:
 {
-    "nextQuestion": "string (The first question to ask)"
+    "nextQuestion": "string (The actual first question to ask)"
 }
 `;
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
             
             If this is the start of the interview (no user answer provided), just return:
             {
-                "nextQuestion": "string (The first question to ask)"
+                "nextQuestion": "string (The actual first question to ask)"
             }
             `;
         } else if (type === "core") {
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
                 "nextQuestion": "string"
             }
             
-            Start: Return only {"nextQuestion": "First question"}
+            Start: Return a JSON object with "nextQuestion" containing the actual first question about the subject.
             `;
         } else if (type === "dsa") {
             // DSA Interview Logic
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
                 "nextQuestion": "string"
             }
             
-            Start: Return only {"nextQuestion": "First question"}
+            Start: Return a JSON object with "nextQuestion" containing the actual first question about the subject.
             `;
         } else if (type === "sql") {
             // SQL Interview Logic
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
                 "nextQuestion": "string"
             }
             
-            Start: Return only {"nextQuestion": "First question"}
+            Start: Return a JSON object with "nextQuestion" containing the actual first question about the subject.
             `;
         } else if (type === "mock") {
             // Full Mock Interview Logic
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
                 "nextQuestion": "string"
             }
             
-            Start: Return only {"nextQuestion": "Intro question"}
+            Start: Return a JSON object with "nextQuestion" containing the intro question.
             `;
         } else if (type === "custom") {
             // Custom Topic
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
                 "nextQuestion": "string"
             }
             
-            Start: Return only {"nextQuestion": "First question"}
+            Start: Return a JSON object with "nextQuestion" containing the actual first question.
             `;
         } else {
             // Behavioural (Default)
@@ -162,7 +162,7 @@ export async function POST(req: Request) {
                 "nextQuestion": "string"
             }
             
-            Start: Return only {"nextQuestion": "Intro question"}
+            Start: Return a JSON object with "nextQuestion" containing the intro question.
             `;
         }
 
