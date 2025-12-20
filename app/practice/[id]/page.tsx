@@ -230,8 +230,8 @@ export default function PracticePlayerPage() {
                     const hasVideo = hints.some(h => h.type === 'video');
                     if (!hasVideo) {
                         // In practice mode, we can set unlock time relative to NOW (load time)
-                        // unlocking 5 mins after the last hint
-                        const unlockTime = Date.now() + (hints.length + 1) * 300000;
+                        // unlocking 2 mins after the last hint
+                        const unlockTime = Date.now() + (hints.length + 1) * 2 * 60 * 1000;
                         hints.push({
                             type: 'video',
                             content: problemData.videoSolution,

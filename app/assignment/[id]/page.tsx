@@ -212,7 +212,7 @@ export default function AssignmentPage() {
                 if (problemData.videoSolution) {
                     const hasVideo = hints.some(h => h.type === 'video');
                     if (!hasVideo) {
-                        const unlockTime = (data.startedAt ? new Date(data.startedAt).getTime() : Date.now()) + (hints.length + 1) * 5 * 60 * 1000;
+                        const unlockTime = (data.startedAt ? new Date(data.startedAt).getTime() : Date.now()) + (hints.length + 1) * 2 * 60 * 1000;
                         problemData.hints.push({
                             type: 'video',
                             content: problemData.videoSolution,
@@ -254,8 +254,8 @@ export default function AssignmentPage() {
                 if (!prev) return prev;
                 let changed = false;
                 const updatedHints = prev.hints.map((h, idx) => {
-                    // Progressive unlocking: 5 mins per hint
-                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 5 * 60 * 1000;
+                    // Progressive unlocking: 2 mins per hint
+                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 2 * 60 * 1000;
                     const isLocked = now < unlockTime;
 
                     if (isLocked !== h.locked) changed = true;
