@@ -199,6 +199,9 @@ model Submission {
   problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([problemId])
 }
 
 model Enrollment {
@@ -340,6 +343,8 @@ model ContestRegistration {
   completedAt DateTime?
 
   @@unique([userId, contestId])
+  @@index([userId])
+  @@index([contestId])
 }
 
 model ContestSubmission {
@@ -356,6 +361,9 @@ model ContestSubmission {
   problem   ContestProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([problemId])
 }
 
 model Job {
