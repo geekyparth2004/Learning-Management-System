@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Editor, { Loader } from "@monaco-editor/react";
+import Editor from "@monaco-editor/react";
 import { Language } from "@/types";
 
 // Pre-load Monaco to avoid delays
