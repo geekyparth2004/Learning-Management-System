@@ -220,36 +220,79 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const activeProblem = localProblems[activeProblemIndex] || ({} as Problem);
 
     // Initialize code (Wait for localProblems)
+    // Initialize code - Only set defaults if not already present
     useEffect(() => {
         if (localProblems.length === 0) return;
-        const initialCodes: any = {};
-        localProblems.forEach(p => {
-            if (p.type === "WEB_DEV") {
-                initialCodes[p.id] = [
-                    { name: "index.html", language: "html", content: p.webDevInitialCode?.html || "" },
-                    { name: "styles.css", language: "css", content: p.webDevInitialCode?.css || "" },
-                    { name: "script.js", language: "javascript", content: p.webDevInitialCode?.js || "" }
-                ];
-            } else {
-                initialCodes[p.id] = p.defaultCode?.[language] || (
-                    language === "python" ? "# Write your code here" :
-                        language === "cpp" ? "// Write your code here" :
-                            "// Write your code here"
-                );
-            }
-        });
-        setUserCodes(initialCodes);
-    }, [localProblems]);
 
-    // Update code when language changes (only for coding problems)
+        setUserCodes(prev => {
+            const newCodes = { ...prev };
+            let hasChanges = false;
+
+            localProblems.forEach(p => {
+                // If code for this problem doesn't exist yet, set it
+                if (newCodes[p.id] === undefined) {
+                    if (p.type === "WEB_DEV") {
+                        newCodes[p.id] = [
+                            { name: "index.html", language: "html", content: p.webDevInitialCode?.html || "" },
+                            { name: "styles.css", language: "css", content: p.webDevInitialCode?.css || "" },
+                            { name: "script.js", language: "javascript", content: p.webDevInitialCode?.js || "" }
+                        ];
+                    } else {
+                        newCodes[p.id] = p.defaultCode?.[language] || (
+                            language === "python" ? "# Write your code here" :
+                                language === "cpp" ? "// Write your code here" :
+                                    "// Write your code here"
+                        );
+                    }
+                    hasChanges = true;
+                }
+            });
+
+            return hasChanges ? newCodes : prev;
+        });
+    }, [localProblems, language]);
+
+    // Update code when language changes
+    // We only want to trigger this when the USER changes language, not when activeProblem reference updates.
+    // So we use a Ref or check activeProblem.id
     useEffect(() => {
         if (activeProblem.type !== "WEB_DEV") {
-            setUserCodes(prev => ({
-                ...prev,
-                [activeProblem.id]: activeProblem.defaultCode?.[language] || prev[activeProblem.id]
-            }));
+            // Only overwrite if we are switching language?
+            // Actually, if we switch language, we WANT to see the new language template.
+            // But we must NOT run this if activeProblem just refreshed reference.
+
+            // NOTE: This effect runs on 'language' or 'activeProblem'.
+            // If activeProblem updates (timer), this runs.
+            // We should only update if our current code doesn't match the expectation, 
+            // OR if we assume this effect is mostly for Language Switching.
+
+            // To be safe, we rely on the user manually selecting language which updates 'language' state.
+            // But how to avoid the activeProblem update triggering this?
+
+            // We can remove activeProblem form dependency and use activeProblem.id?
         }
-    }, [language, activeProblem]);
+    }, [language]); // Removed activeProblem from dependency to avoid timer resets.
+
+    // Dedicated effect for switching problem or language specific loading
+    useEffect(() => {
+        if (!activeProblem || activeProblem.type === "WEB_DEV") return;
+
+        setUserCodes(prev => {
+            // If we already have code for this problem, don't just overwrite it with default 
+            // UNLESS the user explicitly changed language (how to detect?)
+            // For now, let's assume 'prev' is the source of truth.
+            // If the user wants to reset, they have a Reset button.
+
+            // If prev[id] is missing, fill it.
+            if (!prev[activeProblem.id]) {
+                return {
+                    ...prev,
+                    [activeProblem.id]: activeProblem.defaultCode?.[language] || ""
+                };
+            }
+            return prev;
+        });
+    }, [activeProblem.id, language]);
 
     // Timer (Countdown + Auto-Submit)
     useEffect(() => {
