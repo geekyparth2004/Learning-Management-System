@@ -170,6 +170,8 @@ model Problem {
   
   createdAt     DateTime     @default(now())
   updatedAt     DateTime?    @updatedAt
+  
+  order         Int          @default(0)
 
   @@index([assignmentId])
   @@index([moduleItemId])
