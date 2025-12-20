@@ -66,7 +66,7 @@ export async function POST(req: Request) {
             else difficulty = "Easy";
 
             systemPrompt = `You are a Computer Science Professor conducting an oral exam on ${subject}.
-            Goal: Ask conceptual questions to test understanding.
+            Goal: Ask conceptual questions to test understanding. Do NOT ask for code implementation.
             
             Response Format:
             {
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
             difficulty = "Easy";
 
             systemPrompt = `You are a Technical Interviewer conducting a DSA interview on ${subject}.
-            Goal: Ask conceptual/logic questions. NO full code.
+            Goal: Ask conceptual and logic-based interview questions. Do NOT ask the user to write code. Focus on approach and theory.
             
             Response Format:
             {
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
             difficulty = "Easy";
 
             systemPrompt = `You are a Database Expert conducting a SQL interview on ${subject}.
-            Goal: Ask about SQL syntax, logic, and concepts.
+            Goal: Ask about SQL concepts, normalization, and logic. Do NOT ask the user to write full queries.
             
             Response Format:
             {
@@ -138,7 +138,7 @@ export async function POST(req: Request) {
             // Custom Topic
             difficulty = "Easy";
             systemPrompt = `Interviewer for topic: ${subject}.
-            Goal: Ask relevant questions.
+            Goal: Ask relevant conceptual interview questions. Do NOT ask for code.
             
             Response Format:
             {
