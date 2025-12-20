@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import ReactMarkdown from 'react-markdown';
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock } from "lucide-react";
 
@@ -40,6 +41,7 @@ interface Problem {
     slug?: string;
     courseId?: string;
     videoSolution?: string;
+    testDuration?: number;
 }
 
 interface TestCaseResult {
@@ -78,6 +80,7 @@ export default function AssignmentPage() {
     const [timeToAi, setTimeToAi] = useState<string>("");
     const [leetcodeUsername, setLeetcodeUsername] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
+    const isSubmittingRef = useRef(false);
 
 
     const [showGiveAnswer, setShowGiveAnswer] = useState(false);
@@ -97,10 +100,12 @@ export default function AssignmentPage() {
     };
 
     useEffect(() => {
-        // Reset timer on problem load/change
-        setStartTime(Date.now());
-        setElapsedTime(0);
-    }, [assignmentId]);
+        if (problem?.startedAt) {
+            setStartTime(new Date(problem.startedAt).getTime());
+        } else {
+            setStartTime(Date.now());
+        }
+    }, [assignmentId, problem?.startedAt]);
 
     useEffect(() => {
         if (isFocusMode && !hasStarted) {
@@ -223,7 +228,7 @@ export default function AssignmentPage() {
                 }
 
                 // Ensure startedAt is present (it comes from the API now)
-                const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
+                const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId, testDuration: data.testDuration };
                 setProblem(fullProblemData);
                 setCode(problemData.defaultCode[language as keyof typeof problemData.defaultCode]);
             } catch (e) {
@@ -247,7 +252,18 @@ export default function AssignmentPage() {
         if (!problem) return;
         const interval = setInterval(() => {
             const now = Date.now();
-            setElapsedTime(Math.floor((now - startTime) / 1000));
+            const elapsed = Math.floor((now - startTime) / 1000);
+            setElapsedTime(elapsed);
+
+            // Auto-submit check
+            if (problem.testDuration && problem.testDuration > 0) {
+                const remaining = (problem.testDuration * 60) - elapsed;
+                if (remaining <= 0 && !isSubmittingRef.current && status !== "success") {
+                    isSubmittingRef.current = true;
+                    // Force a submit
+                    handleSubmit();
+                }
+            }
 
             // Hints
             setProblem(prev => {
@@ -577,9 +593,11 @@ export default function AssignmentPage() {
                     <span className="text-sm text-gray-400">{problem.difficulty}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 rounded bg-gray-800 px-3 py-2 text-sm font-medium text-white border border-gray-700">
-                        <Clock size={16} className="text-yellow-400" />
-                        {formatElapsedTime(elapsedTime)}
+                    <div className={cn("flex items-center gap-2 rounded px-3 py-2 text-sm font-medium border",
+                        (problem.testDuration && (problem.testDuration * 60 - elapsedTime) < 60) ? "bg-red-900/20 border-red-900 text-red-500" : "bg-gray-800 border-gray-700 text-white"
+                    )}>
+                        <Clock size={16} className={(problem.testDuration && (problem.testDuration * 60 - elapsedTime) < 60) ? "text-red-500" : "text-yellow-400"} />
+                        {problem.testDuration ? formatElapsedTime(Math.max(0, (problem.testDuration * 60) - elapsedTime)) : formatElapsedTime(elapsedTime)}
                     </div>
                     {!problem.leetcodeUrl && (
                         <>
@@ -622,7 +640,17 @@ export default function AssignmentPage() {
                         {/* Description */}
                         <div>
                             <h2 className="mb-4 text-lg font-semibold">Problem Description</h2>
-                            <div className="prose prose-invert text-sm leading-relaxed text-gray-300">{problem.description}</div>
+                            <div className="prose prose-invert text-sm leading-relaxed text-gray-300">
+                                <ReactMarkdown
+                                    components={{
+                                        img: ({ node, ...props }) => (
+                                            <img {...props} className="rounded-lg border border-gray-800 my-4 max-w-full" style={{ maxHeight: '400px' }} />
+                                        )
+                                    }}
+                                >
+                                    {problem.description}
+                                </ReactMarkdown>
+                            </div>
                         </div>
 
                         {/* Test Cases */}

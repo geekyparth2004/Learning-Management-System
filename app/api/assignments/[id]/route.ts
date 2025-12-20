@@ -139,6 +139,7 @@ export async function GET(
         const transformedAssignment = {
             ...assignment,
             courseId,
+            testDuration: assignment.moduleItems[0]?.testDuration,
             startedAt: startedAt.toISOString(),
             problems,
         };
