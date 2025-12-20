@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload, Edit } from "lucide-react";
 import Link from "next/link";
 import ProblemBuilder from "@/components/ProblemBuilder";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
