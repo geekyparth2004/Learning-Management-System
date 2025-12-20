@@ -287,8 +287,8 @@ export default function PracticePlayerPage() {
                 return { ...prev, hints: updatedHints };
             });
 
-            // Ask AI Timer (7 minutes)
-            const unlockTime = startTime + 7 * 60 * 1000;
+            // Ask AI Timer (4 minutes)
+            const unlockTime = startTime + 4 * 60 * 1000;
             const remaining = unlockTime - now;
 
             if (remaining <= 0) {
@@ -895,7 +895,7 @@ export default function PracticePlayerPage() {
                                         <Lock className="mb-4 h-12 w-12 text-gray-600" />
                                         <h3 className="mb-2 text-xl font-semibold">Ask AI is Locked</h3>
                                         <p className="text-gray-400">
-                                            You can ask AI for help after 7 minutes.
+                                            You can ask AI for help after 4 minutes.
                                         </p>
                                         <p className="mt-4 text-2xl font-mono font-bold text-blue-400">
                                             {timeToAi}

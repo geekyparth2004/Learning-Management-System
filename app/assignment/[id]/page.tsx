@@ -267,10 +267,10 @@ export default function AssignmentPage() {
                 return { ...prev, hints: updatedHints };
             });
 
-            // Ask AI Timer (7 minutes from start)
+            // Ask AI Timer (4 minutes from start)
             if (problem.startedAt) {
                 const startTimeLen = new Date(problem.startedAt).getTime();
-                const unlockTime = startTimeLen + 7 * 60 * 1000;
+                const unlockTime = startTimeLen + 4 * 60 * 1000;
                 const remaining = unlockTime - now;
 
                 if (remaining <= 0) {
@@ -925,7 +925,7 @@ export default function AssignmentPage() {
                                         <Lock className="mb-4 h-12 w-12 text-gray-600" />
                                         <h3 className="mb-2 text-xl font-semibold">Ask AI is Locked</h3>
                                         <p className="text-gray-400">
-                                            You can ask AI for help after 7 minutes.
+                                            You can ask AI for help after 4 minutes.
                                         </p>
                                         <p className="mt-4 text-2xl font-mono font-bold text-blue-400">
                                             {timeToAi}
