@@ -56,7 +56,28 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [elapsedTime, setElapsedTime] = useState(0);
 
     const [activeProblemIndex, setActiveProblemIndex] = useState(0);
-    const [language, setLanguage] = useState<"python" | "cpp" | "java">("java");
+    // Stable handler for code changes
+    const handleCodeChange = React.useCallback((val: string | undefined) => {
+        // Use functional update to avoid dependency on 'activeProblem' object
+        // We need the ID. We can get it from refs or just assume activeIndex logic is stable?
+        // Better: activeProblem is in scope. If we include it in dependency, we re-create func.
+        // BUT activeProblem changes every second (ref change).
+        // Let's use a Ref for activeProblemId?
+        // Or just rely on the fact that we render this editor only when activeProblem is present.
+        // Actually, let's store activeProblemId in a Ref or use the index.
+    }, []);
+
+    // ... Wait, we can't easily use Callback if we need activeProblem.id which changes ref.
+    // Solution: Store activeProblemId in state/ref?
+    // activeProblemIndex is stable! problems is stable!
+    // id = problems[activeProblemIndex].id.
+
+    const currentProblemId = problems[activeProblemIndex]?.id;
+
+    const onCodeChange = React.useCallback((val: string | undefined) => {
+        if (!currentProblemId) return;
+        setUserCodes(prev => ({ ...prev, [currentProblemId]: val || "" }));
+    }, [currentProblemId]);
 
     // Store code for each problem
     const [userCodes, setUserCodes] = useState<{ [key: string]: string | File[] }>({});
@@ -220,15 +241,15 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const activeProblem = localProblems[activeProblemIndex] || ({} as Problem);
 
     // Initialize code (Wait for localProblems)
-    // Initialize code - Only set defaults if not already present
+    // Initialize code - Depend on 'problems' prop (stable), not 'localProblems' (dynamic)
     useEffect(() => {
-        if (localProblems.length === 0) return;
+        if (!problems || problems.length === 0) return;
 
         setUserCodes(prev => {
             const newCodes = { ...prev };
             let hasChanges = false;
 
-            localProblems.forEach(p => {
+            problems.forEach(p => {
                 // If code for this problem doesn't exist yet, set it
                 if (newCodes[p.id] === undefined) {
                     if (p.type === "WEB_DEV") {
@@ -238,7 +259,13 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             { name: "script.js", language: "javascript", content: p.webDevInitialCode?.js || "" }
                         ];
                     } else {
-                        newCodes[p.id] = p.defaultCode?.[language] || (
+                        // Safe parsing of defaultCode if it's a string
+                        let def: any = p.defaultCode;
+                        if (typeof def === 'string') {
+                            try { def = JSON.parse(def); } catch (e) { def = {}; }
+                        }
+
+                        newCodes[p.id] = def?.[language] || (
                             language === "python" ? "# Write your code here" :
                                 language === "cpp" ? "// Write your code here" :
                                     "// Write your code here"
@@ -250,7 +277,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
             return hasChanges ? newCodes : prev;
         });
-    }, [localProblems, language]);
+    }, [problems, language]);
 
     // Update code when language changes
     // We only want to trigger this when the USER changes language, not when activeProblem reference updates.
@@ -810,7 +837,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                 <CodeEditor
                                     language={language}
                                     code={userCodes[activeProblem.id] as string || ""}
-                                    onChange={(val) => setUserCodes(prev => ({ ...prev, [activeProblem.id]: val || "" }))}
+                                    onChange={onCodeChange}
                                     errorLine={errorLine}
                                 />
                             </div>
