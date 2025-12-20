@@ -436,9 +436,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
-    const handleCodeChange = (value: string | undefined) => {
-        setUserCodes(prev => ({ ...prev, [activeProblem.id]: value || "" }));
-    };
+    // handleCodeChange removed (replaced by onCodeChange)
 
     const handleWebDevFilesChange = (files: File[]) => {
         setUserCodes(prev => ({ ...prev, [activeProblem.id]: files }));

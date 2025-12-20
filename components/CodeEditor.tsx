@@ -5,7 +5,7 @@ import Editor, { Loader } from "@monaco-editor/react";
 import { Language } from "@/types";
 
 // Pre-load Monaco to avoid delays
-Loader.init();
+// Loader init removed to prevent SSR build error
 
 interface CodeEditorProps {
     language: Language;
