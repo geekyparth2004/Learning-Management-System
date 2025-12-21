@@ -263,23 +263,33 @@ function AssignmentContent() {
                     }
                 }
 
-                // Fallback for "Hello World" if data is missing (Self-Repair)
-                if (problemData.title && problemData.title.toLowerCase().includes("hello world")) {
-                    if (!problemData.testCases || problemData.testCases.length === 0) {
-                        problemData.testCases = [
-                            { id: "desc1", input: "1", expectedOutput: "Hello World", isHidden: false },
-                            { id: "desc2", input: "2", expectedOutput: "Hello World\nHello World", isHidden: false }
-                        ];
-                    }
-                    const javaCode = problemData.defaultCode?.java || "";
-                    if (!javaCode || javaCode.trim() === "") {
-                        problemData.defaultCode = {
-                            ...problemData.defaultCode,
-                            java: `import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int n = scanner.nextInt();\n        // Write your code here\n        \n    }\n}`,
-                            python: `n = int(input())\n# Write your code here\n`,
-                            cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    // Write your code here\n    return 0;\n}`
-                        };
-                    }
+                // Universal Fallback (Self-Repair) for ANY problem with missing data
+                // 1. Ensure at least one test case exists so the UI doesn't look broken
+                if (!problemData.testCases || problemData.testCases.length === 0) {
+                    problemData.testCases = [
+                        {
+                            id: "fallback-case",
+                            input: "(Run to see output)",
+                            expectedOutput: "(Output will appear here)",
+                            isHidden: false
+                        }
+                    ];
+                }
+
+                // 2. Ensure robust Default Code Templates
+                // Java needs 'class Main', C++ needs 'int main'. If missing, inject them.
+                const currentJava = problemData.defaultCode?.java || "";
+                const currentCpp = problemData.defaultCode?.cpp || "";
+                const currentPython = problemData.defaultCode?.python || "";
+
+                if (!currentJava || !currentJava.includes("class Main")) {
+                    problemData.defaultCode.java = `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // Write your code here\n        System.out.println("Hello World");\n    }\n}`;
+                }
+                if (!currentCpp || !currentCpp.includes("int main")) {
+                    problemData.defaultCode.cpp = `#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    cout << "Hello World" << endl;\n    return 0;\n}`;
+                }
+                if (!currentPython || currentPython.trim() === "") {
+                    problemData.defaultCode.python = `# Write your code here\nprint("Hello World")`;
                 }
 
                 // Ensure startedAt is present. If API doesn't send it, default to NOW so timer works.
