@@ -263,6 +263,25 @@ function AssignmentContent() {
                     }
                 }
 
+                // Fallback for "Hello World" if data is missing (Self-Repair)
+                if (problemData.title && problemData.title.toLowerCase().includes("hello world")) {
+                    if (!problemData.testCases || problemData.testCases.length === 0) {
+                        problemData.testCases = [
+                            { id: "desc1", input: "1", expectedOutput: "Hello World", isHidden: false },
+                            { id: "desc2", input: "2", expectedOutput: "Hello World\nHello World", isHidden: false }
+                        ];
+                    }
+                    const javaCode = problemData.defaultCode?.java || "";
+                    if (!javaCode || javaCode.trim() === "") {
+                        problemData.defaultCode = {
+                            ...problemData.defaultCode,
+                            java: `import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        int n = scanner.nextInt();\n        // Write your code here\n        \n    }\n}`,
+                            python: `n = int(input())\n# Write your code here\n`,
+                            cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    // Write your code here\n    return 0;\n}`
+                        };
+                    }
+                }
+
                 // Ensure startedAt is present. If API doesn't send it, default to NOW so timer works.
                 const effectiveStartedAt = data.startedAt || new Date().toISOString();
                 const fullProblemData = { ...problemData, startedAt: effectiveStartedAt, courseId: data.courseId };
