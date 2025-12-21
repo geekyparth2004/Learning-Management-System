@@ -215,14 +215,30 @@ function AssignmentContent() {
                     };
                 });
 
-                // Ensure testCases is an array
+                // Ensure testCases is an array (parse if string)
+                if (typeof problemData.testCases === 'string') {
+                    try {
+                        problemData.testCases = JSON.parse(problemData.testCases);
+                    } catch (e) {
+                        problemData.testCases = [];
+                    }
+                }
                 if (!Array.isArray(problemData.testCases)) {
                     problemData.testCases = [];
                 }
 
                 // Ensure defaultCode matches expected structure
                 if (!problemData.defaultCode || typeof problemData.defaultCode !== 'object') {
-                    problemData.defaultCode = { python: "", cpp: "", java: "" };
+                    // try parse if string
+                    if (typeof problemData.defaultCode === 'string') {
+                        try {
+                            problemData.defaultCode = JSON.parse(problemData.defaultCode);
+                        } catch (e) {
+                            problemData.defaultCode = { python: "", cpp: "", java: "" };
+                        }
+                    } else {
+                        problemData.defaultCode = { python: "", cpp: "", java: "" };
+                    }
                 }
 
                 // Ensure strict presence of language keys
@@ -247,8 +263,9 @@ function AssignmentContent() {
                     }
                 }
 
-                // Ensure startedAt is present
-                const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
+                // Ensure startedAt is present. If API doesn't send it, default to NOW so timer works.
+                const effectiveStartedAt = data.startedAt || new Date().toISOString();
+                const fullProblemData = { ...problemData, startedAt: effectiveStartedAt, courseId: data.courseId };
                 setProblem(fullProblemData);
 
                 // Safely set initial code
