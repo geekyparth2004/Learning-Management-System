@@ -154,7 +154,7 @@ export async function GET(
                         return {
                             ...i,
                             isCompleted: ip?.isCompleted || false,
-
+                            reviewStatus: ip?.reviewStatus || null, // EXPOSE THIS 
                             startedAt: ip?.startedAt || null,
                             signedUrl,
                             signedVideoSolution,
