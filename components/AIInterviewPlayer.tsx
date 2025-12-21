@@ -230,8 +230,9 @@ export default function AIInterviewPlayer({
                 setMessages(prev => [...prev, { role: "assistant", content: data.nextQuestion }]);
                 setQuestionCount(prev => prev + 1);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to submit answer", error);
+            alert("Error submitting answer: " + error.message);
         } finally {
             setIsLoading(false);
             setIsUploading(false);

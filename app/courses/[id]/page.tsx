@@ -428,8 +428,9 @@ export default function CoursePlayerPage() {
             if (res.ok) {
                 fetchCourseData();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            alert("Failed to submit interview review: " + error.message);
         }
     };
 

@@ -3,12 +3,22 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/auth";
 
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID!;
+const SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY!;
+const BUCKET_NAME = process.env.R2_BUCKET_NAME || process.env.AWS_BUCKET_NAME!;
+
+// Construct endpoint
+const ENDPOINT = R2_ACCOUNT_ID
+    ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+    : process.env.AWS_ENDPOINT;
+
 const s3Client = new S3Client({
-    region: "us-east-1", // R2 requires us-east-1
-    endpoint: process.env.AWS_ENDPOINT,
+    region: "auto",
+    endpoint: ENDPOINT,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: ACCESS_KEY_ID,
+        secretAccessKey: SECRET_ACCESS_KEY,
     },
     forcePathStyle: true,
 });
@@ -25,31 +35,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "URL is required" }, { status: 400 });
         }
 
-        // Extract Key from URL
-        // URL format: https://<endpoint>/<bucket>/<key>
-        // OR if endpoint includes bucket (which we fixed), it's https://<endpoint>/<key>
-        // Let's try to be smart.
-
         let key = url;
-        const bucketName = process.env.AWS_BUCKET_NAME!;
 
-        // If URL contains bucket name, try to split by it
-        if (url.includes(bucketName)) {
-            const parts = url.split(bucketName + "/");
-            if (parts.length > 1) {
-                key = parts[1];
-            }
-        } else {
-            // Fallback: assume it's the last part of the path if no bucket name in URL (unlikely with our setup)
-            // But wait, our publicUrl logic was: endpoint + "/" + bucket + "/" + key
-            // So splitting by bucketName + "/" is safe.
+        // Key Extraction Logic
+        // 1. Check if it matches Public Domain
+        if (process.env.R2_PUBLIC_DOMAIN && url.includes(process.env.R2_PUBLIC_DOMAIN)) {
+            key = url.replace(process.env.R2_PUBLIC_DOMAIN + "/", "");
+        }
+        // 2. Check if it matches Bucket Name part (Standard S3 Path Style)
+        else if (url.includes(BUCKET_NAME + "/")) {
+            key = url.split(BUCKET_NAME + "/")[1];
         }
 
-        // Clean up any query params if present
+        // Clean up any query params
         key = key.split("?")[0];
 
+        // Decoding URI component in case spaces were encoded
+        key = decodeURIComponent(key);
+
         const command = new GetObjectCommand({
-            Bucket: bucketName,
+            Bucket: BUCKET_NAME,
             Key: key,
         });
 

@@ -3,24 +3,26 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@/auth";
 
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID!;
+const SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY!;
+const BUCKET_NAME = process.env.R2_BUCKET_NAME || process.env.AWS_BUCKET_NAME!;
+
+// Construct endpoint: R2 specific or generic AWS
+const ENDPOINT = R2_ACCOUNT_ID
+    ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+    : process.env.AWS_ENDPOINT?.replace(new RegExp(`/${BUCKET_NAME}$`), "").replace(/\/$/, "");
+
 const s3Client = new S3Client({
-    region: "us-east-1", // R2 requires us-east-1 for S3 compatibility
-    endpoint: process.env.AWS_ENDPOINT?.replace(new RegExp(`/${process.env.AWS_BUCKET_NAME}$`), "").replace(/\/$/, ""),
+    region: "auto", // R2 uses 'auto'
+    endpoint: ENDPOINT,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: ACCESS_KEY_ID,
+        secretAccessKey: SECRET_ACCESS_KEY,
     },
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
-    forcePathStyle: true,
-});
-
-console.log("S3 Config:", {
-    region: process.env.AWS_REGION,
-    endpoint: process.env.AWS_ENDPOINT,
-    bucket: process.env.AWS_BUCKET_NAME,
-    hasKey: !!process.env.AWS_ACCESS_KEY_ID,
-    hasSecret: !!process.env.AWS_SECRET_ACCESS_KEY
+    forcePathStyle: true, // R2 generally works fine with path style, keeping true for compat
 });
 
 export async function POST(request: Request) {
@@ -36,32 +38,31 @@ export async function POST(request: Request) {
         const key = `videos/${Date.now()}-${filename.replace(/\s+/g, "-")}`;
 
         const command = new PutObjectCommand({
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: BUCKET_NAME,
             Key: key,
             ContentType: contentType,
         });
 
         const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 
-        // Construct public URL (B2 specific structure or generic S3)
-        // For B2 private buckets, we might need a presigned GET url for playback, 
-        // OR if it's public we can use the direct link.
-        // The user selected "Private", so we actually need a presigned GET URL for playback too!
-        // However, for simplicity in the builder, we'll store the KEY or the direct URL 
-        // and generate a signed GET url when playing.
+        // Cloudflare R2 Public URL Logic
+        // If R2, we typically use a public bucket URL or a worker. 
+        // For now, we return the key or a constructed URI.
+        // If the user has a public domain (e.g. pub-xxx.r2.dev), they should set R2_PUBLIC_DOMAIN
 
-        // For now, let's return the public URL format.
-        // B2 Friendly URL: https://f005.backblazeb2.com/file/<bucket_name>/<key>
-        // But since it's private, this won't work for playback without auth.
-        // Let's store the full S3 URI or just the Key. Storing the Key is safer.
-        // But existing logic expects a URL.
+        const publicDomain = process.env.R2_PUBLIC_DOMAIN || ENDPOINT; // Fallback to endpoint (which is private usually)
 
-        // Let's return the endpoint + key as the "url" and handle signing on playback if needed.
-        const publicUrl = `${process.env.AWS_ENDPOINT}/${process.env.AWS_BUCKET_NAME}/${key}`;
+        let publicUrl = "";
+        if (process.env.R2_PUBLIC_DOMAIN) {
+            publicUrl = `${process.env.R2_PUBLIC_DOMAIN}/${key}`;
+        } else {
+            // Fallback to S3 path style for internal compatibility if signing is used everywhere
+            publicUrl = `${ENDPOINT}/${BUCKET_NAME}/${key}`;
+        }
 
         return NextResponse.json({
             uploadUrl,
-            publicUrl,
+            publicUrl, // This might be used by the frontend for playback if public
             key
         });
 
