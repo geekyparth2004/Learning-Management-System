@@ -119,7 +119,9 @@ export default function EditAssignmentPage() {
             defaultCode: JSON.stringify(defaultCode),
             videoSolution: problem.videoSolution,
             leetcodeUrl: problem.leetcodeUrl,
-            slug: problem.leetcodeUrl ? problem.leetcodeUrl.split("/problems/")[1]?.split("/")[0] : undefined
+            slug: problem.leetcodeUrl
+                ? problem.leetcodeUrl.split("/problems/")[1]?.split("/")[0]
+                : problem.title.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "")
         };
 
         if (editingProblemIndex !== null) {
