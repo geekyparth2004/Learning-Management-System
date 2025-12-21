@@ -215,6 +215,24 @@ function AssignmentContent() {
                     };
                 });
 
+                // Ensure testCases is an array
+                if (!Array.isArray(problemData.testCases)) {
+                    problemData.testCases = [];
+                }
+
+                // Ensure defaultCode matches expected structure
+                if (!problemData.defaultCode || typeof problemData.defaultCode !== 'object') {
+                    problemData.defaultCode = { python: "", cpp: "", java: "" };
+                }
+
+                // Ensure strict presence of language keys
+                const safeDefaultCode = {
+                    python: problemData.defaultCode.python || "",
+                    cpp: problemData.defaultCode.cpp || "",
+                    java: problemData.defaultCode.java || ""
+                };
+                problemData.defaultCode = safeDefaultCode;
+
                 // Manual check: Append video solution if not present in hints
                 if (problemData.videoSolution) {
                     const hasVideo = hints.some(h => h.type === 'video');
@@ -229,10 +247,13 @@ function AssignmentContent() {
                     }
                 }
 
-                // Ensure startedAt is present (it comes from the API now)
+                // Ensure startedAt is present
                 const fullProblemData = { ...problemData, startedAt: data.startedAt, courseId: data.courseId };
                 setProblem(fullProblemData);
-                setCode(problemData.defaultCode[language as keyof typeof problemData.defaultCode]);
+
+                // Safely set initial code
+                const initialCode = fullProblemData.defaultCode[language as keyof typeof fullProblemData.defaultCode] || "";
+                setCode(initialCode);
             } catch (e) {
                 console.error("Error fetching assignment:", e);
             }
@@ -244,7 +265,7 @@ function AssignmentContent() {
     const prevLanguageRef = useRef<Language>(language);
     useEffect(() => {
         if (problem && prevLanguageRef.current !== language) {
-            setCode(problem.defaultCode[language as keyof typeof problem.defaultCode]);
+            setCode(problem.defaultCode[language as keyof typeof problem.defaultCode] || "");
             prevLanguageRef.current = language;
         }
     }, [language, problem]);
