@@ -249,8 +249,8 @@ export async function POST(
 
                         // Use problem title for filename
                         const problem = assignment.problems[0];
-                        const moduleTitle = moduleItem.module.title.replace(/\s+/g, "-");
-                        const filename = `${moduleTitle}/${problem.title.replace(/\s+/g, "-")}.${ext}`;
+                        const moduleTitle = moduleItem.module.title.replace(/\s+/g, "_");
+                        const filename = `${moduleTitle}/${problem.title.replace(/\s+/g, "_")}.${ext}`;
 
                         await createOrUpdateFile(
                             user.githubAccessToken,
