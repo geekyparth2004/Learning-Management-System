@@ -80,12 +80,20 @@ export async function POST(
                     }
                 });
 
+                console.log("DEBUG: Module Items Count:", moduleItems.length);
+                console.log("DEBUG: Progress Items Count:", allItemsProgress.length);
+
                 const allCompleted = moduleItems.every(i => {
                     const p = allItemsProgress.find(ap => ap.moduleItemId === i.id);
-                    return p?.isCompleted;
+                    const completed = p?.isCompleted;
+                    if (!completed) console.log("DEBUG: Item incomplete:", i.title, i.id);
+                    return completed;
                 });
 
+                console.log("DEBUG: All Completed?", allCompleted);
+
                 if (allCompleted) {
+                    console.log("DEBUG: Marking Module COMPLETED:", moduleId);
                     // Mark module as completed
                     await db.moduleProgress.upsert({
                         where: { userId_moduleId: { userId, moduleId } },
@@ -103,11 +111,14 @@ export async function POST(
                     });
 
                     if (nextModule) {
+                        console.log("DEBUG: Unlocking Next Module:", nextModule.title);
                         await db.moduleProgress.upsert({
                             where: { userId_moduleId: { userId, moduleId: nextModule.id } },
                             update: { status: "IN_PROGRESS" },
                             create: { userId, moduleId: nextModule.id, status: "IN_PROGRESS", startedAt: new Date() }
                         });
+                    } else {
+                        console.log("DEBUG: No next module found.");
                     }
                 }
             }
