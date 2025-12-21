@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock } from "lucide-react";
 
@@ -49,7 +49,7 @@ interface TestCaseResult {
     expectedOutput: string;
 }
 
-export default function AssignmentPage() {
+function AssignmentContent() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -93,7 +93,7 @@ export default function AssignmentPage() {
     const formatElapsedTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
+        return `${mins}:${secs.toString().padStart(2, "0")} `;
     };
 
     useEffect(() => {
@@ -164,9 +164,16 @@ export default function AssignmentPage() {
     useEffect(() => {
         const fetchAssignment = async () => {
             try {
-                const res = await fetch(`/api/assignments/${assignmentId}`);
+                const res = await fetch(`/ api / assignments / ${assignmentId} `);
                 if (!res.ok) throw new Error("Failed to fetch assignment");
                 const data = await res.json();
+
+                if (!data.problems || data.problems.length === 0) {
+                    console.error("No problems found for assignment");
+                    alert("This assignment has no problems configured.");
+                    return;
+                }
+
                 const problemData: Problem = data.problems[0];
 
                 // Parse defaultCode if string
@@ -281,7 +288,7 @@ export default function AssignmentPage() {
                     // Format logic can stay
                     const minutes = Math.floor(remaining / 60000);
                     const seconds = Math.floor((remaining % 60000) / 1000);
-                    setTimeToAi(`${minutes}:${seconds.toString().padStart(2, "0")}`);
+                    setTimeToAi(`${minutes}:${seconds.toString().padStart(2, "0")} `);
                 }
             }
         }, 1000);
@@ -393,7 +400,7 @@ export default function AssignmentPage() {
         const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
         try {
-            await fetch(`/api/assignments/${assignmentId}/submissions`, {
+            await fetch(`/ api / assignments / ${assignmentId}/submissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code, language, passed: true, duration: timeSpent }),
@@ -983,5 +990,13 @@ export default function AssignmentPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AssignmentPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#0e0e0e] text-white">Loading...</div>}>
+            <AssignmentContent />
+        </Suspense>
     );
 }
