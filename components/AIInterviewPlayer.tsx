@@ -386,11 +386,13 @@ export default function AIInterviewPlayer({
                                     <span className="flex items-center gap-2 text-blue-400">
                                         <Loader2 className="h-4 w-4 animate-spin" /> Transcribing...
                                     </span>
-                                        ? "Listening..."
-                                        : isUploading
-                                            ? "Uploading Audio..."
-                                            : "Click mic to answer"
-                                }
+                                ) : isRecording ? (
+                                    "Listening..."
+                                ) : isUploading ? (
+                                    "Uploading Audio..."
+                                ) : (
+                                    "Click mic to answer"
+                                )}
                             </p>
 
                             {transcribedText && (
