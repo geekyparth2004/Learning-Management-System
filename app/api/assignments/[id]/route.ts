@@ -22,6 +22,11 @@ export async function GET(
                     include: {
                         testCases: true
                     }
+                },
+                moduleItems: {
+                    include: {
+                        module: true // To get courseId
+                    }
                 }
             }
         });
@@ -31,7 +36,10 @@ export async function GET(
             return new NextResponse("Not Found", { status: 404 });
         }
 
-        return NextResponse.json(assignment);
+        // Extract courseId from the first module item (assuming context)
+        const courseId = assignment.moduleItems[0]?.module?.courseId;
+
+        return NextResponse.json({ ...assignment, courseId });
     } catch (error) {
         console.error("[ASSIGNMENT_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
