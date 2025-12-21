@@ -91,13 +91,54 @@ export default function InterviewSubmissionsPage() {
         }
     };
 
-    const parseMessages = (json: string): Message[] => {
-        try {
-            return JSON.parse(json);
-        } catch (e) {
-            return [];
-        }
-    };
+    const [messagesState, setMessagesState] = useState<Message[]>([]);
+
+    useEffect(() => {
+        const loadMessages = async () => {
+            if (!selectedSubmission?.aiSubmission) {
+                setMessagesState([]);
+                return;
+            }
+
+            try {
+                let parsed: Message[] = JSON.parse(selectedSubmission.aiSubmission);
+
+                // Sign URLs
+                const signedMessages = await Promise.all(
+                    parsed.map(async (msg) => {
+                        if (msg.role === "user" && msg.audioUrl) {
+                            try {
+                                // Check if it needs signing (s3/r2)
+                                if (msg.audioUrl.includes("r2.cloudflarestorage") ||
+                                    msg.audioUrl.includes("backblazeb2") ||
+                                    !msg.audioUrl.startsWith("http")) { // Assume key if not http? actually existing logic sends full public url usually, but let's be safe.
+
+                                    const res = await fetch("/api/video/sign", {
+                                        method: "POST",
+                                        body: JSON.stringify({ url: msg.audioUrl })
+                                    });
+                                    const data = await res.json();
+                                    if (data.signedUrl) {
+                                        return { ...msg, audioUrl: data.signedUrl };
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Failed to sign audio", e);
+                            }
+                        }
+                        return msg;
+                    })
+                );
+                setMessagesState(signedMessages);
+            } catch (e) {
+                console.error("Failed to parse", e);
+                setMessagesState([]);
+            }
+        };
+        loadMessages();
+    }, [selectedSubmission]);
+
+    // parseMessages removed/unused now
 
     const filteredSubmissions = submissions.filter(s => filter === "ALL" || s.reviewStatus === filter);
 
@@ -211,7 +252,7 @@ export default function InterviewSubmissionsPage() {
 
                             {/* Chat History / Audio */}
                             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                                {parseMessages(selectedSubmission.aiSubmission).map((msg, idx) => (
+                                {messagesState.map((msg, idx) => (
                                     <div key={idx} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
                                         <div className={`max-w-[80%] rounded-2xl p-4 ${msg.role === "assistant"
                                             ? "bg-[#1e1e1e] border border-gray-800 rounded-tl-sm"
@@ -230,7 +271,7 @@ export default function InterviewSubmissionsPage() {
                                         </div>
                                     </div>
                                 ))}
-                                {parseMessages(selectedSubmission.aiSubmission).length === 0 && (
+                                {messagesState.length === 0 && (
                                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
                                         <AlertCircle size={48} className="mb-4 opacity-50" />
                                         <p>No recording data found.</p>
