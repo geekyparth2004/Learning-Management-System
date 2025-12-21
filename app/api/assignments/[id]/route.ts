@@ -18,7 +18,10 @@ export async function GET(
             where: { id },
             include: {
                 problems: {
-                    orderBy: { order: 'asc' }
+                    orderBy: { order: 'asc' },
+                    include: {
+                        testCases: true
+                    }
                 }
             }
         });
