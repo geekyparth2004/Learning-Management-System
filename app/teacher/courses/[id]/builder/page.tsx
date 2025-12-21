@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload, Edit } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload, Edit, Brain, Users } from "lucide-react";
 import Link from "next/link";
 import ProblemBuilder from "@/components/ProblemBuilder";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -539,6 +539,8 @@ export default function CourseBuilderPage() {
                                                                                         <FileCode size={16} className="text-orange-400" />
                                                                                     ) : item.type === "LEETCODE" ? (
                                                                                         <FileCode size={16} className="text-green-400" />
+                                                                                    ) : item.type === "AI_INTERVIEW" ? (
+                                                                                        <Brain size={16} className="text-pink-400" />
                                                                                     ) : item.type === "ASSIGNMENT" ? (
                                                                                         <FileCode size={16} className="text-purple-400" />
                                                                                     ) : (
@@ -564,6 +566,15 @@ export default function CourseBuilderPage() {
                                                                                                 <FileCode size={14} />
                                                                                             </Link>
                                                                                         </>
+                                                                                    )}
+                                                                                    {item.type === "AI_INTERVIEW" && (
+                                                                                        <Link
+                                                                                            href={`/teacher/courses/${courseId}/interview/${item.id}/submissions`}
+                                                                                            className="text-gray-500 hover:text-pink-400"
+                                                                                            title="Review Interviews"
+                                                                                        >
+                                                                                            <Users size={14} />
+                                                                                        </Link>
                                                                                     )}
                                                                                     <button
                                                                                         onClick={() => deleteItem(item.id)}

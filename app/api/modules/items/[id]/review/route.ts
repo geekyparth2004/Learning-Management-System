@@ -25,7 +25,7 @@ export async function POST(
                 },
             },
             update: {
-                aiSubmission: messages,
+                aiSubmission: JSON.stringify(messages),
                 reviewStatus: "PENDING",
                 isCompleted: false, // Ensure it's not marked as complete yet
                 duration: duration ? parseInt(duration) : undefined // Update duration if provided
@@ -33,7 +33,7 @@ export async function POST(
             create: {
                 userId,
                 moduleItemId,
-                aiSubmission: messages,
+                aiSubmission: JSON.stringify(messages),
                 reviewStatus: "PENDING",
                 isCompleted: false,
                 duration: duration ? parseInt(duration) : 0

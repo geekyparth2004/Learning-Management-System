@@ -56,11 +56,8 @@ export async function deleteFromR2(fileUrl: string) {
     if (!fileUrl) return;
 
     try {
-        // Check if it's an R2 URL
-        if (!fileUrl.includes("r2.cloudflarestorage.com")) {
-            console.log("Not an R2 URL, skipping deletion:", fileUrl);
-            return;
-        }
+        // Generic S3/R2 check - don't restrict to R2 domain only
+        if (!fileUrl) return;
 
         // Extract key from URL
         // URL format: https://<endpoint>/<bucket>/<key> or https://<custom-domain>/<key>

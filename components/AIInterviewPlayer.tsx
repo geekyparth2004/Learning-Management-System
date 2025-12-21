@@ -28,7 +28,11 @@ export default function AIInterviewPlayer({
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
     const [questionCount, setQuestionCount] = useState(0);
-    const [messages, setMessages] = useState<{ role: string, content: string }[]>([]);
+    const [messages, setMessages] = useState<{ role: string, content: string, audioUrl?: string }[]>([]);
+
+    // Audio State
+    const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Timer State
     const [duration, setDuration] = useState(0);
@@ -52,6 +56,45 @@ export default function AIInterviewPlayer({
     const [isSpeaking, setIsSpeaking] = useState(false);
     const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
+    // Upload Audio
+    const uploadAudio = async (blob: Blob) => {
+        setIsUploading(true);
+        try {
+            // 1. Get Presigned URL
+            const res = await fetch("/api/upload/presigned-url", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    filename: `interview-${Date.now()}.webm`,
+                    contentType: "audio/webm",
+                    contentLength: blob.size
+                })
+            });
+            if (!res.ok) throw new Error("Failed to get upload URL");
+            const { uploadUrl, publicUrl } = await res.json();
+
+            // 2. Upload to S3
+            await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("PUT", uploadUrl);
+                xhr.setRequestHeader("Content-Type", "audio/webm");
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) resolve(publicUrl);
+                    else reject(new Error(`Upload failed: ${xhr.statusText}`));
+                };
+                xhr.onerror = () => reject(new Error("Network error during upload"));
+                xhr.send(blob);
+            });
+
+            setCurrentAudioUrl(publicUrl);
+        } catch (error) {
+            console.error("Audio upload failed", error);
+            alert("Failed to upload audio. Please try again.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     // Whisper Hook
     const {
         isRecording,
@@ -62,7 +105,7 @@ export default function AIInterviewPlayer({
         startRecording,
         stopRecording,
         error
-    } = useWhisper();
+    } = useWhisper({ onRecordingComplete: uploadAudio });
 
     // Initialize Speech Synthesis
     useEffect(() => {
@@ -146,7 +189,7 @@ export default function AIInterviewPlayer({
             stopRecording();
         }
 
-        const userMsg = { role: "user", content: transcribedText };
+        const userMsg = { role: "user", content: transcribedText, audioUrl: currentAudioUrl || undefined };
         const updatedMessages = [...messages, userMsg];
         setMessages(updatedMessages);
 
@@ -172,6 +215,7 @@ export default function AIInterviewPlayer({
             }
 
             setTranscribedText("");
+            setCurrentAudioUrl(null);
 
             if (questionCount >= questionCountLimit) {
                 // Add the last assistant message (if any) or just submit
@@ -230,6 +274,26 @@ export default function AIInterviewPlayer({
                     className="rounded-xl bg-indigo-600 px-8 py-3 font-bold text-white hover:bg-indigo-700"
                 >
                     Try Again
+                </button>
+            </div>
+        );
+    }
+
+    if (reviewStatus === "APPROVED") {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+                <div className="mb-6 rounded-full bg-green-900/20 p-6">
+                    <CheckCircle className="h-12 w-12 text-green-500" />
+                </div>
+                <h2 className="mb-2 text-2xl font-bold">Interview Passed</h2>
+                <p className="mb-8 text-gray-400 max-w-md">
+                    Your interviewer has approved your responses. Great job!
+                </p>
+                <button
+                    onClick={() => router.push(`/courses/${courseId}`)}
+                    className="rounded-xl bg-gray-800 px-8 py-3 font-bold text-white hover:bg-gray-700 border border-gray-700"
+                >
+                    Back to Modules
                 </button>
             </div>
         );
@@ -322,9 +386,10 @@ export default function AIInterviewPlayer({
                                     <span className="flex items-center gap-2 text-blue-400">
                                         <Loader2 className="h-4 w-4 animate-spin" /> Transcribing...
                                     </span>
-                                ) : isRecording
-                                    ? "Listening..."
-                                    : "Click mic to answer"
+                                        ? "Listening..."
+                                        : isUploading
+                                            ? "Uploading Audio..."
+                                            : "Click mic to answer"
                                 }
                             </p>
 
@@ -337,7 +402,7 @@ export default function AIInterviewPlayer({
                             {!isRecording && transcribedText && (
                                 <button
                                     onClick={handleSubmitAnswer}
-                                    disabled={isLoading}
+                                    disabled={isLoading || isUploading}
                                     className="flex items-center gap-2 rounded-full bg-white px-8 py-3 font-bold text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
                                 >
                                     {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Next Question"}

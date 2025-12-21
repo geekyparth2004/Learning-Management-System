@@ -11,7 +11,10 @@ interface UseWhisperReturn {
     error: string | null;
 }
 
-export function useWhisper(): UseWhisperReturn {
+onRecordingComplete ?: (blob: Blob) => void;
+}
+
+export function useWhisper({ onRecordingComplete }: { onRecordingComplete?: (blob: Blob) => void } = {}): UseWhisperReturn {
     const [isRecording, setIsRecording] = useState(false);
     const [isTranscribing, setIsTranscribing] = useState(false);
     const [transcribedText, setTranscribedText] = useState("");
@@ -62,6 +65,12 @@ export function useWhisper(): UseWhisperReturn {
 
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+                // Call the callback if provided (e.g., for uploading)
+                if (onRecordingComplete) {
+                    onRecordingComplete(audioBlob);
+                }
+
                 await transcribeAudio(audioBlob);
 
                 // Stop all tracks to release microphone
@@ -74,7 +83,7 @@ export function useWhisper(): UseWhisperReturn {
             console.error("Error starting recording:", err);
             setError("Microphone access denied or not available.");
         }
-    }, []);
+    }, [onRecordingComplete]);
 
     const stopRecording = useCallback(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
