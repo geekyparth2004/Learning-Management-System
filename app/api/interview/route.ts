@@ -176,7 +176,8 @@ export async function POST(req: Request) {
         Current Question Number: ${questionCount + 1}
         Current Difficulty Level: ${difficulty}
         
-        IMPORTANT: Adjust the complexity of your question to match the "${difficulty}" level.
+        IMPORTANT: STRICTLY maintain the "${difficulty}" difficulty level. Do NOT make questions easier or harder.
+        IMPORTANT: Your questions must be STRICTLY related to the topic: ${subject}. Do NOT ask unrelated questions.
         CRITICAL: You MUST return your response in a valid JSON string format.
         `;
 

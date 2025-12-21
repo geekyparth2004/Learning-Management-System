@@ -57,7 +57,8 @@ export default function AIInterviewPlayer({
     const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
     // Upload Audio
-    const uploadAudio = async (blob: Blob) => {
+    // Handle Recording Complete (Upload & Auto-Submit)
+    const handleRecordingComplete = async (blob: Blob) => {
         setIsUploading(true);
         try {
             // 1. Get Presigned URL
@@ -87,11 +88,14 @@ export default function AIInterviewPlayer({
             });
 
             setCurrentAudioUrl(publicUrl);
+
+            // 3. Auto-Submit Answer
+            await submitAnswer(publicUrl);
+
         } catch (error) {
             console.error("Audio upload failed", error);
             alert("Failed to upload audio. Please try again.");
-        } finally {
-            setIsUploading(false);
+            setIsUploading(false); // Only reset if error, otherwise submitAnswer handles loading state
         }
     };
 
@@ -104,7 +108,7 @@ export default function AIInterviewPlayer({
         startRecording,
         stopRecording,
         error
-    } = useWhisper({ onRecordingComplete: uploadAudio });
+    } = useWhisper({ onRecordingComplete: handleRecordingComplete });
 
     // Initialize Speech Synthesis
     useEffect(() => {
@@ -170,29 +174,24 @@ export default function AIInterviewPlayer({
 
     const toggleRecording = async () => {
         if (isRecording) {
-            stopRecording();
+            await stopRecording();
         } else {
             if (isSpeaking && synthesisRef.current) {
                 synthesisRef.current.cancel();
                 setIsSpeaking(false);
             }
             setIsSpeaking(false);
+            await startRecording();
         }
-        // setTranscribedText(""); // Removed
-        await startRecording();
     };
 
-    const handleSubmitAnswer = async () => {
-        if (!currentAudioUrl && !isRecording) return; // Wait for audio
-
-        if (isRecording) {
-            stopRecording();
-        }
+    const submitAnswer = async (audioUrl: string) => {
+        // if (isRecording) stopRecording(); // Already stopped by logic
 
         // Use placeholder text since transcription is disabled
         const placeholderText = "[Audio Response Provided]";
 
-        const userMsg = { role: "user", content: placeholderText, audioUrl: currentAudioUrl || undefined };
+        const userMsg = { role: "user", content: placeholderText, audioUrl: audioUrl };
         const updatedMessages = [...messages, userMsg];
         setMessages(updatedMessages);
 
@@ -235,6 +234,7 @@ export default function AIInterviewPlayer({
             console.error("Failed to submit answer", error);
         } finally {
             setIsLoading(false);
+            setIsUploading(false);
         }
     };
 
@@ -402,15 +402,7 @@ export default function AIInterviewPlayer({
                                 </div>
                             )}
 
-                            {!isRecording && currentAudioUrl && !isUploading && (
-                                <button
-                                    onClick={handleSubmitAnswer}
-                                    disabled={isLoading || isUploading}
-                                    className="flex items-center gap-2 rounded-full bg-white px-8 py-3 font-bold text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                                >
-                                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Next Question"}
-                                </button>
-                            )}
+                            {/* Submit Button Removed - Auto Submit Logic */}
                         </div>
                     )}
                 </div>
