@@ -22,32 +22,6 @@ export function useWhisper({ onRecordingComplete }: { onRecordingComplete?: (blo
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
 
-    const transcribeAudio = async (audioBlob: Blob) => {
-        setIsTranscribing(true);
-        try {
-            const formData = new FormData();
-            formData.append("file", audioBlob, "audio.webm");
-
-            const response = await fetch("/api/transcribe", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            setTranscribedText(data.text);
-        } catch (err: any) {
-            console.error("Transcription error:", err);
-            setError(err.message || "Failed to transcribe audio.");
-        } finally {
-            setIsTranscribing(false);
-        }
-    };
-
     const startRecording = useCallback(async () => {
         setError(null);
         try {
@@ -70,7 +44,8 @@ export function useWhisper({ onRecordingComplete }: { onRecordingComplete?: (blo
                     onRecordingComplete(audioBlob);
                 }
 
-                await transcribeAudio(audioBlob);
+                // Simulate transcription by setting a placeholder
+                setTranscribedText("[Audio Response Provided]");
 
                 // Stop all tracks to release microphone
                 stream.getTracks().forEach(track => track.stop());
@@ -93,7 +68,7 @@ export function useWhisper({ onRecordingComplete }: { onRecordingComplete?: (blo
 
     return {
         isRecording,
-        isModelLoading: false, // No model loading needed for server-side
+        isModelLoading: false,
         isTranscribing,
         transcribedText,
         setTranscribedText,

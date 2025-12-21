@@ -99,9 +99,8 @@ export default function AIInterviewPlayer({
     const {
         isRecording,
         isModelLoading,
-        isTranscribing,
-        transcribedText,
-        setTranscribedText,
+        // isTranscribing, // Removed
+        // transcribedText, // Removed
         startRecording,
         stopRecording,
         error
@@ -177,19 +176,23 @@ export default function AIInterviewPlayer({
                 synthesisRef.current.cancel();
                 setIsSpeaking(false);
             }
-            setTranscribedText("");
-            await startRecording();
+            setIsSpeaking(false);
         }
+        // setTranscribedText(""); // Removed
+        await startRecording();
     };
 
     const handleSubmitAnswer = async () => {
-        if (!transcribedText.trim()) return;
+        if (!currentAudioUrl && !isRecording) return; // Wait for audio
 
         if (isRecording) {
             stopRecording();
         }
 
-        const userMsg = { role: "user", content: transcribedText, audioUrl: currentAudioUrl || undefined };
+        // Use placeholder text since transcription is disabled
+        const placeholderText = "[Audio Response Provided]";
+
+        const userMsg = { role: "user", content: placeholderText, audioUrl: currentAudioUrl || undefined };
         const updatedMessages = [...messages, userMsg];
         setMessages(updatedMessages);
 
@@ -201,7 +204,7 @@ export default function AIInterviewPlayer({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: updatedMessages,
-                    userResponse: transcribedText,
+                    userResponse: placeholderText,
                     questionCount: questionCount,
                     type: "custom",
                     subject: topic,
@@ -214,7 +217,7 @@ export default function AIInterviewPlayer({
                 return;
             }
 
-            setTranscribedText("");
+            // setTranscribedText(""); // Removed
             setCurrentAudioUrl(null);
 
             if (questionCount >= questionCountLimit) {
@@ -382,10 +385,6 @@ export default function AIInterviewPlayer({
                                     <span className="flex items-center gap-2 text-yellow-500">
                                         <Loader2 className="h-4 w-4 animate-spin" /> Loading AI...
                                     </span>
-                                ) : isTranscribing ? (
-                                    <span className="flex items-center gap-2 text-blue-400">
-                                        <Loader2 className="h-4 w-4 animate-spin" /> Transcribing...
-                                    </span>
                                 ) : isRecording ? (
                                     "Listening..."
                                 ) : isUploading ? (
@@ -395,13 +394,15 @@ export default function AIInterviewPlayer({
                                 )}
                             </p>
 
-                            {transcribedText && (
+                            {currentAudioUrl && !isUploading && (
                                 <div className="w-full rounded-xl border border-gray-800 bg-[#161616] p-4 text-center">
-                                    <p className="text-gray-300">"{transcribedText}"</p>
+                                    <p className="text-green-400 flex items-center justify-center gap-2">
+                                        <CheckCircle size={16} /> Audio Recorded Successfully
+                                    </p>
                                 </div>
                             )}
 
-                            {!isRecording && transcribedText && (
+                            {!isRecording && currentAudioUrl && !isUploading && (
                                 <button
                                     onClick={handleSubmitAnswer}
                                     disabled={isLoading || isUploading}
