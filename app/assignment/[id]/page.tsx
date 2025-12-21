@@ -164,7 +164,7 @@ function AssignmentContent() {
     useEffect(() => {
         const fetchAssignment = async () => {
             try {
-                const res = await fetch(`/ api / assignments / ${assignmentId} `);
+                const res = await fetch(`/api/assignments/${assignmentId}`);
                 if (!res.ok) throw new Error("Failed to fetch assignment");
                 const data = await res.json();
 
@@ -400,7 +400,7 @@ function AssignmentContent() {
         const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
         try {
-            await fetch(`/ api / assignments / ${assignmentId}/submissions`, {
+            await fetch(`/api/assignments/${assignmentId}/submissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ code, language, passed: true, duration: timeSpent }),
