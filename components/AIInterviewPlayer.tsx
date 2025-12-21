@@ -12,7 +12,7 @@ interface AIInterviewPlayerProps {
     reviewStatus?: string; // "PENDING" | "APPROVED" | "REJECTED" | null
     onComplete: () => void;
 
-    onSubmitReview: (messages: any[], duration: number) => void;
+    onSubmitReview: (messages: any[], duration: number) => Promise<void>;
 }
 
 export default function AIInterviewPlayer({
@@ -221,7 +221,7 @@ export default function AIInterviewPlayer({
 
             if (questionCount >= questionCountLimit) {
                 // Add the last assistant message (if any) or just submit
-                onSubmitReview(updatedMessages, duration);
+                await onSubmitReview(updatedMessages, duration);
                 return;
             }
 
