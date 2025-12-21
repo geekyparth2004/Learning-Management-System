@@ -11,8 +11,7 @@ interface UseWhisperReturn {
     error: string | null;
 }
 
-onRecordingComplete ?: (blob: Blob) => void;
-}
+
 
 export function useWhisper({ onRecordingComplete }: { onRecordingComplete?: (blob: Blob) => void } = {}): UseWhisperReturn {
     const [isRecording, setIsRecording] = useState(false);
