@@ -426,7 +426,7 @@ export default function CoursePlayerPage() {
                 body: JSON.stringify({ messages }),
             });
             if (res.ok) {
-                fetchCourseData();
+                await fetchCourseData();
             }
         } catch (error: any) {
             console.error(error);
