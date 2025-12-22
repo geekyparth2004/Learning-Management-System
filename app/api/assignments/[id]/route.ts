@@ -51,8 +51,7 @@ export async function GET(
             create: {
                 userId: session.user.id,
                 assignmentId: id,
-                startedAt: new Date(),
-                status: "IN_PROGRESS"
+                startedAt: new Date()
             },
             update: {} // Do nothing if exists, preserving original startedAt
         });
