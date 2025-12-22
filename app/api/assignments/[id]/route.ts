@@ -39,7 +39,21 @@ export async function GET(
         // Extract courseId from the first module item (assuming context)
         const courseId = assignment.moduleItems[0]?.module?.courseId;
 
-        return NextResponse.json({ ...assignment, courseId });
+        // Fetch progress to get consistent startedAt
+        const progress = await db.assignmentProgress.findUnique({
+            where: {
+                userId_assignmentId: {
+                    userId: session.user.id,
+                    assignmentId: id
+                }
+            }
+        });
+
+        return NextResponse.json({
+            ...assignment,
+            courseId,
+            startedAt: progress?.startedAt
+        });
     } catch (error) {
         console.error("[ASSIGNMENT_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
