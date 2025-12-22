@@ -327,14 +327,22 @@ function AssignmentContent() {
             setProblem(prev => {
                 if (!prev) return prev;
                 let changed = false;
+
+                // Use startedAt from the state (prev) to ensure consistency
+                const startTimeMs = prev.startedAt ? new Date(prev.startedAt).getTime() : Date.now();
+
                 const updatedHints = prev.hints.map((h, idx) => {
                     // Progressive unlocking: 2 mins per hint
-                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 2 * 60 * 1000;
-                    const isLocked = now < unlockTime;
+                    const unlockTimeMs = startTimeMs + (idx + 1) * 2 * 60 * 1000;
+                    const isLocked = now < unlockTimeMs;
 
                     if (isLocked !== h.locked) changed = true;
-                    // Store/Update unlockTime in hint for UI countdown
-                    return { ...h, locked: isLocked, unlockTime: new Date(unlockTime).toISOString() };
+
+                    return {
+                        ...h,
+                        locked: isLocked,
+                        unlockTime: new Date(unlockTimeMs).toISOString()
+                    };
                 });
 
                 if (!changed) return prev;
