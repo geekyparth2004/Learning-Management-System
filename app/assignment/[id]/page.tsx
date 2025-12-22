@@ -328,8 +328,8 @@ function AssignmentContent() {
                 if (!prev) return prev;
                 let changed = false;
                 const updatedHints = prev.hints.map((h, idx) => {
-                    // Progressive unlocking: 5 mins per hint
-                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 5 * 60 * 1000;
+                    // Progressive unlocking: 2 mins per hint
+                    const unlockTime = (problem.startedAt ? new Date(problem.startedAt).getTime() : Date.now()) + (idx + 1) * 2 * 60 * 1000;
                     const isLocked = now < unlockTime;
 
                     if (isLocked !== h.locked) changed = true;
@@ -532,7 +532,7 @@ function AssignmentContent() {
     };
 
     const formatTimeRemaining = (unlockTime: string) => {
-        const remaining = Math.max(0, Math.floor((new Date(unlockTime).getTime() - Date.now()) / 1000));
+        const remaining = Math.max(0, Math.ceil((new Date(unlockTime).getTime() - Date.now()) / 1000));
         const minutes = Math.floor(remaining / 60);
         const seconds = remaining % 60;
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
