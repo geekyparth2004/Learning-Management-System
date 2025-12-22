@@ -39,20 +39,28 @@ export async function GET(
         // Extract courseId from the first module item (assuming context)
         const courseId = assignment.moduleItems[0]?.module?.courseId;
 
-        // Fetch progress to get consistent startedAt
-        const progress = await db.assignmentProgress.findUnique({
+        // Create or get progress to ensure consistent startedAt
+        // We use upsert to guarantee a record exists, but we only set startedAt on create
+        const progress = await db.assignmentProgress.upsert({
             where: {
                 userId_assignmentId: {
                     userId: session.user.id,
                     assignmentId: id
                 }
-            }
+            },
+            create: {
+                userId: session.user.id,
+                assignmentId: id,
+                startedAt: new Date(),
+                status: "IN_PROGRESS"
+            },
+            update: {} // Do nothing if exists, preserving original startedAt
         });
 
         return NextResponse.json({
             ...assignment,
             courseId,
-            startedAt: progress?.startedAt
+            startedAt: progress.startedAt
         });
     } catch (error) {
         console.error("[ASSIGNMENT_GET]", error);

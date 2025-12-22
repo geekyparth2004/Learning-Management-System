@@ -789,11 +789,7 @@ function AssignmentContent() {
                                                 {hint.locked ? (
                                                     <div className="flex items-center gap-2 text-xs text-gray-500">
                                                         <Lock size={14} />
-                                                        <span>
-                                                            {formatTimeRemaining(hint.unlockTime) === "0:00"
-                                                                ? "Unlocking..."
-                                                                : `Unlocks in ${formatTimeRemaining(hint.unlockTime)}`}
-                                                        </span>
+                                                        <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
                                                     </div>
                                                 ) : (
                                                     <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
