@@ -336,12 +336,14 @@ function AssignmentContent() {
                     const unlockTimeMs = startTimeMs + (idx + 1) * 2 * 60 * 1000;
                     const isLocked = now < unlockTimeMs;
 
-                    if (isLocked !== h.locked) changed = true;
+                    const newUnlockTime = new Date(unlockTimeMs).toISOString();
+
+                    if (isLocked !== h.locked || h.unlockTime !== newUnlockTime) changed = true;
 
                     return {
                         ...h,
                         locked: isLocked,
-                        unlockTime: new Date(unlockTimeMs).toISOString()
+                        unlockTime: newUnlockTime
                     };
                 });
 
