@@ -105,13 +105,23 @@ export async function POST(
             },
         });
 
-        // Reset the timer by deleting the progress record
-        // This ensures next visit starts fresh with new startedAt
-        await db.assignmentProgress.deleteMany({
+        // Reset the timer by updating the progress record to NOW
+        // This ensures next visit (or reattempt) starts fresh with new startedAt
+        await db.assignmentProgress.upsert({
             where: {
+                userId_assignmentId: {
+                    userId: session.user.id,
+                    assignmentId: assignmentId,
+                }
+            },
+            create: {
                 userId: session.user.id,
                 assignmentId: assignmentId,
+                startedAt: new Date()
             },
+            update: {
+                startedAt: new Date()
+            }
         });
 
         if (passed) {
