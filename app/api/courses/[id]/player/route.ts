@@ -95,6 +95,11 @@ export async function GET(
                         }
                     }
 
+                    // RESTRICTION: Unlock Module 7 (index 6) for specific email regardless of progress
+                    if (index === 6 && session?.user?.email === "aids22013@gmail.com" && status === "LOCKED") {
+                        status = "IN_PROGRESS";
+                    }
+
                     // Map items
                     const items = await Promise.all(m.items.map(async i => {
                         const ip = itemProgress.find(p => p.moduleItemId === i.id);
