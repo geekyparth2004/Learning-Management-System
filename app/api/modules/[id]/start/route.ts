@@ -49,6 +49,11 @@ export async function POST(
                 }
             }
 
+            // BYPASS: Allow specific user to start Module 7 (index 6)
+            if (moduleIndex === 6 && session?.user?.email === "aids22013@gmail.com") {
+                isUnlocked = true;
+            }
+
             if (!isUnlocked) {
                 return NextResponse.json({ error: "Module locked" }, { status: 403 });
             }
