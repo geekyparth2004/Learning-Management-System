@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { signR2Url } from "@/lib/s3";
 
 export async function GET(
     req: Request,
@@ -56,8 +57,41 @@ export async function GET(
             update: {} // Do nothing if exists, preserving original startedAt
         });
 
+        // Process problems to sign hint URLs
+        const processedProblems = await Promise.all(assignment.problems.map(async (problem) => {
+            const hintsRaw = typeof problem.hints === 'string' ? JSON.parse(problem.hints) : (problem.hints || []);
+            const processedHints = await Promise.all(hintsRaw.map(async (hintItem: any) => {
+                let type = "text";
+                let content = "";
+                if (typeof hintItem === 'string') {
+                    content = hintItem;
+                } else {
+                    type = hintItem.type || "text";
+                    content = hintItem.content || "";
+                }
+
+                if (type === "video" && (content.includes("r2.cloudflarestorage.com") || content.includes("backblazeb2.com"))) {
+                    content = await signR2Url(content);
+                }
+                return { type, content };
+            }));
+
+            // Sign video solution if exists
+            let signedVideoSolution = problem.videoSolution;
+            if (problem.videoSolution && (problem.videoSolution.includes("r2.cloudflarestorage.com") || problem.videoSolution.includes("backblazeb2.com"))) {
+                signedVideoSolution = await signR2Url(problem.videoSolution);
+            }
+
+            return {
+                ...problem,
+                hints: processedHints, // Return parsed/signed array
+                videoSolution: signedVideoSolution
+            };
+        }));
+
         return NextResponse.json({
             ...assignment,
+            problems: processedProblems,
             courseId,
             startedAt: progress.startedAt
         });
