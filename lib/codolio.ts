@@ -40,9 +40,14 @@ export async function fetchCodolioStats(username: string): Promise<CodolioStats 
 
         const contestActivityList: any[] = [];
 
+        let profiles = data.platformProfiles;
+        if (!Array.isArray(profiles) && profiles?.platformProfiles && Array.isArray(profiles.platformProfiles)) {
+            profiles = profiles.platformProfiles;
+        }
+
         // Aggregate from platforms
-        if (data.platformProfiles && Array.isArray(data.platformProfiles)) {
-            data.platformProfiles.forEach((profile: any) => {
+        if (profiles && Array.isArray(profiles)) {
+            profiles.forEach((profile: any) => {
                 // 1. Total Questions
                 totalQuestions += profile.totalQuestionStats?.totalQuestionCounts || 0;
 
@@ -84,8 +89,8 @@ export async function fetchCodolioStats(username: string): Promise<CodolioStats 
             gfg: { total: 0 }
         };
 
-        if (data.platformProfiles && Array.isArray(data.platformProfiles)) {
-            data.platformProfiles.forEach((profile: any) => {
+        if (profiles && Array.isArray(profiles)) {
+            profiles.forEach((profile: any) => {
                 const name = profile.platform.toLowerCase();
                 if (name === 'leetcode') {
                     platforms.leetcode.rating = profile.userStats?.currentRating || 0;
