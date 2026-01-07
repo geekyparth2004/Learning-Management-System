@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { Edit2, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import PlatformConnection from "./PlatformConnection";
+import { useRouter } from "next/navigation";
 
 
 interface ExternalStats {
@@ -45,6 +46,7 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
     const [stats, setStats] = useState<ExternalStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const router = useRouter();
 
     const fetchData = async () => {
         setLoading(true);
@@ -60,6 +62,35 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
             setLoading(false);
         }
     };
+
+    // Auto-refresh logic for Leaderboard/Codolio stats
+    useEffect(() => {
+        const checkAndRefreshStats = async () => {
+            if (!user) return;
+
+            const ratings = (user as any).externalRatings as any;
+            const lastUpdated = ratings?.lastUpdated ? new Date(ratings.lastUpdated) : null;
+            const now = new Date();
+            const oneHour = 60 * 60 * 1000;
+
+            const shouldRefresh = !lastUpdated || (now.getTime() - lastUpdated.getTime() > oneHour);
+
+            if (shouldRefresh) {
+                console.log("Auto-refreshing external stats...");
+                try {
+                    const res = await fetch("/api/leaderboard/refresh", { method: "POST" });
+                    if (res.ok) {
+                        console.log("Stats auto-refreshed successfully");
+                        router.refresh(); // Refresh server components to show new counts
+                    }
+                } catch (e) {
+                    console.error("Auto-refresh failed", e);
+                }
+            }
+        };
+
+        checkAndRefreshStats();
+    }, [user, router]);
 
     useEffect(() => {
         if (user && (user.leetcodeUsername || user.codeforcesUsername || user.gfgUsername)) {
