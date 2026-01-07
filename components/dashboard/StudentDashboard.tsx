@@ -285,7 +285,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                         link={{ text: "Enter Contest", href: "/contest" }}
                         className={getCardStyle(nextContest)}
                     />
-                    <ExternalStatsCard user={userPlatforms || {}} />
+                    <ExternalStatsCard user={user || {}} />
 
                 </div>
 
