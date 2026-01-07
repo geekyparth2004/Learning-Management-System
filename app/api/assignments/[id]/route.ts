@@ -158,7 +158,6 @@ export async function PUT(
                             type: p.type || "CODING",
                             difficulty: p.difficulty || "Medium",
                             slug: p.slug,
-                            slug: p.slug,
                             defaultCode: p.defaultCode,
                             // Replace test cases
                             testCases: {
