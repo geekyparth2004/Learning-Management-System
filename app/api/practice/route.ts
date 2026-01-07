@@ -10,7 +10,7 @@ export async function POST(req: Request) {
         }
 
         const data = await req.json();
-        const { title, description, type, testCases, hints, videoSolution, leetcodeUrl, webDevInstructions, webDevInitialCode } = data;
+        const { title, description, type, testCases, hints, videoSolution, leetcodeUrl, webDevInstructions, webDevInitialCode, isManualVerification } = data;
 
         if (!title) {
             return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
                 hints: hints ? JSON.stringify(hints) : "[]",
                 videoSolution,
                 leetcodeUrl,
+                isManualVerification: isManualVerification || false,
                 testCases: {
                     create: testCases?.map((tc: any) => ({
                         input: tc.input,
