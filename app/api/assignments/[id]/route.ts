@@ -155,14 +155,24 @@ export async function PUT(
                         data: {
                             title: p.title,
                             description: p.description,
-                            type: "CODING", // Enforce CODING type for assignments? Or p.type? Assignments usually coding.
+                            type: p.type || "CODING",
                             difficulty: p.difficulty || "Medium",
                             slug: p.slug,
+                            slug: p.slug,
                             defaultCode: p.defaultCode,
-                            testCases: p.testCases, // JSON
+                            // Replace test cases
+                            testCases: {
+                                deleteMany: {},
+                                create: Array.isArray(p.testCases) ? p.testCases.map((tc: any) => ({
+                                    input: tc.input,
+                                    expectedOutput: tc.expectedOutput,
+                                    isHidden: tc.isHidden || false
+                                })) : []
+                            },
                             hints: p.hints,
                             videoSolution: p.videoSolution,
                             leetcodeUrl: p.leetcodeUrl,
+                            isManualVerification: p.isManualVerification,
                             order: i
                         }
                     });
@@ -173,14 +183,21 @@ export async function PUT(
                             assignmentId: id,
                             title: p.title,
                             description: p.description,
-                            type: "CODING",
+                            type: p.type || "CODING",
                             difficulty: p.difficulty || "Medium",
                             slug: p.slug,
                             defaultCode: p.defaultCode,
-                            testCases: p.testCases,
+                            testCases: {
+                                create: Array.isArray(p.testCases) ? p.testCases.map((tc: any) => ({
+                                    input: tc.input,
+                                    expectedOutput: tc.expectedOutput,
+                                    isHidden: tc.isHidden || false
+                                })) : []
+                            },
                             hints: p.hints,
                             videoSolution: p.videoSolution,
                             leetcodeUrl: p.leetcodeUrl,
+                            isManualVerification: p.isManualVerification,
                             order: i
                         }
                     });
