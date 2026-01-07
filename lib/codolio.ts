@@ -28,27 +28,45 @@ export async function fetchCodolioStats(username: string): Promise<CodolioStats 
         const json = await response.json();
         const data = json.data;
 
-        if (!data) return null;
-
-        // 1. Total Questions
-        const totalQuestions = data.totalQuestionStats?.totalQuestionCounts || 0;
-
-        // 2. Contest Stats Calculation
+        // Date calculations for stats
         const now = Date.now();
         const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
         const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000;
 
+        let totalQuestions = 0;
         let weeklyContests = 0;
         let monthlyContests = 0;
         let lifetimeContests = 0;
 
-        // Parse contest activity
-        const contestActivityList = data.contestActivityStats?.contestActivityList || [];
+        const contestActivityList: any[] = [];
 
-        // Also check if individual platforms have contest lists?
-        // The main 'contestActivityStats' seems to aggregate them.
-        // We will strictly use the top-level aggregation if available.
+        // Aggregate from platforms
+        if (data.platformProfiles && Array.isArray(data.platformProfiles)) {
+            data.platformProfiles.forEach((profile: any) => {
+                // 1. Total Questions
+                totalQuestions += profile.totalQuestionStats?.totalQuestionCounts || 0;
 
+                // 2. Collect Contests
+                if (profile.contestActivityStats?.contestActivityList && Array.isArray(profile.contestActivityStats.contestActivityList)) {
+                    contestActivityList.push(...profile.contestActivityStats.contestActivityList);
+                }
+            });
+        }
+
+        // Also check if top-level has them (fallback/merge)
+        if (data.totalQuestionStats?.totalQuestionCounts && totalQuestions === 0) {
+            totalQuestions = data.totalQuestionStats.totalQuestionCounts;
+        }
+        if (data.contestActivityStats?.contestActivityList && Array.isArray(data.contestActivityStats.contestActivityList)) {
+            // Avoid duplicates if possible, but simpler to just add if we assume they are distinct or use Set.
+            // Usually top-level is aggregation of all. If we found platform ones, we might not need this.
+            // But let's check if platform extraction yielded 0.
+            if (contestActivityList.length === 0) {
+                contestActivityList.push(...data.contestActivityStats.contestActivityList);
+            }
+        }
+
+        // Calculate Contest Stats
         contestActivityList.forEach((contest: any) => {
             // contestDate is in seconds based on sample: 1714876200
             const contestTime = contest.contestDate * 1000;
@@ -66,7 +84,7 @@ export async function fetchCodolioStats(username: string): Promise<CodolioStats 
             gfg: { total: 0 }
         };
 
-        if (data.platformProfiles) {
+        if (data.platformProfiles && Array.isArray(data.platformProfiles)) {
             data.platformProfiles.forEach((profile: any) => {
                 const name = profile.platform.toLowerCase();
                 if (name === 'leetcode') {
