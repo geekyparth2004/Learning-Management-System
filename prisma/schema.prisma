@@ -161,6 +161,7 @@ model Problem {
   defaultCode   String?      // Was Json. Store as JSON string.
   hints         String?      // Was String[]. Store as JSON string.
   leetcodeUrl   String?
+  isManualVerification Boolean @default(false)
   videoSolution String?
 
   moduleItemId  String?

@@ -29,6 +29,7 @@ interface ProblemData {
         js: string;
     };
     leetcodeUrl?: string;
+    isManualVerification?: boolean;
 }
 
 interface ProblemBuilderProps {
@@ -61,6 +62,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState(initialData?.videoSolution || "");
     const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE">(initialData?.type || "CODING");
+    const [isManualVerification, setIsManualVerification] = useState(initialData?.isManualVerification || false);
 
     // Web Dev State
     const [webDevInstructions, setWebDevInstructions] = useState(initialData?.webDevInstructions || "");
@@ -153,6 +155,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                 videoSolution: finalVideoUrl || undefined,
                 type: problemType,
                 leetcodeUrl: problemType === "LEETCODE" ? description : undefined,
+                isManualVerification: problemType === "LEETCODE" ? isManualVerification : undefined,
                 webDevInstructions: problemType === "WEB_DEV" ? webDevInstructions : undefined,
                 webDevInitialCode: problemType === "WEB_DEV" ? {
                     html: webDevHtml,
@@ -248,12 +251,12 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                         <label className="text-sm font-medium text-gray-300">Problem Type:</label>
                         <select
                             value={problemType}
-                            onChange={(e) => setProblemType(e.target.value as "CODING" | "WEB_DEV")}
+                            onChange={(e) => setProblemType(e.target.value as "CODING" | "WEB_DEV" | "LEETCODE")}
                             className="rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                         >
                             <option value="CODING">Coding Problem</option>
                             <option value="WEB_DEV">Web Development</option>
-                            <option value="LEETCODE">LeetCode Problem</option>
+                            <option value="LEETCODE">LeetCode/External Problem</option>
                         </select>
                     </div>
 
@@ -295,17 +298,33 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-300">LeetCode URL</label>
+                                        <label className="text-sm font-medium text-gray-300">External Problem URL</label>
                                         <input
                                             type="text"
-                                            placeholder="https://leetcode.com/problems/two-sum/"
+                                            placeholder="https://leetcode.com/... or https://geeksforgeeks.org/..."
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
                                             className="w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
                                         />
                                         <p className="text-xs text-gray-500">
-                                            Paste the full URL of the LeetCode problem. Students will be redirected there to solve it.
+                                            Paste the full URL. Students will be redirected there.
                                         </p>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 rounded border border-gray-700 bg-[#111111] p-3">
+                                        <input
+                                            type="checkbox"
+                                            id="manualVerify"
+                                            checked={isManualVerification}
+                                            onChange={(e) => setIsManualVerification(e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <label htmlFor="manualVerify" className="text-sm text-gray-300 select-none cursor-pointer">
+                                            This is not a LeetCode problem (Manual Verification)
+                                            <span className="block text-xs text-gray-500">
+                                                Enable this for GeeksForGeeks, InterviewBit, etc. Students will mark it as complete manually.
+                                            </span>
+                                        </label>
                                     </div>
                                 </div>
                             ) : problemType === "CODING" ? (
@@ -554,4 +573,3 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
         </div>
     );
 }
-

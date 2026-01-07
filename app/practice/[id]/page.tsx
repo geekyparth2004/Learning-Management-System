@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, XCircle, ArrowLeft, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, XCircle, ArrowLeft, Clock, CheckCircle, ExternalLink } from "lucide-react";
 
 import CodeEditor from "@/components/CodeEditor";
 import Console from "@/components/Console";
@@ -38,7 +38,10 @@ interface Problem {
     slug?: string;
     isPractice?: boolean;
     videoSolution?: string;
+    isManualVerification?: boolean;
 }
+
+
 
 interface TestCaseResult {
     id: string;
@@ -324,6 +327,42 @@ export default function PracticePlayerPage() {
             document.exitFullscreen().catch(err => console.error(err));
         }
         router.push("/practice");
+    };
+
+    // Manual Submit for GFG/External
+    const handleManualSubmit = async () => {
+        if (!problem) return;
+        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
+        // Stop timer visually
+        setHasStarted(false);
+
+        try {
+            const res = await fetch("/api/practice/submit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    problemId: problem.id,
+                    passed: true,
+                    duration: timeSpent,
+                    language: "manual"
+                }),
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen().catch(err => console.error(err));
+                }
+                alert(`🎉 Problem Marked Complete!\n\nDuration: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s\nWallet Balance: ₹${data.walletBalance}`);
+                router.push("/practice");
+            } else {
+                alert(data.error || "Failed to submit");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Failed to submit");
+        }
     };
 
     // Run user code
@@ -789,22 +828,55 @@ export default function PracticePlayerPage() {
                     <div className="flex-1 overflow-hidden relative">
                         {problem.leetcodeUrl ? (
                             <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
-                                {/* LeetCode UI Placeholder - Practice problems usually aren't leetcode links but can be */}
                                 <div className="max-w-md space-y-6">
                                     <div className="space-y-2">
-                                        <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
+                                        <h2 className="text-2xl font-bold">
+                                            {problem.isManualVerification ? "Solve Externally" : "Solve on LeetCode"}
+                                        </h2>
                                         <p className="text-gray-400">
-                                            This problem must be solved on LeetCode.
+                                            {problem.isManualVerification
+                                                ? "This problem is hosted on an external platform. Click the link below to solve it, then come back and mark it as complete."
+                                                : "This problem must be solved on LeetCode."}
                                         </p>
                                     </div>
                                     <a
                                         href={problem.leetcodeUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-4 text-lg font-bold hover:bg-[#333] transition-colors"
+                                        className="inline-flex items-center gap-2 rounded-lg bg-[#2c2c2c] px-6 py-3 font-semibold text-white hover:bg-[#3c3c3c]"
                                     >
-                                        Open Problem on LeetCode <LogOut size={20} />
+                                        <ExternalLink size={20} />
+                                        {problem.isManualVerification ? "Open Problem" : "Open in LeetCode"}
                                     </a>
+
+                                    <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
+                                        <h3 className="mb-4 font-semibold text-gray-200">
+                                            {problem.isManualVerification ? "Completion Status" : "Verification"}
+                                        </h3>
+
+                                        {problem.isManualVerification ? (
+                                            <div className="space-y-4">
+                                                <p className="text-sm text-gray-400">
+                                                    Once you have successfully solved running all test cases on the external site, click below to complete.
+                                                </p>
+                                                <button
+                                                    onClick={handleManualSubmit}
+                                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-bold hover:bg-green-700 transition-all"
+                                                >
+                                                    <CheckCircle size={20} />
+                                                    Mark as Completed
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <LeetCodeVerifier
+                                                problemSlug={problem.slug || ""}
+                                                onVerified={() => {
+                                                    alert("Verified! Points added.");
+                                                    router.push("/practice");
+                                                }}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ) : (
