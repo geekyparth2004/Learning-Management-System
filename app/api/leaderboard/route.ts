@@ -35,7 +35,7 @@ export async function GET(req: Request) {
             // Note: A user might submit the same problem multiple times.
 
             const submissions = await db.submission.groupBy({
-                by: ['userId', 'questionId'], // Group by user AND problem to get unique solves
+                by: ['userId', 'problemId'], // Group by user AND problem to get unique solves
                 where: {
                     status: "PASSED",
                     ...dateFilter
