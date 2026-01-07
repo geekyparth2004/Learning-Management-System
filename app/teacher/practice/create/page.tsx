@@ -11,15 +11,26 @@ export default function CreatePracticeProblemPage() {
     const handleUploadVideo = async (file: File) => {
         setIsUploading(true);
         try {
-            const formData = new FormData();
-            formData.append("file", file);
-            const res = await fetch("/api/upload/r2", {
+            const res = await fetch("/api/upload/presigned-url", {
                 method: "POST",
-                body: formData,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filename: file.name, contentType: file.type }),
             });
-            if (!res.ok) throw new Error("Upload failed");
             const data = await res.json();
-            return data.url;
+            if (!res.ok) throw new Error(data.error || "Upload failed");
+
+            const { uploadUrl, publicUrl } = data;
+
+            await fetch(uploadUrl, {
+                method: "PUT",
+                body: file,
+                headers: { "Content-Type": file.type }
+            });
+
+            return publicUrl;
+        } catch (e: any) {
+            console.error("Upload failed", e);
+            throw new Error(e.message || "Upload failed");
         } finally {
             setIsUploading(false);
         }
