@@ -21,6 +21,9 @@ model User {
   leetcodeUsername   String?
   codeforcesUsername String?
   gfgUsername        String?
+  codolioUsername    String?
+  
+  externalRatings    Json?                // Cached stats: { totalQuestions: number, contests: { weekly: number, monthly: number, lifetime: number }, lastUpdated: string }
   
   // Relations
   courses            Course[]             @relation("TeacherCourses")

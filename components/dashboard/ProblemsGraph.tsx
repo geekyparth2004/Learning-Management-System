@@ -3,6 +3,8 @@
 import React from "react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+import { LeaderboardModal } from "@/components/dashboard/LeaderboardModal";
+
 interface ProblemsGraphProps {
     data: { day: string; value: number }[];
     totalSolved: number;
@@ -11,7 +13,10 @@ interface ProblemsGraphProps {
 export default function ProblemsGraph({ data, totalSolved }: ProblemsGraphProps) {
     return (
         <div className="w-full rounded-xl border border-gray-800 bg-[#161616] p-6">
-            <h3 className="text-sm font-medium text-gray-400">Problems Solved</h3>
+            <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-400">Problems Solved</h3>
+                <LeaderboardModal />
+            </div>
             <div className="mt-2 text-4xl font-bold text-white">{totalSolved}</div>
 
             <div className="mt-8 h-[120px] w-full">
