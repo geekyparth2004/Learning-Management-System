@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
         const user = await db.user.findUnique({
             where: { id: session.user.id },
-            select: { codolioUsername: true }
+            select: { codolioUsername: true, codolioBaseline: true, id: true }
         });
 
         if (!user?.codolioUsername) {
@@ -24,12 +24,19 @@ export async function POST(req: Request) {
         if (!stats) {
             return NextResponse.json({ error: "Failed to fetch stats from Codolio" }, { status: 500 });
         }
+        // Update cache and baseline
+        const updateData: any = {
+            externalRatings: stats,
+            lastUpdated: new Date()
+        };
+
+        if (user.codolioBaseline === null) {
+            updateData.codolioBaseline = stats.totalQuestions;
+        }
 
         await db.user.update({
-            where: { id: session.user.id },
-            data: {
-                externalRatings: stats as any
-            }
+            where: { id: user.id },
+            data: updateData
         });
 
         return NextResponse.json({ success: true, stats });

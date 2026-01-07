@@ -34,40 +34,99 @@ export async function GET(req: Request) {
             // Efficient approach: Group by userId, count distinct problemId.
             // Note: A user might submit the same problem multiple times.
 
+            // Fetch all users who might have a score (either internal or external)
+            // Ideally we'd filter, but to ensure we capture everyone with either internal submissions OR external progress:
+            // We'll fetch users active in submissions + users with codolioUsername.
+
             const submissions = await db.submission.groupBy({
-                by: ['userId', 'problemId'], // Group by user AND problem to get unique solves
+                by: ['userId', 'problemId'],
                 where: {
                     status: "PASSED",
                     ...dateFilter
                 },
-                _count: {
-                    _all: true
-                }
+                _count: { _all: true }
             });
 
-            // Now assume each entry is 1 solved problem. Group by userId in memory.
-            const userCounts: Record<string, number> = {};
+            const internalCounts: Record<string, number> = {};
             submissions.forEach(sub => {
-                userCounts[sub.userId] = (userCounts[sub.userId] || 0) + 1;
+                internalCounts[sub.userId] = (internalCounts[sub.userId] || 0) + 1;
             });
 
-            // Fetch user details for the top IDs
-            const sortedUserIds = Object.keys(userCounts).sort((a, b) => userCounts[b] - userCounts[a]).slice(0, 50);
+            // Fetch users. 
+            // Optimization: Fetch users who have ID in internalCounts OR have codolioUsername not null.
+            const userIdsWithInternal = Object.keys(internalCounts);
 
             const users = await db.user.findMany({
-                where: { id: { in: sortedUserIds } },
+                where: {
+                    OR: [
+                        { id: { in: userIdsWithInternal } },
+                        { codolioUsername: { not: null } }
+                    ]
+                },
                 select: {
                     id: true,
                     name: true,
                     image: true,
-                    // leetcodeUsername: true // optional
+                    codolioUsername: true,
+                    codolioBaseline: true,
+                    externalRatings: true
                 }
             });
 
-            const leaderboard = users.map(u => ({
-                ...u,
-                score: userCounts[u.id]
-            })).sort((a, b) => b.score - a.score);
+            const leaderboard = users.map(u => {
+                const internal = internalCounts[u.id] || 0;
+                let externalDiff = 0;
+
+                // Only count external differential for Lifetime (period not checked for external here based on user request "problem solved card" which usually implies lifetime/total)
+                // However, user said "problem solved on external platforms will be counted in problem solved".
+                // "Problem Solved" metric is usually Lifetime total.
+                // If period is weekly/monthly, technically we should count usage in that period.
+                // But external stats from Codolio (cache) gives us Total, Weekly, Monthly.
+                // The "Differential" logic is specifically "Current Total - Baseline (at start of feature)".
+                // Only Lifetime makes sense for "Differential from Baseline".
+                // For Weekly/Monthly, Codolio already provides the exact count for that period!
+                // Wait, User said: "dont take previous data... as soon as it changes... difference will be updated".
+                // This implies simpler logic: Just add the NEW solves.
+                // If I use Codolio's "Weekly" stats directly, does that include "previous data"?
+                // Codolio Weekly resets every week. So it is always "new".
+                // User's concern "previous data" likely refers to the "Total Questions" count which might be 500 when they start.
+                // They don't want to suddenly jump to 528. They want 28 + (500-500) = 28. Then 28 + (501-500) = 29.
+                // So for LIFETIME, use differential.
+                // For WEEKLY/MONTHLY, use Codolio's direct weekly/monthly stats?
+                // The user said "problem solved card" which implies the main counter.
+                // Typically "Internal Leaderboard" = "Problems Solved".
+                // I will add the *Lifetime Differential* to the score regardless of period?
+                // No, if period is weekly, I should use Weekly Internal + Weekly External.
+                // Codolio provides `contestStats` (weekly/monthly). Does it provide `questionStats` (weekly/monthly)?
+                // `lib/codolio.ts` extracts `totalQuestions`. It does NOT seem to extract weekly question count.
+                // Codolio usually only gives Total Questions.
+                // So for Weekly/Monthly, I can only rely on Internal stats unless I start interpreting "difference" over time which is complex.
+                // RECOMMENDATION: For now, only apply this to LIFETIME "Problems Solved" count.
+                // If period != lifetime, I will stick to internal only, or simple aggregation if available.
+                // User said "problem solved on the external ... counted in problem solved also".
+                // I will assume this applies primarily to the main Lifetime metric.
+
+                if (period === "lifetime" && u.externalRatings && u.codolioBaseline !== null) {
+                    const stats = u.externalRatings as any;
+                    const currentTotal = stats.totalQuestions || 0;
+                    const baseline = u.codolioBaseline || 0;
+                    externalDiff = Math.max(0, currentTotal - baseline);
+                }
+
+                // If user meant "Weekly" too... impossible without historical tracking. 
+                // So I will only apply to Lifetime.
+
+                const totalScore = internal + externalDiff;
+
+                return {
+                    id: u.id,
+                    name: u.name,
+                    image: u.image,
+                    score: totalScore,
+                    internal,
+                    externalDiff
+                };
+            }).sort((a, b) => b.score - a.score).slice(0, 50);
 
             return NextResponse.json(leaderboard);
 

@@ -20,10 +20,16 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
         include: { moduleItem: { select: { duration: true, title: true } } }
     });
 
-    // 1.1 Fetch User Platforms
-    const userPlatforms = await db.user.findUnique({
+    // 1.1 Fetch User Platforms & Codolio Stats
+    const user = await db.user.findUnique({
         where: { id: userId },
-        select: { leetcodeUsername: true, codeforcesUsername: true, gfgUsername: true }
+        select: {
+            leetcodeUsername: true,
+            codeforcesUsername: true,
+            gfgUsername: true,
+            codolioBaseline: true,
+            externalRatings: true
+        }
     });
 
     const moduleSeconds = moduleProgressItems.reduce((acc, curr) => {
@@ -53,7 +59,18 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
         where: { userId, status: "PASSED" },
         select: { createdAt: true, problemId: true, duration: true }
     });
-    const uniqueSolved = new Set(solvedProblems.map(s => s.problemId)).size;
+
+    let uniqueSolved = new Set(solvedProblems.map(s => s.problemId)).size;
+
+    // Add Differential External Stats
+    if (user?.externalRatings && user.codolioBaseline !== null) {
+        const stats = user.externalRatings as any;
+        const currentTotal = stats.totalQuestions || 0;
+        const baseline = user.codolioBaseline || 0;
+        const diff = Math.max(0, currentTotal - baseline);
+        uniqueSolved += diff;
+    }
+
     const practiceSeconds = solvedProblems.reduce((acc, curr) => acc + (curr.duration || 0), 0);
 
     // 4. Fetch Completed Contests Duration

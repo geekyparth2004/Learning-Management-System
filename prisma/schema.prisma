@@ -24,6 +24,7 @@ model User {
   codolioUsername    String?
   
   externalRatings    Json?                // Cached stats: { totalQuestions: number, contests: { weekly: number, monthly: number, lifetime: number }, lastUpdated: string }
+  codolioBaseline    Int?                 // Baseline for external question count (differential tracking)
   
   // Relations
   courses            Course[]             @relation("TeacherCourses")
