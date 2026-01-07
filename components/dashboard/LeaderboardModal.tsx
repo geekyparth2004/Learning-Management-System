@@ -59,7 +59,7 @@ export function LeaderboardModal() {
                 if (json.error === "Codolio username not linked") {
                     alert("Please link your Codolio username in Profile settings first.");
                 } else {
-                    alert("Failed to update stats");
+                    alert(json.error || "Failed to update stats");
                 }
             }
         } catch (error) {

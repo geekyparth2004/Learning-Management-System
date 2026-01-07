@@ -41,8 +41,8 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, stats });
 
-    } catch (error) {
-        console.error("Refresh Stats Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error: any) {
+        console.error("Leaderboard Refresh Error:", error);
+        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
     }
 }
