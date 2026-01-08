@@ -261,12 +261,18 @@ export default function InterviewSubmissionsPage() {
                                             <div className="mb-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                                 {msg.role === "assistant" ? "Interviewer" : "Student"}
                                             </div>
-                                            <p className="text-gray-200 mb-3 whitespace-pre-wrap">{msg.content}</p>
-
-                                            {msg.role === "user" && msg.audioUrl && (
-                                                <div className="mt-2 pt-2 border-t border-gray-700/50">
-                                                    <audio controls src={msg.audioUrl} className="w-full h-8" />
+                                            {msg.role === "user" && msg.audioUrl ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2 text-xs text-indigo-400 font-medium">
+                                                        <Volume2 size={14} />
+                                                        <span>Audio Response</span>
+                                                    </div>
+                                                    <div className="mt-1 pt-1 border-t border-gray-700/50">
+                                                        <audio controls src={msg.audioUrl} className="w-full h-8" />
+                                                    </div>
                                                 </div>
+                                            ) : (
+                                                <p className="text-gray-200 mb-3 whitespace-pre-wrap">{msg.content}</p>
                                             )}
                                         </div>
                                     </div>

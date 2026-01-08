@@ -43,14 +43,15 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     const contestsEntered = await db.contestRegistration.count({
         where: {
             userId,
-            startedAt: { not: null }
+            startedAt: { not: null },
+            contest: { category: "CONTEST" }
         }
     });
     const hackathonsParticipated = await db.contestRegistration.count({
         where: {
             userId,
-            contest: { type: "HACKATHON" },
-            startedAt: { not: null }
+            startedAt: { not: null },
+            contest: { category: "HACKATHON" }
         }
     });
 
