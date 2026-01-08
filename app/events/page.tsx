@@ -257,7 +257,7 @@ export default function EventsPage() {
                             className="rounded-lg border border-gray-800 bg-[#161616] px-4 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
                         />
                     </div>
-                    <Link href="/dashboard" className="rounded-lg bg-[#161616] px-4 py-2 text-sm text-gray-400 hover:bg-[#202020] hover:text-white">
+                    <Link href="/" className="rounded-lg bg-[#161616] px-4 py-2 text-sm text-gray-400 hover:bg-[#202020] hover:text-white">
                         Back to Dashboard
                     </Link>
                 </div>
