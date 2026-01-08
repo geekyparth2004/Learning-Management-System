@@ -10,6 +10,7 @@ import ContestActionButtons from "@/components/contest/ContestActionButtons";
 export default async function ContestPage() {
     const session = await auth();
     const contests = await db.contest.findMany({
+        where: { category: "CONTEST" },
         orderBy: { startTime: "asc" },
     });
 
