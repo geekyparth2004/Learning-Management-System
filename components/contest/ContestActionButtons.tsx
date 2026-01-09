@@ -98,6 +98,28 @@ export default function ContestActionButtons({
         }
     };
 
+    const handleExternalRegister = async () => {
+        setIsLoading(true);
+        // Open link immediately
+        if (contestLink) {
+            window.open(contestLink, "_blank");
+        }
+
+        // Register in DB
+        try {
+            const res = await fetch(`/api/contest/${contestId}/join`, {
+                method: "POST"
+            });
+            if (res.ok) {
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("Error joining hackathon:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // External Contest Logic
     if (type === "EXTERNAL") {
         if (isCompleted) {
@@ -134,14 +156,17 @@ export default function ContestActionButtons({
         }
 
         return (
-            <a
-                href={contestLink || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            <button
+                onClick={handleExternalRegister}
+                disabled={isLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
             >
-                Register on Platform <ExternalLink size={14} />
-            </a>
+                {isLoading ? "Joining..." : (
+                    <>
+                        Register on Platform <ExternalLink size={14} />
+                    </>
+                )}
+            </button>
         );
     }
 
