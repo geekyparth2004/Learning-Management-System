@@ -13,6 +13,7 @@ export default async function TeacherContestPage() {
     }
 
     const contests = await db.contest.findMany({
+        where: { category: "CONTEST" },
         orderBy: { createdAt: "desc" },
         include: {
             _count: {
