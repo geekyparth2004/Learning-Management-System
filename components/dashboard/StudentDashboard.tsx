@@ -87,30 +87,59 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     }, 0);
 
     // 4.1 Fetch Nearest Contest & Hackathon for Live/Upcoming Status
-    const nextContest = await db.contest.findFirst({
+    // 4.1 Fetch Nearest *Active* Contest & Hackathon
+    // We fetch a few upcoming/live ones to find the first one that isn't completed by the user
+    const upcomingContests = await db.contest.findMany({
         where: {
             category: "CONTEST",
             endTime: { gt: now }
         },
-        orderBy: { startTime: 'asc' }
+        orderBy: { startTime: 'asc' },
+        take: 5
     });
 
-    const nextHackathon = await db.contest.findFirst({
+    const upcomingHackathons = await db.contest.findMany({
         where: {
             category: "HACKATHON",
             endTime: { gt: now }
         },
-        orderBy: { startTime: 'asc' }
+        orderBy: { startTime: 'asc' },
+        take: 5
     });
 
-    // Fetch user registrations for these specific upcoming events to check completion status
-    const nextContestReg = nextContest ? await db.contestRegistration.findUnique({
-        where: { userId_contestId: { userId, contestId: nextContest.id } }
-    }) : null;
+    // Fetch registrations for these candidates
+    const contestIds = upcomingContests.map(c => c.id);
+    const hackathonIds = upcomingHackathons.map(c => c.id);
+    const allCandidateIds = [...contestIds, ...hackathonIds];
 
-    const nextHackathonReg = nextHackathon ? await db.contestRegistration.findUnique({
-        where: { userId_contestId: { userId, contestId: nextHackathon.id } }
-    }) : null;
+    const candidateRegistrations = allCandidateIds.length > 0 ? await db.contestRegistration.findMany({
+        where: {
+            userId,
+            contestId: { in: allCandidateIds }
+        }
+    }) : [];
+
+    const regMap = new Map(candidateRegistrations.map(r => [r.contestId, r]));
+
+    // Find first non-completed contest
+    const nextContest = upcomingContests.find(c => {
+        const reg = regMap.get(c.id);
+        return !reg?.completedAt;
+    });
+
+    // Find first non-completed hackathon
+    const nextHackathon = upcomingHackathons.find(c => {
+        const reg = regMap.get(c.id);
+        return !reg?.completedAt;
+    });
+
+    // These are already the "effective" next events, so we don't need to pass registration to getCardStyle again for filtering,
+    // but passing it helps if we want to add "Registered" styling in future.
+    // However, for the animation logic, since we pre-filtered, 'nextContest' is guaranteed to be non-completed.
+
+    // We can simplify getCardStyle signature back or keep it but we know reg.completedAt is false/undefined.
+    const nextContestReg = nextContest ? regMap.get(nextContest.id) : null;
+    const nextHackathonReg = nextHackathon ? regMap.get(nextHackathon.id) : null;
 
     const getCardStyle = (contest: typeof nextContest, registration: typeof nextContestReg = null) => {
         if (!contest) return "";
