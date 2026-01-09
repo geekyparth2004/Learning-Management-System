@@ -103,8 +103,21 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
         orderBy: { startTime: 'asc' }
     });
 
-    const getCardStyle = (contest: typeof nextContest) => {
+    // Fetch user registrations for these specific upcoming events to check completion status
+    const nextContestReg = nextContest ? await db.contestRegistration.findUnique({
+        where: { userId_contestId: { userId, contestId: nextContest.id } }
+    }) : null;
+
+    const nextHackathonReg = nextHackathon ? await db.contestRegistration.findUnique({
+        where: { userId_contestId: { userId, contestId: nextHackathon.id } }
+    }) : null;
+
+    const getCardStyle = (contest: typeof nextContest, registration: typeof nextContestReg = null) => {
         if (!contest) return "";
+
+        // If user already completed this event, do not show any active/upcoming animation
+        if (registration?.completedAt) return "";
+
         const start = new Date(contest.startTime);
         const end = new Date(contest.endTime);
         const diff = start.getTime() - now.getTime();
@@ -274,7 +287,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                         title="Hackathons Participated"
                         value={`${hackathonsParticipated} `}
                         link={{ text: "Enter Hackathon", href: "/hackathon" }}
-                        className={getCardStyle(nextHackathon)}
+                        className={getCardStyle(nextHackathon, nextHackathonReg)}
                     />
                 </div>
 
@@ -284,7 +297,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                         title="Contests Entered"
                         value={`${contestsEntered} `}
                         link={{ text: "Enter Contest", href: "/contest" }}
-                        className={getCardStyle(nextContest)}
+                        className={getCardStyle(nextContest, nextContestReg)}
                     />
                     <ExternalStatsCard user={user || {}} />
 
