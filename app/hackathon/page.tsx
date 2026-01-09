@@ -25,6 +25,8 @@ export default async function HackathonPage() {
         return !!reg?.completedAt;
     };
 
+    const now = new Date();
+
     const activeContests = contests.filter(c => {
         const live = c.startTime <= now && c.endTime > now;
         return live && !isCompleted(c.id);
