@@ -20,10 +20,17 @@ export default async function HackathonPage() {
     }) : [];
     const registrationMap = new Map(registrations.map(r => [r.contestId, r]));
 
-    const now = new Date();
-    const activeContests = contests.filter(c => c.startTime <= now && c.endTime > now);
+    const isCompleted = (contestId: string) => {
+        const reg = registrationMap.get(contestId);
+        return !!reg?.completedAt;
+    };
+
+    const activeContests = contests.filter(c => {
+        const live = c.startTime <= now && c.endTime > now;
+        return live && !isCompleted(c.id);
+    });
     const upcomingContests = contests.filter(c => c.startTime > now);
-    const pastContests = contests.filter(c => c.endTime <= now);
+    const pastContests = contests.filter(c => c.endTime <= now || isCompleted(c.id));
 
     return (
         <div className="min-h-screen bg-[#0e0e0e] text-white p-8">
@@ -56,6 +63,7 @@ export default async function HackathonPage() {
                                     contest={contest}
                                     status="LIVE"
                                     registration={registrationMap.get(contest.id)}
+                                    isCompleted={isCompleted(contest.id)}
                                 />
                             ))}
                         </div>
@@ -63,33 +71,11 @@ export default async function HackathonPage() {
                 )}
 
                 {/* Upcoming Hackathons */}
-                <section>
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-blue-400">
-                        <Calendar className="h-5 w-5" />
-                        Upcoming Events
-                    </h2>
-                    {upcomingContests.length > 0 ? (
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {upcomingContests.map(contest => (
-                                <ContestCard
-                                    key={contest.id}
-                                    contest={contest}
-                                    status="UPCOMING"
-                                    registration={registrationMap.get(contest.id)}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 italic">No upcoming events scheduled.</p>
-                    )}
-                </section>
+                {/* ... existing upcoming ... */}
 
                 {/* Past Hackathons */}
                 <section>
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-400">
-                        <Clock className="h-5 w-5" />
-                        Past Events
-                    </h2>
+                    {/* ... header ... */}
                     {pastContests.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {pastContests.map(contest => (
@@ -98,6 +84,7 @@ export default async function HackathonPage() {
                                     contest={contest}
                                     status="PAST"
                                     registration={registrationMap.get(contest.id)}
+                                    isCompleted={isCompleted(contest.id)}
                                 />
                             ))}
                         </div>
@@ -105,12 +92,13 @@ export default async function HackathonPage() {
                         <p className="text-gray-500 italic">No past events found.</p>
                     )}
                 </section>
+                {/* ... rest of file */}
             </div>
         </div>
     );
 }
 
-function ContestCard({ contest, status, registration }: { contest: any, status: "LIVE" | "UPCOMING" | "PAST", registration?: any }) {
+function ContestCard({ contest, status, registration, isCompleted = false }: { contest: any, status: "LIVE" | "UPCOMING" | "PAST", registration?: any, isCompleted?: boolean }) {
     const isExternal = contest.type === "EXTERNAL";
 
     const now = new Date();
@@ -127,6 +115,9 @@ function ContestCard({ contest, status, registration }: { contest: any, status: 
         } else if (hoursAway <= 24) {
             borderColor = "border-blue-500 bg-blue-900/10 hover:border-blue-400";
         }
+    } else if (status === "PAST" && isCompleted) {
+        // Special styling for completed hackathons? Or just normal past styling.
+        borderColor = "border-green-800 bg-green-900/10 hover:border-green-600";
     }
 
     return (
@@ -170,6 +161,7 @@ function ContestCard({ contest, status, registration }: { contest: any, status: 
                     isRegistered={!!registration}
                     startTime={contest.startTime.toISOString()}
                     endTime={contest.endTime.toISOString()}
+                    isCompleted={isCompleted}
                 />
             </div>
         </div>

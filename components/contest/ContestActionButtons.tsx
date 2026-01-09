@@ -12,6 +12,7 @@ interface ContestActionButtonsProps {
     contestLink?: string | null;
     startTime: string | Date;
     endTime: string | Date;
+    isCompleted?: boolean;
 }
 
 export default function ContestActionButtons({
@@ -20,7 +21,8 @@ export default function ContestActionButtons({
     isRegistered,
     contestLink,
     startTime,
-    endTime
+    endTime,
+    isCompleted = false
 }: ContestActionButtonsProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
@@ -76,21 +78,58 @@ export default function ContestActionButtons({
         }
     };
 
+    const handleComplete = async () => {
+        if (!confirm("Are you sure you want to mark this hackathon as completed? It will move to your Past Events.")) return;
+        setIsLoading(true);
+        try {
+            const res = await fetch(`/api/contest/${contestId}/complete`, {
+                method: "POST"
+            });
+
+            if (res.ok) {
+                router.refresh();
+            } else {
+                alert("Failed to mark as completed");
+            }
+        } catch (error) {
+            console.error("Error completing contest:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // External Contest Logic
     if (type === "EXTERNAL") {
+        if (isCompleted) {
+            return (
+                <button disabled className="flex items-center justify-center gap-2 rounded-lg bg-green-900/20 border border-green-900 px-4 py-2 text-sm font-medium text-green-400 cursor-not-allowed">
+                    Completed
+                </button>
+            );
+        }
+
         if (isLive && isRegistered) {
             return (
-                <button
-                    onClick={() => handleStart(contestLink || "#", true)}
-                    disabled={isLoading}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 animate-pulse transition-colors"
-                >
-                    {isLoading ? "Opening..." : (
-                        <>
-                            <Play size={14} /> Go to Contest Link
-                        </>
-                    )}
-                </button>
+                <div className="flex flex-col gap-2 w-full">
+                    <button
+                        onClick={() => handleStart(contestLink || "#", true)}
+                        disabled={isLoading}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 animate-pulse transition-colors"
+                    >
+                        {isLoading ? "Opening..." : (
+                            <>
+                                <Play size={14} /> Go to Contest Link
+                            </>
+                        )}
+                    </button>
+                    <button
+                        onClick={handleComplete}
+                        disabled={isLoading}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-700 bg-transparent px-4 py-2 text-sm font-medium text-gray-400 hover:bg-gray-800 transition-colors"
+                    >
+                        Mark as Completed
+                    </button>
+                </div>
             );
         }
 
@@ -107,10 +146,10 @@ export default function ContestActionButtons({
     }
 
     // Internal Contest Logic
-    if (isEnded) {
+    if (isEnded || isCompleted) {
         return (
             <button disabled className="flex items-center justify-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">
-                Ended
+                {isCompleted ? "Completed" : "Ended"}
             </button>
         );
     }
