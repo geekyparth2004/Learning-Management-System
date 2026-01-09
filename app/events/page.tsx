@@ -202,7 +202,17 @@ export default function EventsPage() {
                 return isSameDay(eDate, dayDate);
             });
 
-            const isToday = isSameDay(new Date(), dayDate);
+            // IST Date Logic
+            const getISTDate = () => {
+                const now = new Date();
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                return new Date(utc + (3600000 * 5.5)); // IST offset is +5.5 hours
+            };
+
+            const istDate = getISTDate();
+            const isToday = dayDate.getDate() === istDate.getDate() &&
+                dayDate.getMonth() === istDate.getMonth() &&
+                dayDate.getFullYear() === istDate.getFullYear();
 
             calendarDays.push(
                 <div key={i} className={cn(
