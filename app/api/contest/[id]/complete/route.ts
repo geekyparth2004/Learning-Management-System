@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
@@ -13,7 +13,7 @@ export async function POST(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const contestId = params.id;
+        const { id: contestId } = await params;
 
         // Update registration
         await db.contestRegistration.update({
