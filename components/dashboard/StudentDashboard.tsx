@@ -34,7 +34,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
 
     const moduleSeconds = moduleProgressItems.reduce((acc, curr) => {
         if (curr.isCompleted) {
-            return acc + (curr.duration || curr.moduleItem.duration || 0);
+            return acc + Math.max(curr.duration || 0, curr.moduleItem.duration || 0);
         }
         return acc + (curr.duration || 0);
     }, 0);
@@ -198,7 +198,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     });
     const todayModuleSeconds = todayItems.reduce((acc, curr) => {
         if (curr.isCompleted) {
-            return acc + (curr.duration || curr.moduleItem.duration || 0);
+            return acc + Math.max(curr.duration || 0, curr.moduleItem.duration || 0);
         }
         return acc + (curr.duration || 0);
     }, 0);
