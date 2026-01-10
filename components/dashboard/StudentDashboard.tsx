@@ -317,6 +317,10 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                         totalHours={hoursLearned}
                         todayHours={hoursToday}
                     />
+                    {/* DEBUG INFO - REMOVE LATER */}
+                    <div className="text-xs text-gray-600">
+                        TotalSec: {grandTotalSeconds.toFixed(0)} | Mod: {moduleSeconds} | Prac: {practiceSeconds} | Cont: {contestSeconds}
+                    </div>
                     <ProblemsGraph
                         data={problemsData}
                         totalSolved={uniqueSolved}
