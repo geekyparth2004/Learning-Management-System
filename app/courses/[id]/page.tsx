@@ -748,10 +748,10 @@ export default function CoursePlayerPage() {
                                                         onPause={saveVideoProgress}
                                                         onEnded={(e) => {
                                                             const video = e.currentTarget;
+                                                            console.log("Video ended. Auto-advance disabled.");
                                                             // Only save progress, do NOT auto-complete/advance
                                                             if (video.duration && video.currentTime >= video.duration - 1) {
                                                                 saveVideoProgress();
-                                                                // completeItem(activeItem.id); // Disabled to prevent premature auto-advance
                                                             }
                                                         }}
                                                     />
