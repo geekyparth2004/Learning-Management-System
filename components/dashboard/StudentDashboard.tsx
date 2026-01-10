@@ -58,10 +58,19 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     // 3. Fetch Solved Problems (and duration)
     const solvedProblems = await db.submission.findMany({
         where: { userId, status: "PASSED" },
-        select: { createdAt: true, problemId: true, duration: true }
+        select: {
+            createdAt: true,
+            problemId: true,
+            duration: true,
+            problem: {
+                select: { type: true }
+            }
+        }
     });
 
-    let uniqueSolved = new Set(solvedProblems.map(s => s.problemId)).size;
+    // Filter out external problems (LEETCODE) from local count to avoid double counting with Codolio
+    const internalSolved = solvedProblems.filter(s => s.problem?.type !== "LEETCODE");
+    let uniqueSolved = new Set(internalSolved.map(s => s.problemId)).size;
 
     // Add Differential External Stats
     if (user?.externalRatings && user.codolioBaseline !== null) {
