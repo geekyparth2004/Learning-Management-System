@@ -552,14 +552,14 @@ export default function CourseBuilderPage() {
                                                                                     {item.type === "ASSIGNMENT" && (
                                                                                         <>
                                                                                             <Link
-                                                                                                href={`/teacher/courses/${courseId}/assignments/${item.content}/edit`}
+                                                                                                href={`/teacher/courses/${courseId}/assignments/${item.assignmentId || item.content}/edit`}
                                                                                                 className="text-gray-500 hover:text-blue-400"
                                                                                                 title="Edit Assignment"
                                                                                             >
                                                                                                 <Edit size={14} />
                                                                                             </Link>
                                                                                             <Link
-                                                                                                href={`/teacher/courses/${courseId}/assignments/${item.content}/submissions`}
+                                                                                                href={`/teacher/courses/${courseId}/assignments/${item.assignmentId || item.content}/submissions`}
                                                                                                 className="text-gray-500 hover:text-green-400"
                                                                                                 title="View Submissions"
                                                                                             >
