@@ -23,8 +23,12 @@ export async function POST(
                 const module = await db.module.findUnique({ where: { id: moduleId } });
 
                 if (course && module) {
-                    const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
-                    const { createOrUpdateFile, getNextSequenceNumber } = await import("@/lib/github");
+                    // New Repo Name: coding-practice (or coding-practice-<userId> if we want uniqueness, but user asked for "coding-practice")
+                    // Ideally we should namespace it to avoid conflicts if multiple users use the same machine? No, auth is per user.
+                    // If the user has a repo "coding-practice", we use it. 
+                    // Let's stick to "coding-practice" as requested.
+                    const repoName = "coding-practice";
+                    const { createOrUpdateFile } = await import("@/lib/github");
 
                     // Determine file extension
                     const extensionMap: Record<string, string> = {
@@ -39,27 +43,22 @@ export async function POST(
                     };
                     const ext = extensionMap[language.toLowerCase()] || "txt";
 
-                    // Generate filename: ModuleTitle/VideoTitle - {N}.ext
-                    const folderName = module.title.replace(/\s+/g, "-"); // Keep folder name sanitized
-                    // Use videoTitle if provided, otherwise fallback to module title
-                    const fileBaseName = videoTitle ? videoTitle : module.title;
+                    // Generate filename: Question_Name.ext
+                    // Replace spaces with underscores
+                    const fileBaseName = (videoTitle ? videoTitle : module.title).trim().replace(/\s+/g, "_");
 
-                    const nextNum = await getNextSequenceNumber(
-                        user.githubAccessToken,
-                        repoName,
-                        folderName,
-                        fileBaseName,
-                        ext
-                    );
-
-                    const filename = `${folderName}/${fileBaseName} - ${nextNum}.${ext}`;
+                    // Path: fileBaseName.ext (In root of repo? Or in a src folder?)
+                    // User didn't specify folder, but root is cleaner for "coding-practice".
+                    // Or maybe we can group by topic? 
+                    // Let's just put it in root for now as per "according the name of the question".
+                    const filename = `${fileBaseName}.${ext}`;
 
                     await createOrUpdateFile(
                         user.githubAccessToken,
                         repoName,
                         filename,
                         code,
-                        `Practice code from ${module.title} (#${nextNum})`
+                        `Practice code for ${videoTitle || module.title}`
                     );
 
                     return NextResponse.json({ success: true, message: "Saved to GitHub" });
