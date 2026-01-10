@@ -683,6 +683,15 @@ export default function CoursePlayerPage() {
                                 <div className="flex items-center gap-4">
                                     {activeItem.type === "VIDEO" && (
                                         <button
+                                            onClick={() => completeItem(activeItem.id)}
+                                            className="flex items-center gap-2 rounded bg-green-900/20 px-3 py-1 text-sm font-medium text-green-400 border border-green-900/50 hover:bg-green-900/40"
+                                        >
+                                            <CheckCircle size={16} />
+                                            Mark Complete
+                                        </button>
+                                    )}
+                                    {activeItem.type === "VIDEO" && (
+                                        <button
                                             onClick={() => setShowPractice(!showPractice)}
                                             className={`flex items-center gap-2 rounded px-3 py-1 text-sm font-medium transition-colors ${showPractice ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
                                                 }`}
@@ -739,10 +748,10 @@ export default function CoursePlayerPage() {
                                                         onPause={saveVideoProgress}
                                                         onEnded={(e) => {
                                                             const video = e.currentTarget;
-                                                            // Only mark complete if we are actually at the end (tolerance for some browser quirks)
+                                                            // Only save progress, do NOT auto-complete/advance
                                                             if (video.duration && video.currentTime >= video.duration - 1) {
                                                                 saveVideoProgress();
-                                                                completeItem(activeItem.id);
+                                                                // completeItem(activeItem.id); // Disabled to prevent premature auto-advance
                                                             }
                                                         }}
                                                     />
