@@ -681,15 +681,7 @@ export default function CoursePlayerPage() {
                             <div className="mb-6 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold">{activeItem.title}</h1>
                                 <div className="flex items-center gap-4">
-                                    {activeItem.type === "VIDEO" && (
-                                        <button
-                                            onClick={() => completeItem(activeItem.id)}
-                                            className="flex items-center gap-2 rounded bg-green-900/20 px-3 py-1 text-sm font-medium text-green-400 border border-green-900/50 hover:bg-green-900/40"
-                                        >
-                                            <CheckCircle size={16} />
-                                            Mark Complete
-                                        </button>
-                                    )}
+
                                     {activeItem.type === "VIDEO" && (
                                         <button
                                             onClick={() => setShowPractice(!showPractice)}
