@@ -57,6 +57,7 @@ function AssignmentContent() {
     const assignmentId = params.id as string;
 
     const [problem, setProblem] = useState<Problem | null>(null);
+    const [pageError, setPageError] = useState<string | null>(null);
     const [language, setLanguage] = useState<Language>("java");
     const [code, setCode] = useState("");
     const [output, setOutput] = useState("");
@@ -180,7 +181,10 @@ function AssignmentContent() {
         const fetchAssignment = async () => {
             try {
                 const res = await fetch(`/api/assignments/${assignmentId}`);
-                if (!res.ok) throw new Error("Failed to fetch assignment");
+                if (!res.ok) {
+                    const err = await res.text();
+                    throw new Error(`Failed to fetch assignment (${res.status}): ${err}`);
+                }
                 const data = await res.json();
 
                 if (!data.problems || data.problems.length === 0) {
@@ -315,8 +319,9 @@ function AssignmentContent() {
                 // Safely set initial code
                 const initialCode = fullProblemData.defaultCode[language as keyof typeof fullProblemData.defaultCode] || "";
                 setCode(initialCode);
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Error fetching assignment:", e);
+                setPageError(e.message || "Unknown error occurred on loading.");
             }
         };
         fetchAssignment();
@@ -611,6 +616,15 @@ function AssignmentContent() {
     }, [code, language]);
 
     if (!problem) {
+        if (pageError) {
+            return (
+                <div className="flex h-screen flex-col items-center justify-center bg-[#0e0e0e] text-white gap-4">
+                    <div className="text-red-500 text-xl font-bold">Error Loading Assignment</div>
+                    <div className="text-gray-400 font-mono bg-[#111] p-4 rounded">{pageError}</div>
+                    <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Retry</button>
+                </div>
+            );
+        }
         return (
             <div className="flex h-screen items-center justify-center bg-[#0e0e0e] text-white">
                 <div className="text-lg">Loading...</div>
