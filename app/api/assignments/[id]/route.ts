@@ -61,9 +61,12 @@ export async function GET(
         const processedProblems = assignment.problems.map((problem) => {
             let hintsRaw: any[] = [];
             if (typeof problem.hints === 'string') {
-                try { hintsRaw = JSON.parse(problem.hints); } catch (e) { hintsRaw = []; }
+                try {
+                    const parsed = JSON.parse(problem.hints);
+                    hintsRaw = Array.isArray(parsed) ? parsed : [];
+                } catch (e) { hintsRaw = []; }
             } else {
-                hintsRaw = problem.hints || [];
+                hintsRaw = Array.isArray(problem.hints) ? problem.hints : [];
             }
 
             // Normalize hints structure
