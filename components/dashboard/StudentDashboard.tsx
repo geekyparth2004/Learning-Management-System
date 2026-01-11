@@ -59,18 +59,17 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     const solvedProblems = await db.submission.findMany({
         where: { userId, status: "PASSED" },
         select: {
-            select: {
-                createdAt: true,
-                problemId: true,
-                duration: true,
-                problem: {
-                    select: {
-                        type: true,
-                        leetcodeUrl: true
-                    }
+            createdAt: true,
+            problemId: true,
+            duration: true,
+            problem: {
+                select: {
+                    type: true,
+                    leetcodeUrl: true
                 }
             }
-        });
+        }
+    });
 
     // Filter out external problems (LEETCODE or having leetcodeUrl) from local count
     const internalSolved = solvedProblems.filter(s =>
@@ -190,14 +189,12 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     const hoursLearned = rawHours < 100 ? rawHours.toFixed(1) : Math.round(rawHours);
 
     // 5. Calculate "Today's" Stats (Strict IST Midnight)
-    const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Kolkata", year: 'numeric', month: '2-digit', day: '2-digit' };
-    const istDateFormatter = new Intl.DateTimeFormat('en-US', options);
-    const parts = istDateFormatter.formatToParts(now);
-    const year = parts.find(p => p.type === 'year')?.value;
-    const month = parts.find(p => p.type === 'month')?.value;
-    const day = parts.find(p => p.type === 'day')?.value;
-
-    const todayStart = new Date(`${year}-${month}-${day}T00:00:00+05:30`);
+    // 5. Calculate "Today's" Stats (Strict IST Midnight)
+    // Manual Offset Calculation to ensure server environment independence
+    const IST_OFFSET = 330 * 60 * 1000; // 5 hours 30 mins in ms
+    const istDate = new Date(now.getTime() + IST_OFFSET);
+    istDate.setUTCHours(0, 0, 0, 0); // Midnight of that IST day (in shifted time)
+    const todayStart = new Date(istDate.getTime() - IST_OFFSET); // Convert back to real timestamp
 
     // Modules Today
     const todayItems = moduleProgressItems.filter(item => {
