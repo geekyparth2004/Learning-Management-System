@@ -57,10 +57,17 @@ export async function GET(
             update: {} // Do nothing if exists, preserving original startedAt
         });
 
-        // Process problems to sign hint URLs
-        const processedProblems = await Promise.all(assignment.problems.map(async (problem) => {
-            const hintsRaw = typeof problem.hints === 'string' ? JSON.parse(problem.hints) : (problem.hints || []);
-            const processedHints = await Promise.all(hintsRaw.map(async (hintItem: any) => {
+        // Process problems to just parse hints (no signing)
+        const processedProblems = assignment.problems.map((problem) => {
+            let hintsRaw: any[] = [];
+            if (typeof problem.hints === 'string') {
+                try { hintsRaw = JSON.parse(problem.hints); } catch (e) { hintsRaw = []; }
+            } else {
+                hintsRaw = problem.hints || [];
+            }
+
+            // Normalize hints structure
+            const processedHints = hintsRaw.map((hintItem: any) => {
                 let type = "text";
                 let content = "";
                 if (typeof hintItem === 'string') {
@@ -69,25 +76,15 @@ export async function GET(
                     type = hintItem.type || "text";
                     content = hintItem.content || "";
                 }
-
-                if (type === "video" && (content.includes("r2.cloudflarestorage.com") || content.includes("backblazeb2.com"))) {
-                    content = await signR2Url(content);
-                }
                 return { type, content };
-            }));
-
-            // Sign video solution if exists
-            let signedVideoSolution = problem.videoSolution;
-            if (problem.videoSolution && (problem.videoSolution.includes("r2.cloudflarestorage.com") || problem.videoSolution.includes("backblazeb2.com"))) {
-                signedVideoSolution = await signR2Url(problem.videoSolution);
-            }
+            });
 
             return {
                 ...problem,
-                hints: processedHints, // Return parsed/signed array
-                videoSolution: signedVideoSolution
+                hints: processedHints,
+                videoSolution: problem.videoSolution
             };
-        }));
+        });
 
         return NextResponse.json({
             ...assignment,

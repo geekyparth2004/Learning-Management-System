@@ -96,6 +96,21 @@ function AssignmentContent() {
         return `${mins}:${secs.toString().padStart(2, "0")} `;
     };
 
+    const getProxyUrl = (url: string) => {
+        if (!url) return "";
+        if (url.includes("r2.cloudflarestorage.com") && !url.includes("/api/image-proxy")) {
+            try {
+                const u = new URL(url);
+                const pathParts = u.pathname.split('/');
+                if (pathParts.length >= 3) {
+                    const key = pathParts.slice(2).join('/');
+                    return `/api/image-proxy?key=${encodeURIComponent(key)}`;
+                }
+            } catch (e) { return url; }
+        }
+        return url;
+    };
+
     useEffect(() => {
         // Reset timer on problem load/change
         setStartTime(Date.now());
@@ -803,7 +818,7 @@ function AssignmentContent() {
                                                 {hint.type === "text" ? (
                                                     hint.content || <span className="italic text-gray-500">No text content available.</span>
                                                 ) : (
-                                                    <video src={hint.content} controls className="w-full rounded" />
+                                                    <video src={getProxyUrl(hint.content)} controls className="w-full rounded" />
                                                 )}
                                             </div>
                                         )}
