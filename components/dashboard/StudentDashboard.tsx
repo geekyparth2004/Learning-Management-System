@@ -70,8 +70,9 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
 
     // Filter out external problems (LEETCODE) from local count to avoid double counting with Codolio
     const internalSolved = solvedProblems.filter(s => s.problem?.type !== "LEETCODE");
-    let uniqueSolved = new Set(internalSolved.map(s => s.problemId)).size;
+    const uniqueSolved = new Set(internalSolved.map(s => s.problemId)).size;
 
+    /* Removed Codolio aggregation as per user request to keep "Problems Solved" strictly internal
     // Add Differential External Stats
     if (user?.externalRatings && user.codolioBaseline !== null) {
         const stats = user.externalRatings as any;
@@ -80,6 +81,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
         const diff = Math.max(0, currentTotal - baseline);
         uniqueSolved += diff;
     }
+    */
 
     const practiceSeconds = solvedProblems.reduce((acc, curr) => acc + (curr.duration || 0), 0);
 
