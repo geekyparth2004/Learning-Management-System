@@ -334,8 +334,8 @@ export default function PracticePlayerPage() {
         if (!problem) return;
         const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
-        // Stop timer visually
-        setHasStarted(false);
+        // DO NOT stop timer visually to avoid flash of "Start Screen"
+        // setHasStarted(false); 
 
         try {
             const res = await fetch("/api/practice/submit", {
@@ -354,7 +354,7 @@ export default function PracticePlayerPage() {
                 if (document.fullscreenElement) {
                     await document.exitFullscreen().catch(err => console.error(err));
                 }
-                alert(`🎉 Problem Marked Complete!\n\nDuration: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s\nWallet Balance: ₹${data.walletBalance}`);
+                // No alert, just redirect
                 router.push("/practice");
             } else {
                 alert(data.error || "Failed to submit");
@@ -456,12 +456,7 @@ export default function PracticePlayerPage() {
             const data = await res.json();
 
             if (res.ok) {
-                if (data.rewarded) {
-                    alert(`🎉 CONGRATULATIONS! 🎉\n\nYou passed and earned ₹5!\nWallet Balance: ₹${data.walletBalance}`);
-                } else {
-                    alert(`Great job! You passed!\n\n(No reward: Already solved this month)\nWallet Balance: ₹${data.walletBalance}`);
-                }
-
+                // No alert, just redirect
                 if (document.fullscreenElement) {
                     document.exitFullscreen().catch(err => console.error(err));
                 }
@@ -871,7 +866,7 @@ export default function PracticePlayerPage() {
                                             <LeetCodeVerifier
                                                 problemSlug={problem.slug || ""}
                                                 onVerified={() => {
-                                                    alert("Verified! Points added.");
+                                                    // No alert, just redirect
                                                     router.push("/practice");
                                                 }}
                                             />
