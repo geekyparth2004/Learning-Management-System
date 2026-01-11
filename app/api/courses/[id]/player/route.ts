@@ -101,41 +101,43 @@ export async function GET(
                     }
 
                     // Map items
-                    // Return item with progress, skipping expensive pre-signing (frontend handles it on-demand)
+                    const items = await Promise.all(m.items.map(async i => {
+                        const ip = itemProgress.find(p => p.moduleItemId === i.id);
+
+                        // Return item with progress, skipping expensive pre-signing (frontend handles it on-demand)
+                        return {
+                            ...i,
+                            isCompleted: ip?.isCompleted || false,
+                            reviewStatus: ip?.reviewStatus || null,
+                            startedAt: ip?.startedAt || null,
+                            signedUrl: null, // Frontend will fetch if needed
+                            signedVideoSolution: null // Frontend will fetch if needed
+                        };
+                    }));
+
                     return {
-                        ...i,
-                        isCompleted: ip?.isCompleted || false,
-                        reviewStatus: ip?.reviewStatus || null,
-                        startedAt: ip?.startedAt || null,
-                        signedUrl: null, // Frontend will fetch if needed
-                        signedVideoSolution: null // Frontend will fetch if needed
-                        // testProblems and assignment are returned as-is (frontend parses hints/solutions)
+                        ...m,
+                        status,
+                        startedAt: progress?.startedAt || null,
+                        completedAt: progress?.completedAt || null,
+                        items,
                     };
                 }));
 
-                return {
-                    ...m,
-                    status,
-                    startedAt: progress?.startedAt || null,
-                    completedAt: progress?.completedAt || null,
-                    items,
-                };
-            }));
-
-            // Logic to ensure correct locking
-            // If Module N is COMPLETED, Module N+1 should be IN_PROGRESS (or ready to start)
-            // We'll handle this in the "complete-item" or "enroll" logic mostly, but here we just read state.
-            // However, if the user just enrolled, we might need to initialize the first module.
+                // Logic to ensure correct locking
+                // If Module N is COMPLETED, Module N+1 should be IN_PROGRESS (or ready to start)
+                // We'll handle this in the "complete-item" or "enroll" logic mostly, but here we just read state.
+                // However, if the user just enrolled, we might need to initialize the first module.
+            }
         }
-    }
 
         return NextResponse.json({
-        ...course,
-        isEnrolled,
-        modules: modulesWithProgress,
-    });
-} catch (error) {
-    console.error("Error fetching course player:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-}
+            ...course,
+            isEnrolled,
+            modules: modulesWithProgress,
+        });
+    } catch (error) {
+        console.error("Error fetching course player:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }
