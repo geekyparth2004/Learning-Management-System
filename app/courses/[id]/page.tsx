@@ -125,6 +125,21 @@ export default function CoursePlayerPage() {
     const [isResizing, setIsResizing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const getProxyUrl = (url: string | undefined) => {
+        if (!url) return "";
+        if (url.includes("r2.cloudflarestorage.com") && !url.includes("/api/image-proxy")) {
+            try {
+                const u = new URL(url);
+                const pathParts = u.pathname.split('/');
+                if (pathParts.length >= 3) {
+                    const key = pathParts.slice(2).join('/');
+                    return `/api/image-proxy?key=${encodeURIComponent(key)}`;
+                }
+            } catch (e) { return url; }
+        }
+        return url;
+    };
+
     const startResizing = () => setIsResizing(true);
     const stopResizing = () => setIsResizing(false);
 
@@ -874,12 +889,16 @@ export default function CoursePlayerPage() {
                                             <p className="text-gray-400">
                                                 This module contains a coding assignment. Click below to start.
                                             </p>
-                                            <Link
-                                                href={`/assignment/${activeItem.assignmentId}`}
-                                                className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
-                                            >
-                                                Start Assignment
-                                            </Link>
+                                            {activeItem.assignmentId ? (
+                                                <Link
+                                                    href={`/assignment/${activeItem.assignmentId}`}
+                                                    className="rounded-full bg-blue-600 px-8 py-3 font-bold hover:bg-blue-700"
+                                                >
+                                                    Start Assignment
+                                                </Link>
+                                            ) : (
+                                                <div className="text-red-500">Error: Assignment ID not found</div>
+                                            )}
 
 
                                         </div>
@@ -982,7 +1001,7 @@ export default function CoursePlayerPage() {
                                                                         <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
                                                                             {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.includes("r2.cloudflarestorage.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.endsWith(".mp4") ? (
                                                                                 <video
-                                                                                    src={activeItem.signedVideoSolution || activeItem.assignment?.problems?.[0]?.videoSolution}
+                                                                                    src={getProxyUrl(activeItem.assignment?.problems?.[0]?.videoSolution)}
                                                                                     controls
                                                                                     className="h-full w-full object-contain"
                                                                                 />
