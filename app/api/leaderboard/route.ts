@@ -42,7 +42,13 @@ export async function GET(req: Request) {
                 by: ['userId', 'problemId'],
                 where: {
                     status: "PASSED",
-                    ...dateFilter
+                    ...dateFilter,
+                    problem: {
+                        AND: [
+                            { type: { not: "LEETCODE" } },
+                            { leetcodeUrl: null }
+                        ]
+                    }
                 },
                 _count: { _all: true }
             });

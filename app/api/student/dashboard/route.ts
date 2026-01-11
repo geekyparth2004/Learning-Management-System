@@ -93,11 +93,23 @@ export async function GET(req: Request) {
             },
             select: {
                 createdAt: true,
-                problemId: true
+                problemId: true,
+                problem: {
+                    select: {
+                        type: true,
+                        leetcodeUrl: true
+                    }
+                }
             }
         });
-        // Unique problems? "Problems Solved 57". Usually means unique.
-        const uniqueSolved = new Set(solvedProblems.map(s => s.problemId)).size;
+
+        // Filter out external problems to avoid double counting with Codolio/External stats
+        const relevantSolved = solvedProblems.filter(s =>
+            s.problem?.type !== "LEETCODE" && !s.problem?.leetcodeUrl
+        );
+
+        // Unique problems
+        const uniqueSolved = new Set(relevantSolved.map(s => s.problemId)).size;
         // The user mentioned "includes all problem internally and leetcode one". 
         // We don't have leetcode live data. We probably need a field on User for `leetcodeSolvedCount` or scrape it. 
         // For now I'll just use internal.

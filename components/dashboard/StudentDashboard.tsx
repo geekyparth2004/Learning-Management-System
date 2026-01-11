@@ -59,17 +59,23 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     const solvedProblems = await db.submission.findMany({
         where: { userId, status: "PASSED" },
         select: {
-            createdAt: true,
-            problemId: true,
-            duration: true,
-            problem: {
-                select: { type: true }
+            select: {
+                createdAt: true,
+                problemId: true,
+                duration: true,
+                problem: {
+                    select: {
+                        type: true,
+                        leetcodeUrl: true
+                    }
+                }
             }
-        }
-    });
+        });
 
-    // Filter out external problems (LEETCODE) from local count to avoid double counting with Codolio
-    const internalSolved = solvedProblems.filter(s => s.problem?.type !== "LEETCODE");
+    // Filter out external problems (LEETCODE or having leetcodeUrl) from local count
+    const internalSolved = solvedProblems.filter(s =>
+        s.problem?.type !== "LEETCODE" && !s.problem?.leetcodeUrl
+    );
     const uniqueSolved = new Set(internalSolved.map(s => s.problemId)).size;
 
     /* Removed Codolio aggregation as per user request to keep "Problems Solved" strictly internal
