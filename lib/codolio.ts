@@ -17,7 +17,7 @@ export type CodolioStats = {
 export async function fetchCodolioStats(username: string): Promise<CodolioStats | null> {
     try {
         const response = await fetch(`https://api.codolio.com/profile?userKey=${username}`, {
-            next: { revalidate: 3600 } // Cache for 1 hour
+            cache: 'no-store' // Ensure fresh data on every call
         });
 
         if (!response.ok) {
@@ -121,5 +121,39 @@ export async function fetchCodolioStats(username: string): Promise<CodolioStats 
     } catch (error) {
         console.error("Error fetching Codolio stats:", error);
         return null;
+    }
+}
+
+import { db } from "@/lib/db";
+
+export async function syncUserCodolioStats(userId: string) {
+    try {
+        const user = await db.user.findUnique({
+            where: { id: userId },
+            select: { codolioUsername: true, codolioBaseline: true }
+        });
+
+        if (!user?.codolioUsername) return null;
+
+        const stats = await fetchCodolioStats(user.codolioUsername);
+        if (!stats) return null;
+
+        const updateData: any = {
+            externalRatings: stats
+        };
+
+        if (user.codolioBaseline === null) {
+            updateData.codolioBaseline = stats.totalQuestions;
+        }
+
+        await db.user.update({
+            where: { id: userId },
+            data: updateData
+        });
+
+        return stats;
+    } catch (error) {
+        console.error("Error syncing Codolio stats:", error);
+        return null; // Fail silently to not crash dashboard
     }
 }

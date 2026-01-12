@@ -6,12 +6,16 @@ import ProblemsGraph from "@/components/dashboard/ProblemsGraph";
 import HoursStatCard from "@/components/dashboard/HoursStatCard";
 import RecentActivityList from "@/components/dashboard/RecentActivityList";
 import ExternalStatsCard from "@/components/dashboard/ExternalStatsCard";
+import { syncUserCodolioStats } from "@/lib/codolio";
 
 interface StudentDashboardProps {
     userId: string;
 }
 
 export default async function StudentDashboard({ userId }: StudentDashboardProps) {
+    // Sync external stats on load (ensures fresh data on every reload)
+    await syncUserCodolioStats(userId);
+
     const now = new Date();
 
     // 5. Calculate "Today's" Stats (Strict IST Midnight)
