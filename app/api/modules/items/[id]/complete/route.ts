@@ -54,7 +54,15 @@ export async function POST(
         // 2. Check if module is completed
         const item = await db.moduleItem.findUnique({
             where: { id: moduleItemId },
-            include: { module: { include: { items: true } } }
+            include: {
+                module: {
+                    include: {
+                        items: {
+                            orderBy: { order: "asc" }
+                        }
+                    }
+                }
+            }
         });
 
         if (!item) return NextResponse.json({ error: "Item not found" }, { status: 404 });
