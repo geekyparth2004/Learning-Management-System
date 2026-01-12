@@ -178,6 +178,8 @@ export async function POST(req: Request) {
         
         IMPORTANT: STRICTLY maintain the "${difficulty}" difficulty level. Do NOT make questions easier or harder.
         IMPORTANT: Your questions must be STRICTLY related to the topic: ${subject}. Do NOT ask unrelated questions.
+        IMPORTANT: Keep your questions SHORT and CONCISE.
+        IMPORTANT: Ask ONE concept at a time. Do NOT combine multiple concepts in a single question.
         CRITICAL: You MUST return your response in a valid JSON string format.
         `;
 
