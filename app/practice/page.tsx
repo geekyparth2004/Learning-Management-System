@@ -35,7 +35,7 @@ export default async function PracticePage() {
 
     const problems = await db.problem.findMany({
         where: { isPractice: true },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "asc" },
         include: {
             submissions: {
                 where: { userId: session?.user?.id },
