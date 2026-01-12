@@ -151,7 +151,16 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
     }, 0);
 
     // Process Solved Count
-    const uniqueSolved = uniqueSolvedGroup.length;
+    let uniqueSolved = uniqueSolvedGroup.length;
+
+    // Add External Differential (Sync with Leaderboard Logic)
+    if (user && user.externalRatings && user.codolioBaseline !== null) {
+        const stats = user.externalRatings as any;
+        const currentTotal = stats.totalQuestions || 0;
+        const baseline = user.codolioBaseline || 0;
+        const externalDiff = Math.max(0, currentTotal - baseline);
+        uniqueSolved += externalDiff;
+    }
 
     // Process Practice Duration
     const practiceSeconds = lifetimePracticeStats._sum.duration || 0;
