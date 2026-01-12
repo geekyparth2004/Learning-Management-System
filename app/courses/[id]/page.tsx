@@ -911,7 +911,7 @@ export default function CoursePlayerPage() {
                                         <div className="space-y-2">
                                             <h2 className="text-2xl font-bold">{activeItem.title}</h2>
                                             <p className="text-gray-400 max-w-md mx-auto">
-                                                Solve this problem on LeetCode and verify your submission here.
+                                                Solve this problem on LeetCode and mark it as completed here.
                                             </p>
                                         </div>
 

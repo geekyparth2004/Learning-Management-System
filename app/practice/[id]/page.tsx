@@ -831,7 +831,7 @@ export default function PracticePlayerPage() {
                                         <p className="text-gray-400">
                                             {problem.isManualVerification
                                                 ? "This problem is hosted on an external platform. Click the link below to solve it, then come back and mark it as complete."
-                                                : "This problem must be solved on LeetCode."}
+                                                : "This problem must be solved on LeetCode. Once solved, mark it as complete here."}
                                         </p>
                                     </div>
                                     <a
@@ -866,8 +866,7 @@ export default function PracticePlayerPage() {
                                             <LeetCodeVerifier
                                                 problemSlug={problem.slug || ""}
                                                 onVerified={() => {
-                                                    // No alert, just redirect
-                                                    router.push("/practice");
+                                                    handleManualSubmit();
                                                 }}
                                             />
                                         )}

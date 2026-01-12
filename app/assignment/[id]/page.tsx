@@ -907,7 +907,7 @@ function AssignmentContent() {
                                     <div className="space-y-2">
                                         <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
                                         <p className="text-gray-400">
-                                            This problem must be solved on LeetCode. Once you've submitted your solution there, come back here to verify it.
+                                            This problem must be solved on LeetCode. Once you've submitted your solution there, mark it as complete here.
                                         </p>
                                     </div>
 
@@ -930,11 +930,11 @@ function AssignmentContent() {
                                     </div>
 
                                     <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
-                                        <h3 className="mb-4 font-semibold">Verify Submission</h3>
+                                        <h3 className="mb-4 font-semibold">Completion Status</h3>
                                         <LeetCodeVerifier
                                             problemSlug={problem.slug || ""}
                                             onVerified={async () => {
-                                                alert("Verification Successful! Assignment Completed. ✅");
+                                                alert("Assignment Marked as Completed! ✅");
                                                 await fetch(`/api/assignments/${assignmentId}/submissions`, {
                                                     method: "POST",
                                                     headers: { "Content-Type": "application/json" },
