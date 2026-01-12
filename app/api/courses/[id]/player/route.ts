@@ -121,7 +121,7 @@ export async function GET(
             return {
                 id: m.id,
                 title: m.title,
-                description: m.description,
+                // description: m.description, // Removed: Field does not exist in Module model
                 order: m.order,
                 status,
                 startedAt: progress?.startedAt || null,
