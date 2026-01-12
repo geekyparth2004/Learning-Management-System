@@ -68,8 +68,6 @@ export default function CoursePlayerPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
     const [activeItemId, setActiveItemId] = useState<string | null>(null);
-    const [timeLeft, setTimeLeft] = useState<string>("");
-
     // Practice Mode State
     const [showPractice, setShowPractice] = useState(false);
     const [practiceCode, setPracticeCode] = useState("");
@@ -275,35 +273,6 @@ export default function CoursePlayerPage() {
             return () => clearTimeout(timer);
         }
     }, [accumulatedTime]);
-
-    // Timer Logic
-    useEffect(() => {
-        if (!course || !activeModuleId) return;
-
-        const module = course.modules.find(m => m.id === activeModuleId);
-        if (!module || module.status !== "IN_PROGRESS" || !module.startedAt) {
-            setTimeLeft("");
-            return;
-        }
-
-        const interval = setInterval(() => {
-            const startTime = new Date(module.startedAt!).getTime();
-            const endTime = startTime + module.timeLimit * 60 * 1000;
-            const now = new Date().getTime();
-            const diff = endTime - now;
-
-            if (diff <= 0) {
-                setTimeLeft("Time Expired");
-                clearInterval(interval);
-            } else {
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                setTimeLeft(`${hours}h ${minutes}m remaining`);
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [course, activeModuleId]);
 
     // Force update for LeetCode timer
     const [_, setTick] = useState(0);
@@ -682,12 +651,12 @@ export default function CoursePlayerPage() {
                 ) : activeModule && activeModule.status === "IN_PROGRESS" && !activeModule.startedAt ? (
                     <div className="flex h-full flex-col items-center justify-center text-center">
                         <h2 className="text-xl font-bold mb-4">{activeModule.title}</h2>
-                        <p className="text-gray-400 mb-6">You have {Math.round(activeModule.timeLimit / 60)} hours to complete this module once started.</p>
+                        <p className="text-gray-400 mb-6">Click below to begin watching the content.</p>
                         <button
                             onClick={() => startModule(activeModule.id)}
                             className="rounded bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700"
                         >
-                            Start Module & Timer
+                            Start Module
                         </button>
                     </div>
                 ) : activeItem ? (
@@ -706,12 +675,6 @@ export default function CoursePlayerPage() {
                                             <Code size={16} />
                                             {showPractice ? "Hide Practice" : "Practice Mode"}
                                         </button>
-                                    )}
-                                    {timeLeft && (
-                                        <div className="flex items-center gap-2 rounded bg-red-900/20 px-3 py-1 text-red-400 border border-red-900/50">
-                                            <Clock size={16} />
-                                            <span className="font-mono font-bold">{timeLeft}</span>
-                                        </div>
                                     )}
                                 </div>
                             </div>
