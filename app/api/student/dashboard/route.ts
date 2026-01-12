@@ -114,7 +114,24 @@ export async function GET(req: Request) {
         // We don't have leetcode live data. We probably need a field on User for `leetcodeSolvedCount` or scrape it. 
         // For now I'll just use internal.
 
-        // 5. Graphs Data
+        // 5. Fetch User for External Stats (to match Leaderboard logic)
+        const user = await db.user.findUnique({
+            where: { id: userId },
+            select: {
+                codolioBaseline: true,
+                externalRatings: true
+            }
+        });
+
+        let externalDiff = 0;
+        if (user && user.externalRatings && user.codolioBaseline !== null) {
+            const stats = user.externalRatings as any;
+            const currentTotal = stats.totalQuestions || 0;
+            const baseline = user.codolioBaseline || 0;
+            externalDiff = Math.max(0, currentTotal - baseline);
+        }
+
+        // 6. Graphs Data
         // "Problems Solved" - Daily bar chart (Last 7 days)
         // "Activity" - Weekly curve (Last 7 days)
 
@@ -155,7 +172,7 @@ export async function GET(req: Request) {
             hoursLearned,
             contestsEntered,
             hackathonsParticipated,
-            problemsSolved: uniqueSolved,
+            problemsSolved: uniqueSolved + externalDiff,
             activityGraph: activityData,
             problemsGraph: problemsData
         });
