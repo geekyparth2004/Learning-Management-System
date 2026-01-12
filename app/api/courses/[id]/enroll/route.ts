@@ -23,13 +23,15 @@ export async function POST(
         if (existing) {
             // Even if enrolled, check/create GitHub repo
             try {
-                const user = await db.user.findUnique({ where: { id: userId } });
-                if (user?.githubAccessToken) {
+                const { getGitHubAccessToken } = await import("@/lib/github");
+                const githubAccessToken = await getGitHubAccessToken(userId);
+
+                if (githubAccessToken) {
                     const course = await db.course.findUnique({ where: { id } });
                     if (course) {
                         const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${userId.slice(-4)}`;
                         const { createRepository } = await import("@/lib/github");
-                        await createRepository(user.githubAccessToken, repoName);
+                        await createRepository(githubAccessToken, repoName);
                     }
                 }
             } catch (error) {
@@ -64,17 +66,18 @@ export async function POST(
 
         // Create GitHub Repository
         try {
-            const user = await db.user.findUnique({ where: { id: userId } });
-            console.log("Enrollment: User GitHub Token exists?", !!user?.githubAccessToken);
+            const { getGitHubAccessToken } = await import("@/lib/github");
+            const githubAccessToken = await getGitHubAccessToken(userId);
+            console.log("Enrollment: User GitHub Token exists?", !!githubAccessToken);
 
-            if (user?.githubAccessToken) {
+            if (githubAccessToken) {
                 const course = await db.course.findUnique({ where: { id } });
                 if (course) {
                     const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${userId.slice(-4)}`;
                     console.log("Enrollment: Attempting to create repo:", repoName);
 
                     const { createRepository } = await import("@/lib/github");
-                    const result = await createRepository(user.githubAccessToken, repoName);
+                    const result = await createRepository(githubAccessToken, repoName);
                     console.log("Enrollment: Repo creation result:", result);
                 }
             } else {

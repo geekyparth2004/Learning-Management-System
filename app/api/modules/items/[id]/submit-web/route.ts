@@ -54,8 +54,10 @@ export async function POST(
         // Create/Update File in GitHub ONLY if it's the first submission
         if (isFirstSubmission) {
             try {
-                const user = await db.user.findUnique({ where: { id: session.user.id } });
-                if (user?.githubAccessToken) {
+                const { getGitHubAccessToken } = await import("@/lib/github");
+                const githubAccessToken = await getGitHubAccessToken(session.user.id);
+
+                if (githubAccessToken) {
                     // Find course title to construct repo name
                     const moduleItem = await db.moduleItem.findUnique({
                         where: { id },
@@ -71,7 +73,7 @@ export async function POST(
 
                         // Create HTML file
                         await createOrUpdateFile(
-                            user.githubAccessToken,
+                            githubAccessToken,
                             repoName,
                             `${moduleTitle}/${itemTitle}/index.html`,
                             html,
@@ -80,7 +82,7 @@ export async function POST(
 
                         // Create CSS file
                         await createOrUpdateFile(
-                            user.githubAccessToken,
+                            githubAccessToken,
                             repoName,
                             `${moduleTitle}/${itemTitle}/styles.css`,
                             css,
@@ -89,7 +91,7 @@ export async function POST(
 
                         // Create JS file
                         await createOrUpdateFile(
-                            user.githubAccessToken,
+                            githubAccessToken,
                             repoName,
                             `${moduleTitle}/${itemTitle}/script.js`,
                             js,

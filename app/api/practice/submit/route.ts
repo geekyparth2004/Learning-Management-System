@@ -62,7 +62,10 @@ export async function POST(req: Request) {
         // 3. Reward Logic (Only if passed)
         if (passed) {
             // 3.1 GitHub Sync (Fire and forget or await?) - Let's await to be safe but catch errors
-            if (session.user.githubAccessToken) {
+            const { getGitHubAccessToken } = await import("@/lib/github");
+            const githubAccessToken = await getGitHubAccessToken(session.user.id);
+
+            if (githubAccessToken) {
                 try {
                     // Fetch problem for title
                     const problem = await db.problem.findUnique({
@@ -90,7 +93,7 @@ export async function POST(req: Request) {
                         const message = `Solved: ${problem.title}`;
 
                         await createOrUpdateFile(
-                            session.user.githubAccessToken,
+                            githubAccessToken,
                             "Practice-Questions", // Repo Name
                             path,
                             code,

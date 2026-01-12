@@ -17,8 +17,10 @@ export async function POST(
 
         // Push to GitHub
         try {
-            const user = await db.user.findUnique({ where: { id: session.user.id } });
-            if (user?.githubAccessToken) {
+            const { getGitHubAccessToken } = await import("@/lib/github");
+            const githubAccessToken = await getGitHubAccessToken(session.user.id);
+
+            if (githubAccessToken) {
                 const course = await db.course.findUnique({ where: { id: courseId } });
                 const module = await db.module.findUnique({ where: { id: moduleId } });
 
@@ -54,7 +56,7 @@ export async function POST(
                     const filename = `${fileBaseName}.${ext}`;
 
                     await createOrUpdateFile(
-                        user.githubAccessToken,
+                        githubAccessToken,
                         repoName,
                         filename,
                         code,

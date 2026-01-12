@@ -167,8 +167,47 @@ export const getNextFolderSequence = async (
         }
 
         return maxNum + 1;
+        return maxNum + 1;
     } catch (error) {
         console.error("Error getting folder sequence:", error);
         return 1;
+    }
+};
+
+// Robust Helper to get GitHub Access Token
+// 1. Checks User.githubAccessToken (Legacy/Direct)
+// 2. Checks Account table (NextAuth linked account)
+// This fixes issues where user email differs from GitHub email
+import { db } from "@/lib/db";
+
+export const getGitHubAccessToken = async (userId: string): Promise<string | null> => {
+    try {
+        const user = await db.user.findUnique({
+            where: { id: userId },
+            select: { githubAccessToken: true },
+            // Relations logic handled separately for optimization
+        });
+
+        if (user?.githubAccessToken) {
+            return user.githubAccessToken;
+        }
+
+        // Fallback: Check Account table
+        const account = await db.account.findFirst({
+            where: {
+                userId,
+                provider: "github"
+            },
+            select: { access_token: true }
+        });
+
+        if (account?.access_token) {
+            return account.access_token;
+        }
+
+        return null;
+    } catch (error) {
+        console.error("Error retrieving GitHub access token:", error);
+        return null;
     }
 };

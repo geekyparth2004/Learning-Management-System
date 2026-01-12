@@ -13,14 +13,15 @@ export async function POST(req: Request) {
 
         const { files, courseId, moduleTitle, videoOrder, videoTitle } = await req.json();
 
-        // 1. Get User with GitHub Token
-        const user = await db.user.findUnique({
-            where: { id: session.user.id }
-        });
+        // 1. Get User with GitHub Token (Robust)
+        const { getGitHubAccessToken } = await import("@/lib/github");
+        const githubAccessToken = await getGitHubAccessToken(session.user.id);
 
-        if (!user?.githubAccessToken) {
+        if (!githubAccessToken) {
             return NextResponse.json({ error: "GitHub not connected" }, { status: 400 });
         }
+
+        const user = { id: session.user.id }; // Minimal user obj for ID usage below
 
         // 2. Get Course to determine Repo Name
         const course = await db.course.findUnique({ where: { id: courseId } });
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
 
         // Calculate next sequence number ONCE for the batch
         const nextSeq = await getNextFolderSequence(
-            user.githubAccessToken!,
+            githubAccessToken,
             repoName,
             parentPath,
             "Practice"
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
 
         const results = await Promise.all(files.map(async (file: { name: string, content: string }) => {
             return createOrUpdateFile(
-                user.githubAccessToken!,
+                githubAccessToken,
                 repoName,
                 `${finalPath}/${file.name}`,
                 file.content,

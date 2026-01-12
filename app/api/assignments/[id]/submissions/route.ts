@@ -233,8 +233,10 @@ export async function POST(
         // Push to GitHub ONLY if it's the first submission
         if (existingSubmissionsCount === 0) {
             try {
-                const user = await db.user.findUnique({ where: { id: session.user.id } });
-                if (user?.githubAccessToken) {
+                const { getGitHubAccessToken } = await import("@/lib/github");
+                const githubAccessToken = await getGitHubAccessToken(session.user.id);
+
+                if (githubAccessToken) {
                     const moduleItem = await db.moduleItem.findFirst({
                         where: { assignmentId: assignmentId },
                         include: { module: { include: { course: true } } }
@@ -263,7 +265,7 @@ export async function POST(
                         const filename = `${moduleTitle}/${problem.title.replace(/\s+/g, "_")}.${ext}`;
 
                         await createOrUpdateFile(
-                            user.githubAccessToken,
+                            githubAccessToken,
                             repoName,
                             filename,
                             code,
