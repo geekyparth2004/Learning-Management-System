@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
     try {
         const session = await auth();
@@ -105,7 +107,9 @@ export async function GET(req: Request) {
 
         // Filter out external problems to avoid double counting with Codolio/External stats
         const relevantSolved = solvedProblems.filter(s =>
-            s.problem?.type !== "LEETCODE" && !s.problem?.leetcodeUrl
+            s.problem &&
+            s.problem.type !== "LEETCODE" &&
+            !s.problem.leetcodeUrl
         );
 
         // Unique problems
