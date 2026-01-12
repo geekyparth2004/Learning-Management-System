@@ -15,22 +15,40 @@ export async function GET(
         const { id } = await params;
         console.log("[ASSIGNMENT_GET] Fetching id:", id);
 
-        const assignment = await db.assignment.findUnique({
-            where: { id },
-            include: {
-                problems: {
-                    orderBy: { order: 'asc' },
-                    include: {
-                        testCases: true
-                    }
-                },
-                moduleItems: {
-                    include: {
-                        module: true // To get courseId
+        // Parallelize assignment fetch and progress creation
+        const [assignment, progress] = await Promise.all([
+            db.assignment.findUnique({
+                where: { id },
+                include: {
+                    problems: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                            testCases: true
+                        }
+                    },
+                    moduleItems: {
+                        include: {
+                            module: true // To get courseId
+                        }
                     }
                 }
-            }
-        });
+            }),
+            // Create or get progress to ensure consistent startedAt
+            db.assignmentProgress.upsert({
+                where: {
+                    userId_assignmentId: {
+                        userId: session.user.id,
+                        assignmentId: id
+                    }
+                },
+                create: {
+                    userId: session.user.id,
+                    assignmentId: id,
+                    startedAt: new Date()
+                },
+                update: {} // Do nothing if exists, preserving original startedAt
+            })
+        ]);
 
         if (!assignment) {
             console.log("[ASSIGNMENT_GET] Not found for id:", id);
@@ -39,23 +57,6 @@ export async function GET(
 
         // Extract courseId from the first module item (assuming context)
         const courseId = assignment.moduleItems[0]?.module?.courseId;
-
-        // Create or get progress to ensure consistent startedAt
-        // We use upsert to guarantee a record exists, but we only set startedAt on create
-        const progress = await db.assignmentProgress.upsert({
-            where: {
-                userId_assignmentId: {
-                    userId: session.user.id,
-                    assignmentId: id
-                }
-            },
-            create: {
-                userId: session.user.id,
-                assignmentId: id,
-                startedAt: new Date()
-            },
-            update: {} // Do nothing if exists, preserving original startedAt
-        });
 
         // Process problems to just parse hints (no signing)
         const processedProblems = assignment.problems.map((problem) => {
