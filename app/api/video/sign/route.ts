@@ -14,7 +14,7 @@ const ENDPOINT = R2_ACCOUNT_ID
     : process.env.AWS_ENDPOINT;
 
 const s3Client = new S3Client({
-    region: "auto",
+    region: "us-east-1",
     endpoint: ENDPOINT,
     credentials: {
         accessKeyId: ACCESS_KEY_ID,
