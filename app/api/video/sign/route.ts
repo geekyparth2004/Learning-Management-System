@@ -35,6 +35,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "URL is required" }, { status: 400 });
         }
 
+        let key = url;
+
         try {
             const urlObj = new URL(url);
             let path = urlObj.pathname;
