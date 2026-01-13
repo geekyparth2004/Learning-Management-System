@@ -55,6 +55,7 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                 codeforcesUsername: true,
                 gfgUsername: true,
                 codolioBaseline: true,
+                codolioUsername: true,
                 externalRatings: true
             }
         }),
@@ -421,5 +422,23 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                 </div>
             </div>
         </div>
-    );
+            {/* Hidden Iframe to trigger Codolio Auto-Refresh (Simulates User Visit) */ }
+    {
+        user?.codolioUsername && (
+            <iframe
+                src={`https://codolio.com/profile/${user.codolioUsername}`}
+                style={{
+                    width: 0,
+                    height: 0,
+                    border: 0,
+                    position: 'absolute',
+                    visibility: 'hidden',
+                    pointerEvents: 'none'
+                }}
+                aria-hidden="true"
+                title="Codolio Refresh Trigger"
+            />
+        )
+    }
+        </div >
 }
