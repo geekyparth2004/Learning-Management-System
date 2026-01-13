@@ -140,7 +140,7 @@ export async function GET(req: Request) {
                 const newStats = await syncUserCodolioStats(userId);
                 if (newStats) {
                     // Update local user object so the response reflects new data immediately
-                    user = { ...user, externalRatings: newStats };
+                    user = { ...user, externalRatings: newStats as any };
                 }
             }
         }
