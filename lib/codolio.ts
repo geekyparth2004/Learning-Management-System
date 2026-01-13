@@ -16,6 +16,22 @@ export type CodolioStats = {
 
 export async function fetchCodolioStats(username: string): Promise<CodolioStats | null> {
     try {
+        // Trigger Codolio Refresh by visiting the public profile page first
+        // User reports that visiting the portfolio page triggers the update.
+        try {
+            // We use a short timeout and don't care about the result, just the request hitting their server.
+            const profileUrl = `https://codolio.com/profile/${username}`;
+            console.log(`[Codolio] Pinging profile page to trigger refresh: ${profileUrl}`);
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 3000); // 3s timeout
+            await fetch(profileUrl, { signal: controller.signal, cache: 'no-store' }).catch(() => { });
+            clearTimeout(id);
+            // Wait a moment for their backend to ideally start processing (though user says 30s, we can't wait that long)
+            // But this "visit" is what starts the job.
+        } catch (e) {
+            // Ignore ping errors
+        }
+
         const response = await fetch(`https://api.codolio.com/profile?userKey=${username}`, {
             cache: 'no-store' // Ensure fresh data on every call
         });
