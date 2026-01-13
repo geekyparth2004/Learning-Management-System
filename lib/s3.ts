@@ -1,11 +1,11 @@
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export const s3Client = new S3Client({
-    region: process.env.AWS_REGION || "us-east-1",
-    endpoint: process.env.AWS_ENDPOINT ? process.env.AWS_ENDPOINT.replace(new RegExp(`/${process.env.AWS_BUCKET_NAME}$`), "").replace(/\/$/, "") : undefined,
+    region: "us-east-1",
+    endpoint: process.env.R2_ENDPOINT || (process.env.R2_ACCOUNT_ID ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : process.env.AWS_ENDPOINT),
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY!,
     },
     forcePathStyle: true,
 });
@@ -22,7 +22,7 @@ export async function signR2Url(fileUrl: string) {
     }
 
     try {
-        const bucketName = process.env.AWS_BUCKET_NAME;
+        const bucketName = process.env.R2_BUCKET_NAME || process.env.AWS_BUCKET_NAME;
         if (!bucketName) return fileUrl;
 
         const urlObj = new URL(fileUrl);
@@ -43,6 +43,7 @@ export async function signR2Url(fileUrl: string) {
         const command = new GetObjectCommand({
             Bucket: bucketName,
             Key: key,
+            ResponseContentType: "video/mp4", // Force browser to treat content as MP4 (fixes MKV playback issues)
         });
 
         return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
