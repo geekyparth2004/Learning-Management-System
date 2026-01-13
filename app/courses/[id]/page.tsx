@@ -711,7 +711,6 @@ export default function CoursePlayerPage() {
                                                         src={signedVideoUrl || activeItem.content}
                                                         controls
                                                         preload="metadata"
-                                                        crossOrigin="anonymous"
                                                         playsInline
                                                         className="h-full w-full object-contain"
                                                         onTimeUpdate={handleVideoTimeUpdate}
