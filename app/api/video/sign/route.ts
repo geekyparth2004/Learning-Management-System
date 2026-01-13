@@ -35,23 +35,31 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "URL is required" }, { status: 400 });
         }
 
-        let key = url;
+        try {
+            const urlObj = new URL(url);
+            let path = urlObj.pathname;
+            // Remove leading slash
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
+            // Decode path
+            path = decodeURIComponent(path);
 
-        // Key Extraction Logic
-        // 1. Check if it matches Public Domain
-        if (process.env.R2_PUBLIC_DOMAIN && url.includes(process.env.R2_PUBLIC_DOMAIN)) {
-            key = url.replace(process.env.R2_PUBLIC_DOMAIN + "/", "");
+            // Remove bucket prefix if present (handling path-style URLs)
+            if (path.startsWith(BUCKET_NAME + "/")) {
+                path = path.substring(BUCKET_NAME.length + 1);
+            }
+
+            // Handle R2 Public Domain specific case if needed, but the above generic path logic often covers it 
+            // if the public domain maps to bucket root. 
+            // If explicit R2_PUBLIC_DOMAIN env is set and matches, we validly assume the path is the key.
+
+            key = path;
+        } catch (e) {
+            console.warn("Invalid URL format in signing request, using raw string:", url);
+            // Fallback to simpler extraction or raw string if not a valid URL (e.g. just a filename)
+            key = url.split("?")[0];
         }
-        // 2. Check if it matches Bucket Name part (Standard S3 Path Style)
-        else if (url.includes(BUCKET_NAME + "/")) {
-            key = url.split(BUCKET_NAME + "/")[1];
-        }
-
-        // Clean up any query params
-        key = key.split("?")[0];
-
-        // Decoding URI component in case spaces were encoded
-        key = decodeURIComponent(key);
 
         const command = new GetObjectCommand({
             Bucket: BUCKET_NAME,
