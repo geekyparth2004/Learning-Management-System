@@ -439,4 +439,5 @@ export default async function StudentDashboard({ userId }: StudentDashboardProps
                 />
             )}
         </div>
+    );
 }
