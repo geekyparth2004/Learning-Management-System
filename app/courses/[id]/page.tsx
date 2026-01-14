@@ -246,33 +246,61 @@ export default function CoursePlayerPage() {
     const [accumulatedTime, setAccumulatedTime] = useState(0);
     const lastTimeRef = useRef(0);
     const lastSignedItemId = useRef<string | null>(null);
+    const accumulatedTimeRef = useRef(0); // Ref to hold latest value for cleanup/interval
 
-    const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-        const currentTime = e.currentTarget.currentTime;
-        if (currentTime > lastTimeRef.current && currentTime - lastTimeRef.current < 2) {
-            setAccumulatedTime(prev => prev + (currentTime - lastTimeRef.current));
-        }
-        lastTimeRef.current = currentTime;
-    };
+    // Sync Ref
+    useEffect(() => {
+        accumulatedTimeRef.current = accumulatedTime;
+    }, [accumulatedTime]);
 
-    const saveVideoProgress = async () => {
-        if (accumulatedTime < 1) return;
+    const saveVideoProgress = async (arg?: number | any) => {
+        // If arg is a number, use it (internal call). Otherwise (event or undefined), use ref.
+        const time = typeof arg === 'number' ? arg : accumulatedTimeRef.current;
+
+        if (time < 1) return;
+
+        // Capture current item ID to ensure correctness during async
+        const currentItemId = activeItem?.id;
+        if (!currentItemId) return;
+
         try {
-            if (activeItem) {
-                await completeItem(activeItem.id, Math.floor(accumulatedTime), true, false);
-                setAccumulatedTime(0);
-            }
+            await completeItem(currentItemId, Math.floor(time), true, false);
+            // Reset both state and ref
+            setAccumulatedTime(0);
+            accumulatedTimeRef.current = 0;
         } catch (err) {
             console.error(err);
         }
     };
 
-    useEffect(() => {
-        if (accumulatedTime > 0) {
-            const timer = setTimeout(saveVideoProgress, 30000);
-            return () => clearTimeout(timer);
+    const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        const currentTime = e.currentTarget.currentTime;
+        if (currentTime > lastTimeRef.current && currentTime - lastTimeRef.current < 2) {
+            const delta = currentTime - lastTimeRef.current;
+            setAccumulatedTime(prev => {
+                const newVal = prev + delta;
+                return newVal;
+            });
         }
-    }, [accumulatedTime]);
+        lastTimeRef.current = currentTime;
+    };
+
+    // Auto-save interval (every 30s)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (accumulatedTimeRef.current >= 10) { // Save every 10s of progress
+                saveVideoProgress();
+            }
+        }, 10000); // Check every 10s
+
+        // Save on unmount or item change
+        return () => {
+            if (accumulatedTimeRef.current > 0) {
+                saveVideoProgress();
+            }
+            clearInterval(interval);
+        };
+    }, [activeItem?.id]); // Re-attach when item changes to ensure we save for the *old* item context in cleanup
 
     // Force update for LeetCode timer
     const [_, setTick] = useState(0);
