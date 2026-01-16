@@ -91,6 +91,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     const [isRunning, setIsRunning] = useState(false);
     const [output, setOutput] = useState("");
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
+    const [customInput, setCustomInput] = useState("");
 
     // Tabs State
     const [activeTab, setActiveTab] = useState<"console" | "results" | "ask-ai">("console");
@@ -460,7 +461,42 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
     };
     const [errorLine, setErrorLine] = useState<number | null>(null);
 
-    const handleRun = async () => {
+    const handleRunCustom = async () => {
+        setIsRunning(true);
+        setStatus("running");
+        setOutput("Running custom input...");
+        setActiveTab("console");
+        setErrorLine(null);
+
+        try {
+            const res = await fetch("/api/compile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code: userCodes[activeProblem.id],
+                    language: language,
+                    input: customInput,
+                }),
+            });
+            const data = await res.json();
+            if (data.error) {
+                setStatus("error");
+                setOutput(data.error);
+                const line = parseErrorLine(data.error, language);
+                if (line) setErrorLine(line);
+            } else {
+                setStatus("success");
+                setOutput(data.output || "No output");
+            }
+        } catch (error) {
+            setStatus("error");
+            setOutput("Failed to run code");
+        } finally {
+            setIsRunning(false);
+        }
+    };
+
+    const handleRunTests = async () => {
         setIsRunning(true);
         setStatus("running");
         setOutput("Running test cases...");
@@ -844,7 +880,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                             {/* Run Button Floating or fixed in header? Header is better but let's keep consistent */}
                             <div className="absolute bottom-4 right-4 z-10">
                                 <button
-                                    onClick={handleRun}
+                                    onClick={() => activeTab === "console" ? handleRunCustom() : handleRunTests()}
                                     disabled={isRunning}
                                     className={`flex items-center gap-2 rounded-full px-6 py-2 font-bold shadow-lg transition-all ${isRunning
                                         ? "bg-gray-700 text-gray-400 cursor-not-allowed"
@@ -894,13 +930,13 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
 
                         <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
                             {activeTab === "console" ? (
-                                <div className="space-y-2">
-                                    {output ? (
-                                        <pre className="whitespace-pre-wrap text-gray-300">{output}</pre>
-                                    ) : (
-                                        <div className="text-gray-600 italic">Run your code to see output...</div>
-                                    )}
-                                </div>
+                                <Terminal
+                                    output={output}
+                                    error={status === "error" ? output : undefined}
+                                    status={status}
+                                    stdin={customInput}
+                                    onStdinChange={setCustomInput}
+                                />
                             ) : activeTab === "ask-ai" ? (
                                 <div className="space-y-6">
                                     {!aiMessage ? (

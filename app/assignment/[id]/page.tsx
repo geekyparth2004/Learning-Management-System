@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock } from "lucide-react";
 
 import CodeEditor from "@/components/CodeEditor";
-import Console from "@/components/Console";
+import Terminal from "@/components/Terminal";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
 import ProblemLayout from "@/components/ProblemLayout";
 import LeetCodeVerifier from "@/components/LeetCodeVerifier";
@@ -63,7 +63,7 @@ function AssignmentContent() {
     const [output, setOutput] = useState("");
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
     const [customInput, setCustomInput] = useState("");
-    const [activeTab, setActiveTab] = useState<"editor" | "console" | "results" | "ask-ai">("editor");
+    const [activeTab, setActiveTab] = useState<"editor" | "terminal" | "results" | "ask-ai">("editor");
     const [testCaseResults, setTestCaseResults] = useState<TestCaseResult[]>([]);
     const [expandedHints, setExpandedHints] = useState<number[]>([]);
     const [errorLine, setErrorLine] = useState<number | null>(null);
@@ -423,7 +423,9 @@ function AssignmentContent() {
         setStatus("running");
         setOutput("");
         setErrorLine(null);
-        setActiveTab("console");
+        setOutput("");
+        setErrorLine(null);
+        setActiveTab("terminal");
         try {
             const res = await fetch("/api/compile", {
                 method: "POST",
@@ -867,13 +869,13 @@ function AssignmentContent() {
                                 Editor
                             </button>
                             <button
-                                onClick={() => setActiveTab("console")}
+                                onClick={() => setActiveTab("terminal")}
                                 className={cn(
                                     "px-6 py-3 text-sm font-medium transition-colors",
-                                    activeTab === "console" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                    activeTab === "terminal" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
                                 )}
                             >
-                                Console
+                                Terminal
                             </button>
                             <button
                                 onClick={() => setActiveTab("results")}
