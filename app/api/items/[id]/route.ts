@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { deleteFromR2 } from "@/lib/s3";
@@ -37,10 +38,25 @@ export async function DELETE(
             }
         });
 
-    },
-});
+        if (!item) {
+            return NextResponse.json({ error: "Item not found" }, { status: 404 });
+        }
 
-return NextResponse.json(deletedItem);
+        // Check verification
+        const course = item.module.course;
+        if (course.teacherId !== session.user.id) {
+            return NextResponse.json({ error: "Forbidden: You do not own this course" }, { status: 403 });
+        }
+
+        // Perform Resource Cleanup (Videos, Images, etc.)
+        await cleanupItemResources(item);
+
+        // Delete the item (Assignments/Problems will cascade delete)
+        await db.moduleItem.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({ message: "Item deleted" });
     } catch (error) {
     console.error("Error deleting item:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
