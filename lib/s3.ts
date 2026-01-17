@@ -107,3 +107,70 @@ export async function deleteFromR2(fileUrl: string) {
         // Don't throw, just log. We don't want to stop DB deletion if file deletion fails.
     }
 }
+
+export async function deleteFilesFromR2(keys: string[]) {
+    if (!keys || keys.length === 0) return;
+
+    // Remove duplicates and empty strings
+    const uniqueKeys = Array.from(new Set(keys)).filter(k => k && k.trim() !== "");
+    if (uniqueKeys.length === 0) return;
+
+    console.log(`Deleting ${uniqueKeys.length} files from R2:`, uniqueKeys);
+
+    await Promise.allSettled(uniqueKeys.map(async (key) => {
+        try {
+            const command = new DeleteObjectCommand({
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Key: key,
+            });
+            await s3Client.send(command);
+        } catch (error) {
+            console.error(`Failed to delete key: ${key}`, error);
+        }
+    }));
+}
+
+export function extractKeysFromContent(content: string): string[] {
+    if (!content) return [];
+
+    const keys: string[] = [];
+    const bucketName = process.env.AWS_BUCKET_NAME;
+    if (!bucketName) return [];
+
+    // Regex to match URLs that might contain our bucket/endpoint
+    // Matches standard URLs and extracts the path
+    const urlRegex = /(https?:\/\/[^\s"',)]+)/g;
+    const matches = content.match(urlRegex);
+
+    if (matches) {
+        matches.forEach(url => {
+            try {
+                // simple cleanup of markdown syntax if regex caught extra chars
+                const cleanUrl = url.replace(/\)$/, "").replace(/"$/, "");
+                const urlObj = new URL(cleanUrl);
+
+                // Logic strictly mirroring the existing deleteFromR2 extraction logic
+                // Check if it looks like our storage URL
+                if (urlObj.pathname.includes(bucketName)) {
+                    const pathParts = urlObj.pathname.split("/");
+                    if (pathParts.includes(bucketName)) {
+                        const bucketIndex = pathParts.indexOf(bucketName);
+                        let key = pathParts.slice(bucketIndex + 1).join("/");
+                        key = decodeURIComponent(key);
+                        keys.push(key);
+                    }
+                } else if (cleanUrl.includes("r2.cloudflarestorage.com") || cleanUrl.includes("s3")) {
+                    // Fallback for direct R2 URLs where bucket might be part of domain or path
+                    // Currently assuming path style for simplicity as per existing config
+                    let key = urlObj.pathname.substring(1);
+                    key = decodeURIComponent(key);
+                    keys.push(key);
+                }
+            } catch (e) {
+                // ignore invalid URLs
+            }
+        });
+    }
+
+    return keys;
+}

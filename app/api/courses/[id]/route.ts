@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { deleteFromR2 } from "@/lib/s3";
+import { cleanupItemResources } from "@/lib/resource-cleanup";
 
 export async function DELETE(
     req: Request,
@@ -50,15 +51,7 @@ export async function DELETE(
         if (courseToDelete) {
             for (const module of courseToDelete.modules) {
                 for (const item of module.items) {
-                    // Delete video file if it exists
-                    if (item.type === "VIDEO" && item.content) {
-                        await deleteFromR2(item.content);
-                    }
-
-                    // Delete LeetCode solution video if it exists
-                    if (item.type === "LEETCODE" && item.assignment?.problems?.[0]?.videoSolution) {
-                        await deleteFromR2(item.assignment.problems[0].videoSolution);
-                    }
+                    await cleanupItemResources(item);
                 }
             }
         }
