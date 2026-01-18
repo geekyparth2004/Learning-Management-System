@@ -971,9 +971,9 @@ function AssignmentContent() {
                             </div>
                         )}
 
-                        {activeTab === "console" && (
+                        {activeTab === "terminal" && (
                             <div className="h-full p-4">
-                                <Console output={output} status={status} onInput={setCustomInput} />
+                                <Terminal output={output} status={status} stdin={customInput} onStdinChange={setCustomInput} />
                             </div>
                         )}
 
