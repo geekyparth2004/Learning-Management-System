@@ -1,0 +1,109 @@
+﻿
+> temp-app@0.1.1 build
+> next build
+
+   Γû▓ Next.js 16.0.7 (Turbopack)
+   - Environments: .env.local, .env.production, .env
+
+node.exe :  ΓÜá The 
+"middleware" file 
+convention is 
+deprecated. Please 
+use "proxy" instead. 
+Learn more: https://n
+extjs.org/docs/messag
+es/middleware-to-prox
+y
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ( ΓÜá Th   
+ e "middl...lewar    
+e-to-proxy:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 21.3s
+   Running TypeScript ...
+Failed to compile.
+
+./components/TestPlay
+er.tsx:942:37
+Type error: Type '{ 
+output: string; 
+error: string | 
+undefined; status: 
+"error" | "success" 
+| "idle" | 
+"running"; stdin: 
+string; 
+onStdinChange: Dispat
+ch<SetStateAction<str
+ing>>; }' is not 
+assignable to type 
+'IntrinsicAttributes 
+& Omit<LucideProps, 
+"ref"> & RefAttribute
+s<SVGSVGElement>'.
+  Property 'output' 
+does not exist on 
+type 
+'IntrinsicAttributes 
+& Omit<LucideProps, 
+"ref"> & RefAttribute
+s<SVGSVGElement>'.
+
+[0m [90m 940 
+|[39m               
+              
+{activeTab 
+[33m===[39m 
+[32m"console"[39m 
+[33m?[39m (
+ [90m 941 |[39m    
+                     
+        [33m<[39m[
+33mTerminal[39m
+[31m[1m>[22m[39m
+[90m 942 |[39m      
+                     
+          output[33m
+=[39m{output}
+ [90m     |[39m    
+                     
+            
+[31m[1m^[22m[39m
+ [90m 943 |[39m    
+                     
+            error[33
+m=[39m{status 
+[33m===[39m 
+[32m"error"[39m 
+[33m?[39m output 
+[33m:[39m 
+undefined}
+ [90m 944 |[39m    
+                     
+            status[3
+3m=[39m{status}
+ [90m 945 |[39m    
+                     
+            stdin[33
+m=[39m{customInput}
+[0m
+Next.js build worker 
+exited with code: 1 
+and signal: null

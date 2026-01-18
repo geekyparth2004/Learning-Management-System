@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal, XCircle, Lock, Video, RefreshCw } from "lucide-react";
+import { Clock, CheckCircle, ChevronDown, FileText, Code, Play, Terminal as TerminalIcon, XCircle, Lock, Video, RefreshCw } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
 import { cn } from "@/lib/utils";
 import { Language } from "@/types";
 import WebDevEditor from "./WebDevEditor";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
+import Terminal from "./Terminal";
 
 interface File {
     name: string;
@@ -621,6 +622,14 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
         }
     };
 
+    const handleRun = () => {
+        if (activeTab === "console") {
+            handleRunCustom();
+        } else {
+            handleRunTests();
+        }
+    };
+
     const prevProblem = () => {
         if (activeProblemIndex > 0) {
             setActiveProblemIndex(prev => prev - 1);
@@ -903,7 +912,7 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                     }`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <Terminal size={14} />
+                                    <TerminalIcon size={14} />
                                     Output
                                 </div>
                             </button>
