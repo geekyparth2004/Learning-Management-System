@@ -1,0 +1,259 @@
+﻿[dotenv@17.2.3] injecting env (0) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+Found User: Khushboo Dixit (cmj6p317l000ypwnxzf02sans)
+
+Checking Course: cmj61n0kl0001bgc3srv748gd
+
+[Module Order: 0] Introduction - Status: COMPLETED (ID: cmj6o62jv0001thhtsa6slrcv)
+  - [Item Order: 0] Intro To Java (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj6patvx000a61u2w2ug9w1n
+  - [Item Order: 1] Hello World (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj6px1vr000d45y3pg81x0xx
+  - [Item Order: 2] Next Line  (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj6qndji0001wlc4slyzdrgi
+  - [Item Order: 3] Print Next Line (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj6qwpse000b13u1wtrcxtup
+  - [Item Order: 4] Variable and Declaration (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj6qxz1j000h13u1egjhkhzb
+  - [Item Order: 5] Variable and Updation (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj6rb9750003p2ui79zgzo52
+  - [Item Order: 6] Variable Declaration and Updation (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj6utcpb0011nboq1ywn7z6k
+  - [Item Order: 7] Area of Circle (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj6v1nbw001hnboqwpp5xp8q
+  - [Item Order: 8] Area of Circle (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj6vit620007bq7vpz3gvzwl
+  - [Item Order: 9] Simple Interest (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj6vqolj0007s9xhe9k21her
+  - [Item Order: 10] Simple Interest (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj6vq8kn0003s9xhmezlam5z
+
+[Module Order: 1] Input and Operators - Status: COMPLETED (ID: cmj6ux7mf001fnboq5jrcg22x)
+  - [Item Order: 0] Naming Variable (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj84pacc0001zk85dqauqju9
+  - [Item Order: 1] User Input (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj85dozh00057027p0y3lgws
+  - [Item Order: 2] Square of Number (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj85z2hw0007bnxla5vxrnqx
+  - [Item Order: 4] Modulus Operator (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj865zqw000fbnxlq6q1zam1
+  - [Item Order: 5] Modulus Operator (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj86ci86000915xqg3pmsm8r
+  - [Item Order: 6] Typecasting (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj86g7mv000d15xq1vsu6zxv
+  - [Item Order: 7] Typecasting (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmj86p5q000091l84fwp46n39
+  - [Item Order: 8] Hierarchy of Operators (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj9krt2y0001bjcxr1kfvwm3
+  - [Item Order: 9] More on Typecasting (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmj9ktcys0005bjcxce8g56xq
+  - [Item Order: 10] Char Data type and its ASCII values (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmk9olabl00052qa3j4467shm
+
+[Module Order: 2] Some Practice Questions - Status: COMPLETED (ID: cmj763rwz000392j5gabd4cu5)
+  - [Item Order: 0] MCQ (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmk9ss74b000bu788pdudoxz0
+  - [Item Order: 1] Even and Odd Number (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmk9t1uzi001du788cnmw9r1i
+  - [Item Order: 2] Absolute Number (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmk9t2vpv000xh75wirkqgdss
+  - [Item Order: 3] Absolute Number (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmk9tu0bv001jgqa2uueskk3p
+  - [Item Order: 4] Profit and Loss (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmk9u6xul0009sca1ahveospl
+  - [Item Order: 5] && Operator (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmk9ujmvu000rsca10isymiko
+  - [Item Order: 6] Check if the number is 3 digit or not (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmk9uwfqm0019sca1qyet1ohn
+  - [Item Order: 7] OR Opertor (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmk9uzc2k001jsca1dejymktt
+
+[Module Order: 3] Some more Operators and Switch Statement - Status: COMPLETED (ID: cmj77v1wd00015n5esrexw8e1)
+  - [Item Order: 0] Ternary Operator (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmkb73aro000jk6du3mu0b31o
+  - [Item Order: 1] Even and Odd Number (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmkc70hkw000b2pcpkhnnewq9
+  - [Item Order: 2] Triangle or Not (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmkc73vi6000110pdvy6vy8ms
+  - [Item Order: 3] Traingle or Not (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmkm61gqw000z11g7x836fbbo
+  - [Item Order: 4] Switch Statement (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmkm62ccn001311g7qbjp0eq0
+  - [Item Order: 5] Switch Statement (ASSIGNMENT)
+    Completed: true, Review: N/A, ProgressID: cmkm6sfn1003111g7ys5vq5fy
+  - [Item Order: 6] MCQ (VIDEO)
+    Completed: true, Review: N/A, ProgressID: cmkm6t39r003511g7mdqxc78f
+  - [Item Order: 7] Benchmark Test - 1 (TEST)
+    Completed: true, Review: N/A, ProgressID: cmkm7hihx000714luk6ypbzyh
+  - [Item Order: 8] AI Interview - 1 (AI_INTERVIEW)
+    Completed: true, Review: APPROVED, ProgressID: cmkm7kxmv000f14lu2fht0h1x
+    AI Submission: Present
+
+[Module Order: 4] Loops - Status: IN_PROGRESS (ID: cmjeg98id0001y1kjbcy7o7tf)
+  - [Item Order: 0] Intro to loops (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Hello World (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Loops Syntax (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Print 1 to 100 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Print 1 to 10 (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 5] Print all odd and even number (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 6] Print all odd number (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 7] Sum of Natural Numbers (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 8] Print of table 19 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 9] Print table on n (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 5] Loops - 2 - Status: LOCKED (ID: cmjehry7q000910odmctxwxhi)
+  - [Item Order: 0] Arithmetic Progression - 1 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Arithmetic Progression (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Arithmetic Progression - 2 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Progression upto n terms (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] GP using method - 2 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 5] GP using method - 2 (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 6] Break Keyword (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 7] Continue (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 8] Composite Number (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 9] Check Prime (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 10] While and do while (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 11] Print numbers (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 6] Loops - 3 - Status: LOCKED (ID: cmjfac0as000w55gjs7ah0al3)
+  - [Item Order: 0] Predict the output (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Question using operators (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Count Digits (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Sum of  Digits (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Greatest Common Divisor (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 5] Fibonacci Series (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 6] Benchmark Test - 2 (TEST)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 7] Methods - Status: LOCKED (ID: cmjfbi36k000adj9begvjv9ei)
+  - [Item Order: 0] Need of functions (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Syntax of Functions (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Advantages of Functions (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Methods in Java (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Types of Methods (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 5] Understanding Methods Practically (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 6] Add two Number (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 7] Check Prime (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 8] Even and Odd (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 8] Pattern Printing - Status: LOCKED (ID: cmk5p9t4z00039ym6umt7oyub)
+  - [Item Order: 0] Pattern Printing Introduction (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Rectangle Pattern (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Triangles and Horizontally Flipped Traingles (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Special Patterns - 1 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Special Patterns - 2 (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 9] Pattern Printing - 2 - Status: LOCKED (ID: cmk5q4n3a000b12xvyvagkd36)
+  - [Item Order: 0] Composite Pattern (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Number Pyramid (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Number Bridge (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Star Diamond (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Number Spiral (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 10] Arrays - Status: LOCKED (ID: cmk73hqr70001z2mf7qg4n3my)
+  - [Item Order: 0] Basics of Array - Syntax and Declaration (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Basics of Array Input and Output (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Basic Questions of Array (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Marks of students (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Sum of All Elements (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 5] Linear Search (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 6] Linear Search (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 7] Product of array (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 8] Max Value (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 9] Second Largest (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 10] Minimum Value (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 11] Arrays - 2 - Status: LOCKED (ID: cmk73pgpn0001vj7z7rjcr0fh)
+  - [Item Order: 0] MCQ T - F (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Passing Arrays to Methods (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Methods (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] ArrayList in Java (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 4] Deep Copy (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 5] Basic Operations on ArrayList (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 6] Add Elements (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 7] Modify Array (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 8] Remove Element (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 12] Arrays - 3 - Status: LOCKED (ID: cmk73pocw0003vj7zgphuqnfu)
+  - [Item Order: 0] Two Pointers (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Reverse an Array (ASSIGNMENT)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Rotate the array (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 3] Sort the array 0s and 1s (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+
+[Module Order: 13] Arrays - 4 - Status: LOCKED (ID: cmk73pv4p0005vj7zgf1f14p8)
+  - [Item Order: 0] Sort the arrys 0s, 1s and 2s (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 1] Merge Two Sorted Arrays (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
+  - [Item Order: 2] Next Greatest Element (VIDEO)
+    Completed: false, Review: N/A, ProgressID: undefined
