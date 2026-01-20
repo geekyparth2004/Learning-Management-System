@@ -1,0 +1,95 @@
+﻿[dotenv@17.2.3] injecting env (0) from .env -- tip: Γ£à audit secrets and track compliance: https://dotenvx.com/ops
+node.exe : Script 
+Error: PrismaClientIn
+itializationError: 
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Script    
+ Error: P...lizat    
+ionError: :Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Invalid `db.user.find
+Unique()` invocation 
+in
+C:\Users\Parth Goel\O
+neDrive\Desktop\Learn
+ing Platform\scripts\
+debug_module_4.ts:12:
+36
+
+   9 const email = "k
+hushboodixit4687@gmai
+l.com";
+  10 
+  11 // 1. Find User
+ΓåÆ 12 const user = 
+await 
+db.user.findUnique(
+Can't reach database 
+server at `ep-green-f
+rost-a1v9ip83-pooler.
+ap-southeast-1.aws.ne
+on.tech`:`5432`
+
+Please make sure 
+your database server 
+is running at `ep-gre
+en-frost-a1v9ip83-poo
+ler.ap-southeast-1.aw
+s.neon.tech`:`5432`.
+    at In.handleReque
+stError 
+(C:\Users\Parth Goel\
+OneDrive\Desktop\Lear
+ning Platform\node_mo
+dules\@prisma\client\
+runtime\library.js:12
+3:7154)
+    at In.handleAndLo
+gRequestError 
+(C:\Users\Parth Goel\
+OneDrive\Desktop\Lear
+ning Platform\node_mo
+dules\@prisma\client\
+runtime\library.js:12
+3:6188)
+    at In.request 
+(C:\Users\Parth Goel\
+OneDrive\Desktop\Lear
+ning Platform\node_mo
+dules\@prisma\client\
+runtime\library.js:12
+3:5896)
+    at async l 
+(C:\Users\Parth Goel\
+OneDrive\Desktop\Lear
+ning Platform\node_mo
+dules\@prisma\client\
+runtime\library.js:12
+8:10871)
+    at async main 
+(C:\Users\Parth Goel\
+OneDrive\Desktop\Lear
+ning Platform\scripts
+\debug_module_4.ts:12
+:22) {
+  clientVersion: 
+'5.10.0',
+  errorCode: 
+undefined
+}

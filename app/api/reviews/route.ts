@@ -31,6 +31,18 @@ export async function POST(req: Request) {
             data: updateData,
         });
 
+        // Check if this approval completes the module
+        if (action === "APPROVED") {
+            const progress = await db.moduleItemProgress.findUnique({
+                where: { id },
+                select: { userId: true, moduleItemId: true }
+            });
+            if (progress) {
+                const { checkAndUnlockNextModule } = await import("@/lib/modules");
+                await checkAndUnlockNextModule(progress.userId, progress.moduleItemId);
+            }
+        }
+
         // Trigger notification for student (Optional enhancement)
         const progress = await db.moduleItemProgress.findUnique({
             where: { id },
