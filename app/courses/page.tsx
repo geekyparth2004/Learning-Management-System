@@ -4,7 +4,7 @@ import { BookOpen, User } from "lucide-react";
 import { db } from "@/lib/db";
 
 // Revalidate every hour
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export default async function CoursesPage() {
     const courses = await db.course.findMany({
