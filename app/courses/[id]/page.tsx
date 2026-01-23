@@ -738,7 +738,7 @@ export default function CoursePlayerPage() {
                                                     <video
                                                         src={signedVideoUrl || activeItem.content}
                                                         controls
-                                                        preload="metadata"
+                                                        preload="auto"
                                                         playsInline
                                                         className="h-full w-full object-contain"
                                                         onTimeUpdate={handleVideoTimeUpdate}

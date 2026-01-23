@@ -44,6 +44,7 @@ export async function signR2Url(fileUrl: string) {
             Bucket: bucketName,
             Key: key,
             ResponseContentType: "video/mp4", // Force browser to treat content as MP4 (fixes MKV playback issues)
+            ResponseCacheControl: "public, max-age=31536000, immutable",
         });
 
         return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
