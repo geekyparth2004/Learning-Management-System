@@ -21,8 +21,15 @@ export async function GET(
         const submissions = await db.moduleItemProgress.findMany({
             where: {
                 moduleItemId,
+                aiSubmission: { not: null }, // Only get AI interview submissions
             },
-            include: {
+            select: {
+                id: true,
+                userId: true,
+                aiSubmission: true,
+                reviewStatus: true,
+                startedAt: true,
+                completedAt: true,
                 user: {
                     select: {
                         id: true,
