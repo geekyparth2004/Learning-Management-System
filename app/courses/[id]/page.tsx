@@ -79,6 +79,8 @@ export default function CoursePlayerPage() {
     const [isWebDevFullScreen, setIsWebDevFullScreen] = useState(false);
     const [isTestFullScreen, setIsTestFullScreen] = useState(false);
     const [lastTestResult, setLastTestResult] = useState<{ passed: boolean; score: number } | null>(null);
+    // Lazy-loaded test problems cache
+    const [testProblemsCache, setTestProblemsCache] = useState<Record<string, any[]>>({});
 
     // Web Dev Practice State
     const [practiceType, setPracticeType] = useState<"dsa" | "web">("dsa");
@@ -242,6 +244,75 @@ export default function CoursePlayerPage() {
         fetchSignedUrl();
     }, [activeItem?.id, (activeItem as any)?.signedUrl]);
 
+    // Lazy load test problems when a TEST item is selected
+    useEffect(() => {
+        const fetchTestProblems = async () => {
+            if (!activeItem || activeItem.type !== "TEST" || !activeItem.id) return;
+
+            // Check if already cached
+            if (testProblemsCache[activeItem.id]) {
+                // Update the active item with cached data
+                if (course) {
+                    setCourse(prev => {
+                        if (!prev) return prev;
+                        return {
+                            ...prev,
+                            modules: prev.modules.map(m =>
+                                m.id === activeModuleId
+                                    ? {
+                                        ...m,
+                                        items: m.items.map(i =>
+                                            i.id === activeItem.id
+                                                ? { ...i, testProblems: testProblemsCache[activeItem.id] }
+                                                : i
+                                        )
+                                    }
+                                    : m
+                            )
+                        };
+                    });
+                }
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/modules/items/${activeItem.id}/test-details`);
+                if (res.ok) {
+                    const data = await res.json();
+                    // Cache the test problems
+                    setTestProblemsCache(prev => ({
+                        ...prev,
+                        [activeItem.id]: data.testProblems
+                    }));
+                    // Update course data with test problems
+                    if (course) {
+                        setCourse(prev => {
+                            if (!prev) return prev;
+                            return {
+                                ...prev,
+                                modules: prev.modules.map(m =>
+                                    m.id === activeModuleId
+                                        ? {
+                                            ...m,
+                                            items: m.items.map(i =>
+                                                i.id === activeItem.id
+                                                    ? { ...i, testProblems: data.testProblems }
+                                                    : i
+                                            )
+                                        }
+                                        : m
+                                )
+                            };
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch test problems:", error);
+            }
+        };
+        fetchTestProblems();
+    }, [activeItem?.id, activeItem?.type]);
+
     // Video Watch Time Tracking
     const [accumulatedTime, setAccumulatedTime] = useState(0);
     const lastTimeRef = useRef(0);
@@ -316,9 +387,12 @@ export default function CoursePlayerPage() {
             if (!res.ok) throw new Error("Failed to fetch course");
             const data = await res.json();
 
-            // Optimization: Only update course if data actually changed significantly
-            // But for now, just setting it is standard.
-            setCourse(data);
+            // Optimization: Only update if there's meaningful change or first load
+            setCourse(prevCourse => {
+                if (!prevCourse || refresh) return data;
+                // If not refreshing, keep previous data to avoid unnecessary re-renders
+                return prevCourse;
+            });
 
             if (!activeModuleId && data.modules.length > 0) {
                 // ... (keep existing logic)
@@ -397,9 +471,27 @@ export default function CoursePlayerPage() {
                 body
             });
             if (res.ok) {
-                // Only refresh data if the item is fully marked as complete
-                if (completed) {
-                    await fetchCourseData(true, "Item Completion");
+                // Optimistic UI update: mark item as complete immediately
+                if (completed && course) {
+                    setCourse(prevCourse => {
+                        if (!prevCourse) return prevCourse;
+                        return {
+                            ...prevCourse,
+                            modules: prevCourse.modules.map(m =>
+                                m.id === activeModuleId
+                                    ? {
+                                        ...m,
+                                        items: m.items.map(i =>
+                                            i.id === itemId ? { ...i, isCompleted: true } : i
+                                        )
+                                    }
+                                    : m
+                            )
+                        };
+                    });
+
+                    // Fetch in background to update module progress
+                    fetchCourseData(true, "Item Completion");
 
                     // Auto-advance logic
                     if (course && activeModuleId) {

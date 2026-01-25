@@ -24,14 +24,11 @@ export async function GET(
                             items: {
                                 orderBy: { order: "asc" },
                                 include: {
-                                    testProblems: {
-                                        include: {
-                                            testCases: true
-                                        }
-                                    },
+                                    // Removed: testProblems with testCases (loaded on-demand)
                                     assignment: {
                                         select: {
                                             id: true,
+                                            // Only include problem count and basic info, not full problem data
                                             problems: {
                                                 select: {
                                                     leetcodeUrl: true,
@@ -108,8 +105,7 @@ export async function GET(
                     order: i.order,
                     duration: i.duration,
                     assignmentId: i.assignmentId,
-                    // Include test problems and assignments for frontend compatibility
-                    testProblems: i.testProblems,
+                    // Removed: testProblems (loaded on-demand for performance)
                     assignment: i.assignment,
                     // Progress fields
                     isCompleted: ip?.isCompleted || false,
@@ -130,11 +126,16 @@ export async function GET(
             };
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             ...course,
             isEnrolled,
             modules: modulesWithProgress,
         });
+
+        // Add cache headers - cache for 10 seconds to reduce load
+        response.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=20');
+
+        return response;
     } catch (error) {
         console.error("Error fetching course player:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
