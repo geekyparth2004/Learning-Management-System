@@ -219,11 +219,18 @@ export default function CoursePlayerPage() {
             // But if we previously had a signed URL (from a different item), we cleared it above.
 
             // 3. Solution Video Signing
-            const solutionUrl = activeItem.type === "LEETCODE"
-                ? activeItem.assignment?.problems?.[0]?.videoSolution
-                : activeItem.type === "WEB_DEV"
-                    ? activeItem.content
-                    : null;
+            let solutionUrl: string | null = null;
+            if (activeItem.type === "LEETCODE") {
+                // For LEETCODE, videoSolution is in content JSON
+                try {
+                    const contentData = activeItem.content ? JSON.parse(activeItem.content) : {};
+                    solutionUrl = contentData.videoSolution || null;
+                } catch {
+                    solutionUrl = null;
+                }
+            } else if (activeItem.type === "WEB_DEV") {
+                solutionUrl = activeItem.content || null;
+            }
 
             if (solutionUrl && !solutionUrl.includes("cloudinary.com") && !solutionUrl.includes("youtube")) {
                 try {
@@ -1066,56 +1073,69 @@ export default function CoursePlayerPage() {
                                                 onVerified={() => completeItem(activeItem.id)}
                                             />
 
-                                            {activeItem.assignment?.problems?.[0]?.videoSolution && (
-                                                <div className="mt-4 border-t border-gray-800 pt-4">
-                                                    {!activeItem.startedAt ? (
-                                                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                                                            <Lock size={14} />
-                                                            <span>Solution video unlocks 5m after starting</span>
-                                                        </div>
-                                                    ) : (
-                                                        (() => {
-                                                            const startTime = new Date(activeItem.startedAt!).getTime();
-                                                            const unlockTime = startTime + 5 * 60 * 1000;
-                                                            const now = new Date().getTime();
-                                                            const isUnlocked = now >= unlockTime;
+                                            {(() => {
+                                                // For LEETCODE items, videoSolution is in content JSON
+                                                let videoSolutionUrl: string | undefined;
+                                                try {
+                                                    const contentData = activeItem.content ? JSON.parse(activeItem.content) : {};
+                                                    videoSolutionUrl = contentData.videoSolution;
+                                                } catch {
+                                                    videoSolutionUrl = undefined;
+                                                }
 
-                                                            if (isUnlocked) {
-                                                                return (
-                                                                    <div className="space-y-2">
-                                                                        <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
-                                                                        <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-                                                                            {activeItem.assignment?.problems?.[0]?.videoSolution?.includes("cloudinary.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.includes("r2.cloudflarestorage.com") || activeItem.assignment?.problems?.[0]?.videoSolution?.endsWith(".mp4") ? (
-                                                                                <video
-                                                                                    src={getProxyUrl(activeItem.assignment?.problems?.[0]?.videoSolution)}
-                                                                                    controls
-                                                                                    className="h-full w-full object-contain"
-                                                                                />
-                                                                            ) : (
-                                                                                <iframe
-                                                                                    src={activeItem.assignment?.problems?.[0]?.videoSolution?.replace("watch?v=", "embed/")}
-                                                                                    className="h-full w-full"
-                                                                                    allowFullScreen
-                                                                                />
-                                                                            )}
+                                                if (!videoSolutionUrl) return null;
+
+                                                return (
+                                                    <div className="mt-4 border-t border-gray-800 pt-4">
+                                                        {!activeItem.startedAt ? (
+                                                            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                                                <Lock size={14} />
+                                                                <span>Solution video unlocks 5m after starting</span>
+                                                            </div>
+                                                        ) : (
+                                                            (() => {
+                                                                const startTime = new Date(activeItem.startedAt!).getTime();
+                                                                const unlockTime = startTime + 5 * 60 * 1000;
+                                                                const now = new Date().getTime();
+                                                                const isUnlocked = now >= unlockTime;
+
+                                                                if (isUnlocked) {
+                                                                    return (
+                                                                        <div className="space-y-2">
+                                                                            <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
+                                                                            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                                                                {videoSolutionUrl?.includes("cloudinary.com") || videoSolutionUrl?.includes("r2.cloudflarestorage.com") || videoSolutionUrl?.endsWith(".mp4") ? (
+                                                                                    <video
+                                                                                        src={signedSolutionUrl || getProxyUrl(videoSolutionUrl)}
+                                                                                        controls
+                                                                                        className="h-full w-full object-contain"
+                                                                                    />
+                                                                                ) : (
+                                                                                    <iframe
+                                                                                        src={videoSolutionUrl?.replace("watch?v=", "embed/")}
+                                                                                        className="h-full w-full"
+                                                                                        allowFullScreen
+                                                                                    />
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                );
-                                                            } else {
-                                                                const diff = unlockTime - now;
-                                                                const minutes = Math.floor(diff / (1000 * 60));
-                                                                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                                                                return (
-                                                                    <div className="flex items-center justify-center gap-2 rounded bg-[#1a1a1a] p-3 text-sm text-yellow-500">
-                                                                        <Clock size={16} />
-                                                                        <span>Solution unlocks in {minutes}m {seconds}s</span>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                        })()
-                                                    )}
-                                                </div>
-                                            )}
+                                                                    );
+                                                                } else {
+                                                                    const diff = unlockTime - now;
+                                                                    const minutes = Math.floor(diff / (1000 * 60));
+                                                                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                                                                    return (
+                                                                        <div className="flex items-center justify-center gap-2 rounded bg-[#1a1a1a] p-3 text-sm text-yellow-500">
+                                                                            <Clock size={16} />
+                                                                            <span>Solution unlocks in {minutes}m {seconds}s</span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                            })()
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     </div>
                                 ) : null}
