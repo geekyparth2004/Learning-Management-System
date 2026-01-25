@@ -1009,9 +1009,9 @@ export default function CoursePlayerPage() {
                                                                 if (isUnlocked) {
                                                                     const videoUrl = activeItem.assignment.problems[0].videoSolution!;
                                                                     return (
-                                                                        <div className="space-y-3 w-full max-w-2xl mx-auto">
+                                                                        <div className="space-y-3 w-full">
                                                                             <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
-                                                                            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                                                            <div className="w-full overflow-auto rounded-lg bg-black max-h-[600px]">
                                                                                 {videoUrl.includes("cloudinary.com") || videoUrl.includes("r2.cloudflarestorage.com") || videoUrl.endsWith(".mp4") ? (
                                                                                     <video
                                                                                         src={signedSolutionUrl || getProxyUrl(videoUrl)}
@@ -1171,9 +1171,9 @@ export default function CoursePlayerPage() {
 
                                                                 if (isUnlocked) {
                                                                     return (
-                                                                        <div className="space-y-3 w-full max-w-2xl mx-auto">
+                                                                        <div className="space-y-3 w-full">
                                                                             <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
-                                                                            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                                                            <div className="w-full overflow-auto rounded-lg bg-black max-h-[600px]">
                                                                                 {videoSolutionUrl?.includes("cloudinary.com") || videoSolutionUrl?.includes("r2.cloudflarestorage.com") || videoSolutionUrl?.endsWith(".mp4") ? (
                                                                                     <video
                                                                                         src={signedSolutionUrl || getProxyUrl(videoSolutionUrl)}
