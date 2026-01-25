@@ -68,7 +68,9 @@ export async function POST(
                         const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
                         const { createOrUpdateFile } = await import("@/lib/github");
 
-                        const moduleTitle = moduleItem.module.title.replace(/\s+/g, "-");
+                        // Include module order number in folder name for better sorting
+                        const moduleOrder = moduleItem.module.order ?? 0;
+                        const moduleTitle = `${moduleOrder + 1} ${moduleItem.module.title.replace(/\s+/g, " ")}`;
                         const itemTitle = moduleItem.title.replace(/\s+/g, "-");
 
                         // Create HTML file

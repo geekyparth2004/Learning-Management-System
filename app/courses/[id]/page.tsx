@@ -618,6 +618,7 @@ export default function CoursePlayerPage() {
                     body: JSON.stringify({
                         files: webFiles,
                         courseId: course?.id,
+                        moduleId: activeModuleId,
                         moduleTitle: activeModule?.title,
                         videoOrder: (activeItem as any)?.order || 0,
                         videoTitle: activeItem?.title

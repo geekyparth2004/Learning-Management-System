@@ -11,7 +11,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { files, courseId, moduleTitle, videoOrder, videoTitle } = await req.json();
+        const { files, courseId, moduleTitle, videoOrder, videoTitle, moduleId } = await req.json();
 
         // 1. Get User with GitHub Token (Robust)
         const { getGitHubAccessToken } = await import("@/lib/github");
@@ -29,13 +29,23 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Course not found" }, { status: 404 });
         }
 
+        // 3. Get Module to determine order number
+        let moduleOrder = 0;
+        if (moduleId) {
+            const module = await db.module.findUnique({
+                where: { id: moduleId },
+                select: { order: true }
+            });
+            moduleOrder = module?.order ?? 0;
+        }
+
         const repoName = `${course.title.toLowerCase().replace(/\s+/g, "-")}-${user.id.slice(-4)}`;
 
-        // 3. Sync Files
-        // Folder Structure: Module Name / Video Name / Practice - N / file_name
+        // 4. Sync Files
+        // Folder Structure: <Module Number> <Module Name> / Video Name / Practice - N / file_name
 
-        // Use sanitize for module title
-        const sanitizedModuleTitle = moduleTitle.trim();
+        // Use sanitize for module title with order number
+        const sanitizedModuleTitle = `${moduleOrder + 1} ${moduleTitle.trim()}`;
         // Use videoTitle directly as request
         const sanitizedVideoTitle = videoTitle.trim().replace(/\//g, "-");
 
