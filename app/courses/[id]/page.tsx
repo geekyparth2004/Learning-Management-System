@@ -969,6 +969,10 @@ export default function CoursePlayerPage() {
                                                     href={activeItem.assignment.problems[0].leetcodeUrl}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
+                                                    onClick={() => {
+                                                        fetch(`/api/modules/items/${activeItem.id}/start`, { method: "POST" })
+                                                            .then(() => fetchCourseData());
+                                                    }}
                                                     className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
                                                 >    Solve on LeetCode <Unlock size={16} />
                                                 </a>
