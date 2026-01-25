@@ -1009,7 +1009,7 @@ export default function CoursePlayerPage() {
                                                                 if (isUnlocked) {
                                                                     const videoUrl = activeItem.assignment.problems[0].videoSolution!;
                                                                     return (
-                                                                        <div className="space-y-2">
+                                                                        <div className="space-y-3 w-full max-w-2xl mx-auto">
                                                                             <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
                                                                             <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
                                                                                 {videoUrl.includes("cloudinary.com") || videoUrl.includes("r2.cloudflarestorage.com") || videoUrl.endsWith(".mp4") ? (
@@ -1171,7 +1171,7 @@ export default function CoursePlayerPage() {
 
                                                                 if (isUnlocked) {
                                                                     return (
-                                                                        <div className="space-y-2">
+                                                                        <div className="space-y-3 w-full max-w-2xl mx-auto">
                                                                             <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
                                                                             <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
                                                                                 {videoSolutionUrl?.includes("cloudinary.com") || videoSolutionUrl?.includes("r2.cloudflarestorage.com") || videoSolutionUrl?.endsWith(".mp4") ? (
