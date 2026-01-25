@@ -971,7 +971,7 @@ export default function CoursePlayerPage() {
                                                     rel="noopener noreferrer"
                                                     onClick={() => {
                                                         fetch(`/api/modules/items/${activeItem.id}/start`, { method: "POST" })
-                                                            .then(() => fetchCourseData());
+                                                            .then(() => window.location.reload());
                                                     }}
                                                     className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
                                                 >    Solve on LeetCode <Unlock size={16} />
