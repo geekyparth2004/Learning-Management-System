@@ -964,7 +964,7 @@ export default function CoursePlayerPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="flex flex-col gap-4 w-full max-w-sm">
+                                            <div className="flex flex-col gap-4 w-full">
                                                 <a
                                                     href={activeItem.assignment.problems[0].leetcodeUrl}
                                                     target="_blank"
@@ -1016,12 +1016,12 @@ export default function CoursePlayerPage() {
                                                                                     <video
                                                                                         src={signedSolutionUrl || getProxyUrl(videoUrl)}
                                                                                         controls
-                                                                                        className="h-full w-full object-contain"
+                                                                                        className="w-full"
                                                                                     />
                                                                                 ) : (
                                                                                     <iframe
                                                                                         src={videoUrl.replace("watch?v=", "embed/")}
-                                                                                        className="h-full w-full"
+                                                                                        className="w-full aspect-video min-h-[400px]"
                                                                                         allowFullScreen
                                                                                     />
                                                                                 )}
@@ -1115,14 +1115,14 @@ export default function CoursePlayerPage() {
                                             </p>
                                         </div>
 
-                                        <div className="flex flex-col gap-4 w-full max-w-sm">
+                                        <div className="flex flex-col gap-4 w-full">
                                             <a
                                                 href={activeItem.assignment?.problems?.[0]?.leetcodeUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 onClick={() => {
                                                     fetch(`/api/modules/items/${activeItem.id}/start`, { method: "POST" })
-                                                        .then(() => fetchCourseData());
+                                                        .then(() => window.location.reload());
                                                 }}
                                                 className="flex items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-3 font-bold hover:bg-[#333] transition-colors"
                                             >
@@ -1178,12 +1178,12 @@ export default function CoursePlayerPage() {
                                                                                     <video
                                                                                         src={signedSolutionUrl || getProxyUrl(videoSolutionUrl)}
                                                                                         controls
-                                                                                        className="h-full w-full object-contain"
+                                                                                        className="w-full"
                                                                                     />
                                                                                 ) : (
                                                                                     <iframe
                                                                                         src={videoSolutionUrl?.replace("watch?v=", "embed/")}
-                                                                                        className="h-full w-full"
+                                                                                        className="w-full aspect-video min-h-[400px]"
                                                                                         allowFullScreen
                                                                                     />
                                                                                 )}
