@@ -228,6 +228,9 @@ export default function CoursePlayerPage() {
                 } catch {
                     solutionUrl = null;
                 }
+            } else if (activeItem.type === "ASSIGNMENT") {
+                // For ASSIGNMENT with LeetCode problems, videoSolution is in problems array
+                solutionUrl = activeItem.assignment?.problems?.[0]?.videoSolution || null;
             } else if (activeItem.type === "WEB_DEV") {
                 solutionUrl = activeItem.content || null;
             }
@@ -973,6 +976,59 @@ export default function CoursePlayerPage() {
                                                     problemSlug={activeItem.assignment.problems[0].slug || activeItem.assignment.problems[0].leetcodeUrl.split("/problems/")[1]?.split("/")[0] || ""}
                                                     onVerified={() => completeItem(activeItem.id)}
                                                 />
+
+                                                {/* Video Solution for ASSIGNMENT type LeetCode problems */}
+                                                {activeItem.assignment?.problems?.[0]?.videoSolution && (
+                                                    <div className="mt-4 border-t border-gray-800 pt-4">
+                                                        {!activeItem.startedAt ? (
+                                                            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                                                <Lock size={14} />
+                                                                <span>Solution video unlocks 5m after starting</span>
+                                                            </div>
+                                                        ) : (
+                                                            (() => {
+                                                                const startTime = new Date(activeItem.startedAt!).getTime();
+                                                                const unlockTime = startTime + 5 * 60 * 1000;
+                                                                const now = new Date().getTime();
+                                                                const isUnlocked = now >= unlockTime;
+
+                                                                if (isUnlocked) {
+                                                                    const videoUrl = activeItem.assignment.problems[0].videoSolution!;
+                                                                    return (
+                                                                        <div className="space-y-2">
+                                                                            <h3 className="text-sm font-bold text-gray-300">Solution Video</h3>
+                                                                            <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+                                                                                {videoUrl.includes("cloudinary.com") || videoUrl.includes("r2.cloudflarestorage.com") || videoUrl.endsWith(".mp4") ? (
+                                                                                    <video
+                                                                                        src={signedSolutionUrl || getProxyUrl(videoUrl)}
+                                                                                        controls
+                                                                                        className="h-full w-full object-contain"
+                                                                                    />
+                                                                                ) : (
+                                                                                    <iframe
+                                                                                        src={videoUrl.replace("watch?v=", "embed/")}
+                                                                                        className="h-full w-full"
+                                                                                        allowFullScreen
+                                                                                    />
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                } else {
+                                                                    const diff = unlockTime - now;
+                                                                    const minutes = Math.floor(diff / (1000 * 60));
+                                                                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                                                                    return (
+                                                                        <div className="flex items-center justify-center gap-2 rounded bg-[#1a1a1a] p-3 text-sm text-yellow-500">
+                                                                            <Clock size={16} />
+                                                                            <span>Solution unlocks in {minutes}m {seconds}s</span>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                            })()
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ) : (
