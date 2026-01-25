@@ -470,6 +470,12 @@ export default function CourseBuilderPage() {
                             <p className="text-sm text-gray-400">Course Builder</p>
                         </div>
                     </div>
+                    <Link href={`/teacher/courses/${courseId}/students`}>
+                        <button className="flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors">
+                            <Users size={16} />
+                            Students
+                        </button>
+                    </Link>
                 </div>
             </header>
 
