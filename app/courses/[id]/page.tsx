@@ -951,7 +951,7 @@ export default function CoursePlayerPage() {
                                     )
                                 ) : activeItem.type === "ASSIGNMENT" ? (
                                     activeItem.assignment?.problems?.[0]?.leetcodeUrl ? (
-                                        <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+                                        <div className="flex h-full w-full flex-col items-center justify-start gap-6 p-8 text-center overflow-y-auto">
                                             {/* ... LeetCode UI ... */}
                                             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
                                                 <Code className="h-10 w-10 text-yellow-500" />
@@ -1103,7 +1103,7 @@ export default function CoursePlayerPage() {
                                         </div>
                                     )
                                 ) : activeItem.type === "LEETCODE" ? (
-                                    <div className="flex h-full flex-col items-center justify-center gap-6 p-8 text-center">
+                                    <div className="flex h-full w-full flex-col items-center justify-start gap-6 p-8 text-center overflow-y-auto">
                                         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#2a2a2a]">
                                             <Code className="h-10 w-10 text-yellow-500" />
                                         </div>
