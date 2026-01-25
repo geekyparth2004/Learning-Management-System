@@ -81,6 +81,8 @@ export default function CoursePlayerPage() {
     const [lastTestResult, setLastTestResult] = useState<{ passed: boolean; score: number } | null>(null);
     // Lazy-loaded test problems cache
     const [testProblemsCache, setTestProblemsCache] = useState<Record<string, any[]>>({});
+    // Real-time countdown ticker
+    const [currentTime, setCurrentTime] = useState(Date.now());
 
     // Web Dev Practice State
     const [practiceType, setPracticeType] = useState<"dsa" | "web">("dsa");
@@ -170,6 +172,14 @@ export default function CoursePlayerPage() {
     useEffect(() => {
         fetchCourseData(false, "Initial Load/CourseId Change");
     }, [courseId]);
+
+    // Update time every second for real-time countdowns
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const [signedVideoUrl, setSignedVideoUrl] = useState<string | null>(null);
     const [signedSolutionUrl, setSignedSolutionUrl] = useState<string | null>(null);
