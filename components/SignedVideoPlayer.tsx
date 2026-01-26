@@ -25,7 +25,8 @@ export default function SignedVideoPlayer({ src, className }: SignedVideoPlayerP
 
                 // Logic adapted from course player to ensure consistency
                 if (pathParts.length >= 3) {
-                    const key = pathParts.slice(2).join('/');
+                    const rawKey = pathParts.slice(2).join('/');
+                    const key = decodeURIComponent(rawKey);
                     setVideoSrc(`/api/image-proxy?key=${encodeURIComponent(key)}`);
                     return;
                 }
@@ -36,6 +37,19 @@ export default function SignedVideoPlayer({ src, className }: SignedVideoPlayerP
 
         setVideoSrc(src);
     }, [src]);
+
+    const isYoutube = src.includes("youtube.com") || src.includes("youtu.be");
+
+    if (isYoutube) {
+        const embedUrl = src.replace("watch?v=", "embed/");
+        return (
+            <iframe
+                src={embedUrl}
+                className={`w-full aspect-video rounded-lg ${className}`}
+                allowFullScreen
+            />
+        );
+    }
 
     return (
         <video
