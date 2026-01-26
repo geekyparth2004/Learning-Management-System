@@ -8,6 +8,7 @@ import CodeEditor from "@/components/CodeEditor";
 import Terminal from "@/components/Terminal";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
 import LeetCodeVerifier from "@/components/LeetCodeVerifier";
+import SignedVideoPlayer from "@/components/SignedVideoPlayer";
 import { cn } from "@/lib/utils";
 
 import { Language } from "@/types";
@@ -753,7 +754,7 @@ export default function PracticePlayerPage() {
                                                     {hint.type === "text" ? (
                                                         hint.content || <span className="italic text-gray-500">No text content available.</span>
                                                     ) : (
-                                                        <video src={hint.content} controls className="w-full rounded" />
+                                                        <SignedVideoPlayer src={hint.content} />
                                                     )}
                                                 </div>
                                             )}
