@@ -18,7 +18,9 @@ async function main() {
 
     console.log("Practice Problems with Video Solutions:");
     problems.forEach(p => {
-        console.log(`- ${p.title} (${p.id}): ${p.videoSolution}`);
+        console.log(`Title: ${p.title}`);
+        console.log(`URL: ${p.videoSolution}`);
+        console.log('---');
     });
 }
 
