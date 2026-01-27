@@ -25,9 +25,17 @@ export default function SignedVideoPlayer({ src, className }: SignedVideoPlayerP
 
                 // Logic adapted from course player to ensure consistency
                 if (pathParts.length >= 3) {
-                    const rawKey = pathParts.slice(2).join('/');
-                    const key = decodeURIComponent(rawKey);
-                    setVideoSrc(`/api/image-proxy?key=${encodeURIComponent(key)}`);
+                    const relativePath = pathParts.slice(2).join('/');
+                    const key = decodeURIComponent(relativePath);
+
+                    let proxyUrl = `/api/image-proxy?key=${encodeURIComponent(key)}`;
+
+                    // Force content-type for MKV files so they play in browser (as WebM)
+                    if (key.toLowerCase().endsWith('.mkv')) {
+                        proxyUrl += '&contentType=video/webm';
+                    }
+
+                    setVideoSrc(proxyUrl);
                     return;
                 }
             } catch (e) {

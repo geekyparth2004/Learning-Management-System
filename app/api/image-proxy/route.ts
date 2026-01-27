@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const contentType = searchParams.get("contentType");
     const key = searchParams.get("key");
 
     if (!key) {
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
         const command = new GetObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: key,
+            ResponseContentType: contentType || undefined, // Allow overriding content type (e.g. video/webm for mkv)
         });
 
         // Generate signed URL
