@@ -14,6 +14,15 @@ const s3Client = new S3Client({
     forcePathStyle: true,
 });
 
+const r2Client = process.env.R2_ACCOUNT_ID ? new S3Client({
+    region: "auto",
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    },
+}) : null;
+
 export async function GET(request: NextRequest) {
     const session = await auth();
     // Optional: Check if user is authenticated to view images?
@@ -25,20 +34,29 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const contentType = searchParams.get("contentType");
     const key = searchParams.get("key");
+    const provider = searchParams.get("provider");
 
     if (!key) {
         return NextResponse.json({ error: "Missing key" }, { status: 400 });
     }
 
     try {
+        let client = s3Client;
+        let bucket = process.env.AWS_BUCKET_NAME;
+
+        if (provider === "r2" && r2Client) {
+            client = r2Client;
+            bucket = process.env.R2_BUCKET_NAME;
+        }
+
         const command = new GetObjectCommand({
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: bucket,
             Key: key,
             ResponseContentType: contentType || undefined, // Allow overriding content type (e.g. video/webm for mkv)
         });
 
         // Generate signed URL
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        const signedUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
 
         // Redirect to the signed URL
         return NextResponse.redirect(signedUrl);

@@ -28,7 +28,8 @@ export default function SignedVideoPlayer({ src, className }: SignedVideoPlayerP
                     const relativePath = pathParts.slice(2).join('/');
                     const key = decodeURIComponent(relativePath);
 
-                    let proxyUrl = `/api/image-proxy?key=${encodeURIComponent(key)}`;
+                    // Add provider=r2 to tell proxy to use R2 client/bucket
+                    let proxyUrl = `/api/image-proxy?key=${encodeURIComponent(key)}&provider=r2`;
 
                     // Force content-type for MKV files so they play in browser (as WebM)
                     if (key.toLowerCase().endsWith('.mkv')) {
