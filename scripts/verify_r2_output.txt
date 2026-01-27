@@ -1,0 +1,10 @@
+Attempting to list objects in bucket...
+ListObjects Success. Found 5 items.
+First item: images/1765808166893-Screenshot-2025-12-15-194534.png
+Generating signed URL for key: videos/1768314025967-2026-01-13-19-41-56.mkv
+Signed URL generated successfully.
+URL: https://eb6b901b00b21ec6cacff3826c972015.r2.cloudflarestorage.com/learningsystem/videos/1768314025967-2026-01-13-19-41-56.mkv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=affe78d582a5de2973430f4c5f801c04%2F20260127%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260127T062144Z&X-Amz-Expires=3600&X-Amz-Signature=16163a44e964fe112e8fc862bbe513b90d1bc675e21fa602d33a56524a5b24f5&X-Amz-SignedHeaders=host&response-content-type=video%2Fwebm&x-amz-checksum-mode=ENABLED&x-id=GetObject
+Verifying access...
+Status: 403
+Content-Type: text/plain;charset=UTF-8
+FAILURE: Could not access video via signed URL.
