@@ -50,6 +50,7 @@ model User {
   lastActivityDate   DateTime?
   
   accounts           Account[]
+  discussionMessages DiscussionMessage[]
 }
 
 model Account {
@@ -397,5 +398,20 @@ model UserBadge {
   earnedAt  DateTime @default(now())
   
   @@unique([userId, badgeType])
+  @@index([userId])
+}
+
+model DiscussionMessage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  content     String?  // Text content
+  mediaUrl    String?  // URL to media file in R2 (image/voice/video)
+  mediaType   String?  // "image" | "voice" | "video"
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([createdAt])
   @@index([userId])
 }
