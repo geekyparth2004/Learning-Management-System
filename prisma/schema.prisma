@@ -45,6 +45,10 @@ model User {
   walletBalance      Int                  @default(0)
   lastWalletReset    DateTime             @default(now())
   
+  // Streak Tracking
+  currentStreak      Int                  @default(0)
+  lastActivityDate   DateTime?
+  
   accounts           Account[]
 }
 

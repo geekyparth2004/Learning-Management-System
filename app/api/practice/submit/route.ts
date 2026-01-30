@@ -135,6 +135,10 @@ export async function POST(req: Request) {
                     data: { walletBalance: currentBalance }
                 });
                 rewarded = true;
+
+                // Update streak on first successful solve
+                const { updateUserStreak } = await import("@/lib/streak");
+                await updateUserStreak(userId);
             }
         }
 

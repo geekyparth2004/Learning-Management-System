@@ -4,6 +4,7 @@ import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy, Code } from "luci
 import { auth, signOut } from "@/auth";
 import GitHubConnect from "@/components/GitHubConnect";
 import NotificationBell from "@/components/NotificationBell";
+import StreakIndicator from "@/components/StreakIndicator";
 import NewContestBanner from "@/components/NewContestBanner";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { StatsSkeleton } from "@/components/dashboard/DashboardSkeletons";
@@ -189,6 +190,7 @@ export default async function Home() {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-4">
+              <StreakIndicator />
               <NotificationBell />
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <User className="h-4 w-4" />

@@ -55,6 +55,12 @@ export async function POST(
         const { checkAndUnlockNextModule } = await import("@/lib/modules");
         await checkAndUnlockNextModule(userId, moduleItemId);
 
+        // 3. Update streak when task is completed
+        if (completed !== false) {
+            const { updateUserStreak } = await import("@/lib/streak");
+            await updateUserStreak(userId);
+        }
+
 
         // 4. If Item is a TEST and Completed, Create Submission Records
         if (completed !== false) {
