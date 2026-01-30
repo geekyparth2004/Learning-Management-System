@@ -51,7 +51,7 @@ export default async function Home() {
                 <NotificationBell />
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                   <User className="h-4 w-4" />
-                  <span>{session.user?.name} ({session.user?.role})</span>
+                  <span>{session.user?.name}</span>
                 </div>
                 <GitHubConnect isConnected={!!session.user?.githubAccessToken} />
                 <form
@@ -195,7 +195,7 @@ export default async function Home() {
               <NotificationBell />
               <Link href="/profile" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors cursor-pointer">
                 <User className="h-4 w-4" />
-                <span>{session.user?.name} ({session.user?.role})</span>
+                <span>{session.user?.name}</span>
               </Link>
               <GitHubConnect isConnected={!!session.user?.githubAccessToken} />
               <form
