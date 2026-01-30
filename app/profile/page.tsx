@@ -1,9 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getUserBadges, BADGE_DEFINITIONS, BadgeType } from "@/lib/badges";
+import { getUserBadges, PROBLEM_BADGE_DEFINITIONS, STREAK_BADGE_DEFINITIONS, ProblemBadgeType, StreakBadgeType } from "@/lib/badges";
 import Link from "next/link";
-import { ArrowLeft, Award, Calendar, Mail, User } from "lucide-react";
+import { ArrowLeft, Award, Calendar, Mail, Flame } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -44,8 +44,9 @@ export default async function ProfilePage() {
     const totalSolved = passedProblems.length;
 
     // All possible badges for display
-    const allBadges: BadgeType[] = ["PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200"];
-    const earnedBadgeTypes = new Set(badges.map(b => b.id));
+    const problemBadges: ProblemBadgeType[] = ["PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200"];
+    const streakBadges: StreakBadgeType[] = ["STREAK_25", "STREAK_50", "STREAK_100", "STREAK_200", "STREAK_365"];
+    const earnedBadgeTypes = new Set(badges.map((b: { id: string }) => b.id));
 
     return (
         <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
@@ -101,25 +102,25 @@ export default async function ProfilePage() {
                     </div>
                 </div>
 
-                {/* Badges Section */}
-                <div className="bg-[#161616] rounded-2xl p-8 border border-gray-800">
+                {/* Problem Badges Section */}
+                <div className="bg-[#161616] rounded-2xl p-8 border border-gray-800 mb-8">
                     <div className="flex items-center gap-3 mb-6">
                         <Award className="h-6 w-6 text-yellow-500" />
-                        <h2 className="text-2xl font-bold">Badges</h2>
+                        <h2 className="text-2xl font-bold">Problem Badges</h2>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        {allBadges.map((badgeType) => {
-                            const badge = BADGE_DEFINITIONS[badgeType];
+                        {problemBadges.map((badgeType) => {
+                            const badge = PROBLEM_BADGE_DEFINITIONS[badgeType];
                             const isEarned = earnedBadgeTypes.has(badgeType);
-                            const earnedBadge = badges.find(b => b.id === badgeType);
+                            const earnedBadge = badges.find((b: { id: string }) => b.id === badgeType);
 
                             return (
                                 <div
                                     key={badgeType}
                                     className={`relative flex flex-col items-center gap-3 p-4 rounded-xl border transition-all ${isEarned
-                                            ? "border-yellow-500/50 bg-yellow-500/5"
-                                            : "border-gray-700 bg-gray-800/30 opacity-50 grayscale"
+                                        ? "border-yellow-500/50 bg-yellow-500/5"
+                                        : "border-gray-700 bg-gray-800/30 opacity-50 grayscale"
                                         }`}
                                 >
                                     <img
@@ -147,7 +148,7 @@ export default async function ProfilePage() {
                         })}
                     </div>
 
-                    {/* Progress to next badge */}
+                    {/* Progress to next problem badge */}
                     {totalSolved < 200 && (
                         <div className="mt-8 p-4 bg-gray-800/30 rounded-xl">
                             <div className="flex justify-between text-sm mb-2">
@@ -168,6 +169,82 @@ export default async function ProfilePage() {
                                             totalSolved < 50 ? 50 :
                                                 totalSolved < 100 ? 100 :
                                                     totalSolved < 150 ? 150 : 200
+                                        )) * 100}%`
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Streak Badges Section */}
+                <div className="bg-[#161616] rounded-2xl p-8 border border-gray-800">
+                    <div className="flex items-center gap-3 mb-6">
+                        <Flame className="h-6 w-6 text-orange-500" />
+                        <h2 className="text-2xl font-bold">Punctuality Badges</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {streakBadges.map((badgeType) => {
+                            const badge = STREAK_BADGE_DEFINITIONS[badgeType];
+                            const isEarned = earnedBadgeTypes.has(badgeType);
+                            const earnedBadge = badges.find((b: { id: string }) => b.id === badgeType);
+
+                            return (
+                                <div
+                                    key={badgeType}
+                                    className={`relative flex flex-col items-center gap-3 p-3 rounded-xl border transition-all ${isEarned
+                                        ? "border-orange-500/50 bg-orange-500/5"
+                                        : "border-gray-700 bg-gray-800/30 opacity-50 grayscale"
+                                        }`}
+                                >
+                                    <img
+                                        src={badge.image}
+                                        alt={badge.title}
+                                        className={`w-16 h-16 object-contain ${isEarned ? "drop-shadow-[0_0_20px_rgba(255,100,0,0.4)]" : ""}`}
+                                    />
+                                    <div className="text-center">
+                                        <h3 className="font-bold text-xs">{badge.title}</h3>
+                                        <p className="text-[10px] text-gray-400 mt-1">{badge.threshold} days</p>
+                                        {isEarned && earnedBadge?.earnedAt && (
+                                            <p className="text-[10px] text-orange-500 mt-1">
+                                                {new Date(earnedBadge.earnedAt).toLocaleDateString()}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {!isEarned && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl">
+                                            <span className="text-gray-400 text-xs">🔒</span>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Progress to next streak badge */}
+                    {user.currentStreak < 365 && (
+                        <div className="mt-8 p-4 bg-gray-800/30 rounded-xl">
+                            <div className="flex justify-between text-sm mb-2">
+                                <span className="text-gray-400">Progress to next streak badge</span>
+                                <span className="text-white font-bold">
+                                    {user.currentStreak} / {
+                                        user.currentStreak < 25 ? 25 :
+                                            user.currentStreak < 50 ? 50 :
+                                                user.currentStreak < 100 ? 100 :
+                                                    user.currentStreak < 200 ? 200 : 365
+                                    } days
+                                </span>
+                            </div>
+                            <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full transition-all"
+                                    style={{
+                                        width: `${(user.currentStreak / (
+                                            user.currentStreak < 25 ? 25 :
+                                                user.currentStreak < 50 ? 50 :
+                                                    user.currentStreak < 100 ? 100 :
+                                                        user.currentStreak < 200 ? 200 : 365
                                         )) * 100}%`
                                     }}
                                 />

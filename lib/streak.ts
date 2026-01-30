@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { checkAndAwardStreakBadges, StreakBadgeType } from "@/lib/badges";
 
 /**
  * Updates user streak when they complete a task.
@@ -6,14 +7,14 @@ import { db } from "@/lib/db";
  * - If last activity was today, do nothing
  * - If last activity was before yesterday (or never), reset to 1
  */
-export async function updateUserStreak(userId: string): Promise<{ streak: number }> {
+export async function updateUserStreak(userId: string): Promise<{ streak: number; newBadge?: StreakBadgeType | null }> {
     const user = await db.user.findUnique({
         where: { id: userId },
         select: { currentStreak: true, lastActivityDate: true }
     });
 
     if (!user) {
-        return { streak: 0 };
+        return { streak: 0, newBadge: null };
     }
 
     const now = new Date();
@@ -29,7 +30,7 @@ export async function updateUserStreak(userId: string): Promise<{ streak: number
 
         if (diffDays === 0) {
             // Already active today, don't change streak
-            return { streak: user.currentStreak };
+            return { streak: user.currentStreak, newBadge: null };
         } else if (diffDays === 1) {
             // Last activity was yesterday, increment streak
             newStreak = user.currentStreak + 1;
@@ -47,7 +48,10 @@ export async function updateUserStreak(userId: string): Promise<{ streak: number
         }
     });
 
-    return { streak: newStreak };
+    // Check for streak badges
+    const newBadge = await checkAndAwardStreakBadges(userId, newStreak);
+
+    return { streak: newStreak, newBadge };
 }
 
 /**
