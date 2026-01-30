@@ -5,6 +5,7 @@ import { auth, signOut } from "@/auth";
 import GitHubConnect from "@/components/GitHubConnect";
 import NotificationBell from "@/components/NotificationBell";
 import StreakIndicator from "@/components/StreakIndicator";
+import BadgeCheckOnLogin from "@/components/BadgeCheckOnLogin";
 import NewContestBanner from "@/components/NewContestBanner";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { StatsSkeleton } from "@/components/dashboard/DashboardSkeletons";
@@ -192,10 +193,10 @@ export default async function Home() {
             <div className="flex items-center gap-4">
               <StreakIndicator />
               <NotificationBell />
-              <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Link href="/profile" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors cursor-pointer">
                 <User className="h-4 w-4" />
                 <span>{session.user?.name} ({session.user?.role})</span>
-              </div>
+              </Link>
               <GitHubConnect isConnected={!!session.user?.githubAccessToken} />
               <form
                 action={async () => {
@@ -216,6 +217,9 @@ export default async function Home() {
         <Suspense fallback={<StatsSkeleton />}>
           <StudentDashboard userId={session.user?.id || ""} />
         </Suspense>
+
+        {/* Badge Check on Login - Awards pending badges and shows celebration */}
+        <BadgeCheckOnLogin />
       </div>
     </div>
   );

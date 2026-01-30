@@ -139,6 +139,19 @@ export async function POST(req: Request) {
                 // Update streak on first successful solve
                 const { updateUserStreak } = await import("@/lib/streak");
                 await updateUserStreak(userId);
+
+                // Check for badge achievements
+                const { checkAndAwardBadges } = await import("@/lib/badges");
+                const newBadge = await checkAndAwardBadges(userId);
+                if (newBadge) {
+                    return NextResponse.json({
+                        success: true,
+                        walletBalance: currentBalance,
+                        rewarded,
+                        newBadge, // Return the badge type to trigger celebration
+                        message: "Submission recorded"
+                    });
+                }
             }
         }
 
@@ -146,6 +159,7 @@ export async function POST(req: Request) {
             success: true,
             walletBalance: currentBalance,
             rewarded,
+            newBadge: null,
             message: "Submission recorded"
         });
 

@@ -389,3 +389,13 @@ model Job {
   postedAt  DateTime
   createdAt DateTime @default(now())
 }
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeType String   // "PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200"
+  earnedAt  DateTime @default(now())
+  
+  @@unique([userId, badgeType])
+  @@index([userId])
+}
