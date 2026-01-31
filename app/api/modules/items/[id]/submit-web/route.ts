@@ -106,6 +106,10 @@ export async function POST(
             }
         }
 
+        // Update streak on any successful submission
+        const { updateUserStreak } = await import("@/lib/streak");
+        await updateUserStreak(session.user.id);
+
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Error submitting web dev assignment:", error);
