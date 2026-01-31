@@ -119,14 +119,14 @@ export async function POST(req: Request) {
                 }
             });
 
+            // Update streak on ANY successful solve (even re-solves)
+            // This ensures the streak continues as long as user is active
+            const { updateUserStreak } = await import("@/lib/streak");
+            await updateUserStreak(userId);
+
             // If passedCount is 1, it means this is the FIRST success (the one we just added).
             // If > 1, they solved it before.
-            // Actually, concurrency might be an issue, but for this scale valid.
-            // Better: Check `passedCount === 1` (since we just inserted one).
-
-            // Wait, I inserted above. So if it was 0 before, now it is 1.
-            // If it was 1 before (solved), now it is 2.
-            // So if `passedCount === 1`, apply reward.
+            // Only reward coins and badge on FIRST solve of a problem
 
             if (passedCount === 1) {
                 currentBalance += 5;
@@ -135,10 +135,6 @@ export async function POST(req: Request) {
                     data: { walletBalance: currentBalance }
                 });
                 rewarded = true;
-
-                // Update streak on first successful solve
-                const { updateUserStreak } = await import("@/lib/streak");
-                await updateUserStreak(userId);
 
                 // Check for badge achievements
                 const { checkAndAwardBadges } = await import("@/lib/badges");
