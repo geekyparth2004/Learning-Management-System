@@ -12,6 +12,8 @@ interface Student {
     image?: string;
     enrolledAt: string;
     progressPercentage: number;
+    completedItems: number;
+    totalItems: number;
     completedModules: number;
     totalModules: number;
 }
@@ -146,7 +148,7 @@ export default function StudentsPage() {
                                     </div>
                                     <div className="flex items-center justify-between text-xs text-gray-500">
                                         <span>
-                                            {student.completedModules} / {student.totalModules} modules
+                                            {student.completedItems} / {student.totalItems} items completed
                                         </span>
                                         <span>
                                             Enrolled {new Date(student.enrolledAt).toLocaleDateString()}
