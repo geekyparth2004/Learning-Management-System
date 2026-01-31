@@ -44,7 +44,7 @@ export default async function ProfilePage() {
     const totalSolved = passedProblems.length;
 
     // All possible badges for display
-    const problemBadges: ProblemBadgeType[] = ["PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200"];
+    const problemBadges: ProblemBadgeType[] = ["PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200", "PROBLEMS_300", "PROBLEMS_500", "PROBLEMS_750", "PROBLEMS_1000", "PROBLEMS_1500", "PROBLEMS_2000"];
     const streakBadges: StreakBadgeType[] = ["STREAK_25", "STREAK_50", "STREAK_100", "STREAK_200", "STREAK_365"];
     const earnedBadgeTypes = new Set(badges.map((b: { id: string }) => b.id));
 
@@ -126,7 +126,14 @@ export default async function ProfilePage() {
                                     <img
                                         src={badge.image}
                                         alt={badge.title}
-                                        className={`w-24 h-24 object-contain ${isEarned ? "drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]" : ""}`}
+                                        className={`w-24 h-24 object-contain ${isEarned
+                                            ? badgeType === "PROBLEMS_2000"
+                                                ? "animate-badge-godlike"
+                                                : badgeType === "PROBLEMS_1500"
+                                                    ? "animate-badge-legendary"
+                                                    : "drop-shadow-[0_0_20px_rgba(255,165,0,0.3)]"
+                                            : ""
+                                            }`}
                                     />
                                     <div className="text-center">
                                         <h3 className="font-bold text-sm">{badge.title}</h3>
@@ -149,7 +156,7 @@ export default async function ProfilePage() {
                     </div>
 
                     {/* Progress to next problem badge */}
-                    {totalSolved < 200 && (
+                    {totalSolved < 2000 && (
                         <div className="mt-8 p-4 bg-gray-800/30 rounded-xl">
                             <div className="flex justify-between text-sm mb-2">
                                 <span className="text-gray-400">Progress to next badge</span>
@@ -157,7 +164,13 @@ export default async function ProfilePage() {
                                     {totalSolved} / {
                                         totalSolved < 50 ? 50 :
                                             totalSolved < 100 ? 100 :
-                                                totalSolved < 150 ? 150 : 200
+                                                totalSolved < 150 ? 150 :
+                                                    totalSolved < 200 ? 200 :
+                                                        totalSolved < 300 ? 300 :
+                                                            totalSolved < 500 ? 500 :
+                                                                totalSolved < 750 ? 750 :
+                                                                    totalSolved < 1000 ? 1000 :
+                                                                        totalSolved < 1500 ? 1500 : 2000
                                     }
                                 </span>
                             </div>
@@ -168,7 +181,13 @@ export default async function ProfilePage() {
                                         width: `${(totalSolved / (
                                             totalSolved < 50 ? 50 :
                                                 totalSolved < 100 ? 100 :
-                                                    totalSolved < 150 ? 150 : 200
+                                                    totalSolved < 150 ? 150 :
+                                                        totalSolved < 200 ? 200 :
+                                                            totalSolved < 300 ? 300 :
+                                                                totalSolved < 500 ? 500 :
+                                                                    totalSolved < 750 ? 750 :
+                                                                        totalSolved < 1000 ? 1000 :
+                                                                            totalSolved < 1500 ? 1500 : 2000
                                         )) * 100}%`
                                     }}
                                 />

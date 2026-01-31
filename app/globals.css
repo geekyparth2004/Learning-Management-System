@@ -17,3 +17,43 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Legendary Badge Animations */
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8));
+  }
+}
+
+@keyframes badge-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(255, 100, 255, 0.4)) drop-shadow(0 0 20px rgba(100, 200, 255, 0.3));
+  }
+  33% {
+    filter: drop-shadow(0 0 20px rgba(100, 255, 200, 0.6)) drop-shadow(0 0 30px rgba(255, 200, 100, 0.4));
+  }
+  66% {
+    filter: drop-shadow(0 0 15px rgba(255, 200, 100, 0.5)) drop-shadow(0 0 25px rgba(100, 100, 255, 0.4));
+  }
+}
+
+@keyframes badge-rainbow {
+  0% { filter: hue-rotate(0deg) drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
+  25% { filter: hue-rotate(90deg) drop-shadow(0 0 25px rgba(100, 255, 200, 0.6)); }
+  50% { filter: hue-rotate(180deg) drop-shadow(0 0 30px rgba(100, 150, 255, 0.6)); }
+  75% { filter: hue-rotate(270deg) drop-shadow(0 0 25px rgba(255, 100, 200, 0.6)); }
+  100% { filter: hue-rotate(360deg) drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
+}
+
+.animate-badge-legendary {
+  animation: badge-pulse 2s ease-in-out infinite, badge-glow 3s ease-in-out infinite;
+}
+
+.animate-badge-godlike {
+  animation: badge-pulse 1.5s ease-in-out infinite, badge-rainbow 4s linear infinite;
+}

@@ -33,6 +33,56 @@ export const PROBLEM_BADGE_DEFINITIONS = {
         threshold: 200,
         image: "/badges/badge_200.png",
         category: "problems"
+    },
+    PROBLEMS_300: {
+        id: "PROBLEMS_300",
+        title: "Ruby Warrior",
+        description: "Solved 300 practice problems",
+        threshold: 300,
+        image: "/badges/badge_300.png",
+        category: "problems"
+    },
+    PROBLEMS_500: {
+        id: "PROBLEMS_500",
+        title: "Elite Achiever",
+        description: "Solved 500 practice problems",
+        threshold: 500,
+        image: "/badges/badge_500.png",
+        category: "problems"
+    },
+    PROBLEMS_750: {
+        id: "PROBLEMS_750",
+        title: "Cosmic Champion",
+        description: "Solved 750 practice problems",
+        threshold: 750,
+        image: "/badges/badge_750.png",
+        category: "problems"
+    },
+    PROBLEMS_1000: {
+        id: "PROBLEMS_1000",
+        title: "Dragon Master",
+        description: "Solved 1000 practice problems - Ultimate Achievement!",
+        threshold: 1000,
+        image: "/badges/badge_1000.png",
+        category: "problems"
+    },
+    PROBLEMS_1500: {
+        id: "PROBLEMS_1500",
+        title: "Immortal Tier",
+        description: "Solved 1500 practice problems - Celestial Power!",
+        threshold: 1500,
+        image: "/badges/badge_1500.png",
+        category: "problems",
+        animated: true
+    },
+    PROBLEMS_2000: {
+        id: "PROBLEMS_2000",
+        title: "Godlike Tier",
+        description: "Solved 2000 practice problems - LEGENDARY!",
+        threshold: 2000,
+        image: "/badges/badge_2000.png",
+        category: "problems",
+        animated: true
     }
 } as const;
 
@@ -115,7 +165,7 @@ export async function checkAndAwardBadges(userId: string): Promise<BadgeType | n
     const earnedBadgeTypes = new Set(existingBadges.map((b: { badgeType: string }) => b.badgeType));
 
     // Check each badge threshold from highest to lowest
-    const badgesToCheck: ProblemBadgeType[] = ["PROBLEMS_200", "PROBLEMS_150", "PROBLEMS_100", "PROBLEMS_50"];
+    const badgesToCheck: ProblemBadgeType[] = ["PROBLEMS_2000", "PROBLEMS_1500", "PROBLEMS_1000", "PROBLEMS_750", "PROBLEMS_500", "PROBLEMS_300", "PROBLEMS_200", "PROBLEMS_150", "PROBLEMS_100", "PROBLEMS_50"];
 
     for (const badgeType of badgesToCheck) {
         const badge = PROBLEM_BADGE_DEFINITIONS[badgeType];
