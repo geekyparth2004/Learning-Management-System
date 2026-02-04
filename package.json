@@ -16,6 +16,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@huggingface/transformers": "^3.8.0",
     "@monaco-editor/react": "^4.7.0",
+    "@upstash/redis": "^1.36.2",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
     "cloudinary": "^2.8.0",

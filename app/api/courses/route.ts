@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { cacheGet, cacheSet, cacheDelete, CACHE_TTL, CACHE_KEYS } from "@/lib/redis";
 
 export async function POST(req: Request) {
     try {
@@ -23,6 +24,9 @@ export async function POST(req: Request) {
             },
         });
 
+        // Invalidate courses cache
+        await cacheDelete(CACHE_KEYS.courses());
+
         return NextResponse.json(course);
     } catch (error) {
         console.error("Error creating course:", error);
@@ -32,6 +36,14 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     try {
+        const cacheKey = CACHE_KEYS.courses();
+
+        // Try cache first
+        const cached = await cacheGet(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached);
+        }
+
         const courses = await db.course.findMany({
             include: {
                 teacher: {
@@ -44,9 +56,13 @@ export async function GET(req: Request) {
             orderBy: { createdAt: "desc" },
         });
 
+        // Cache for 5 minutes
+        await cacheSet(cacheKey, courses, CACHE_TTL.MEDIUM);
+
         return NextResponse.json(courses);
     } catch (error) {
         console.error("Error fetching courses:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+

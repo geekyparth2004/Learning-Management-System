@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { checkAndAwardStreakBadges, StreakBadgeType } from "@/lib/badges";
+import { cacheGet, cacheSet, cacheDelete, CACHE_TTL, CACHE_KEYS } from "@/lib/redis";
 
 // IST offset: UTC+5:30 = 5.5 hours = 330 minutes
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -61,6 +62,9 @@ export async function updateUserStreak(userId: string): Promise<{ streak: number
         }
     });
 
+    // Invalidate streak cache
+    await cacheDelete(CACHE_KEYS.userStreak(userId));
+
     // Check for streak badges
     const newBadge = await checkAndAwardStreakBadges(userId, newStreak);
 
@@ -73,6 +77,17 @@ export async function updateUserStreak(userId: string): Promise<{ streak: number
  * If the user missed yesterday (IST), reset streak to 0.
  */
 export async function getUserStreak(userId: string): Promise<{ streak: number; lastActivityDate: Date | null }> {
+    const cacheKey = CACHE_KEYS.userStreak(userId);
+
+    // Try cache first
+    const cached = await cacheGet<{ streak: number; lastActivityDate: string | null }>(cacheKey);
+    if (cached) {
+        return {
+            streak: cached.streak,
+            lastActivityDate: cached.lastActivityDate ? new Date(cached.lastActivityDate) : null
+        };
+    }
+
     const user = await db.user.findUnique({
         where: { id: userId },
         select: { currentStreak: true, lastActivityDate: true }
@@ -97,10 +112,22 @@ export async function getUserStreak(userId: string): Promise<{ streak: number; l
                 where: { id: userId },
                 data: { currentStreak: 0 }
             });
-            return { streak: 0, lastActivityDate: user.lastActivityDate };
+
+            const result = { streak: 0, lastActivityDate: user.lastActivityDate };
+            await cacheSet(cacheKey, { streak: 0, lastActivityDate: user.lastActivityDate?.toISOString() }, CACHE_TTL.SHORT);
+            return result;
         }
     }
 
-    return { streak: user.currentStreak, lastActivityDate: user.lastActivityDate };
+    const result = { streak: user.currentStreak, lastActivityDate: user.lastActivityDate };
+
+    // Cache for 1 minute
+    await cacheSet(cacheKey, {
+        streak: user.currentStreak,
+        lastActivityDate: user.lastActivityDate?.toISOString() || null
+    }, CACHE_TTL.SHORT);
+
+    return result;
 }
+
 
