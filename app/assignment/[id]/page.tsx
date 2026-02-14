@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock } from "lucide-react";
 
 import CodeEditor from "@/components/CodeEditor";
+import WebDevEditor from "@/components/WebDevEditor";
 import Terminal from "@/components/Terminal";
 import ComplexityAnalysis from "@/components/ComplexityAnalysis";
 import ProblemLayout from "@/components/ProblemLayout";
@@ -40,6 +41,12 @@ interface Problem {
     slug?: string;
     courseId?: string;
     videoSolution?: string;
+    type?: "CODING" | "WEB_DEV";
+    webDevInitialCode?: {
+        html: string;
+        css: string;
+        js: string;
+    };
 }
 
 interface TestCaseResult {
@@ -64,6 +71,10 @@ function AssignmentContent() {
     const [status, setStatus] = useState<"idle" | "running" | "success" | "error">("idle");
     const [customInput, setCustomInput] = useState("");
     const [activeTab, setActiveTab] = useState<"editor" | "terminal" | "results" | "ask-ai">("editor");
+
+    // Web Dev State
+    const [webDevFiles, setWebDevFiles] = useState<{ name: string; language: string; content: string }[]>([]);
+    const [activeFileName, setActiveFileName] = useState("index.html");
     const [testCaseResults, setTestCaseResults] = useState<TestCaseResult[]>([]);
     const [expandedHints, setExpandedHints] = useState<number[]>([]);
     const [errorLine, setErrorLine] = useState<number | null>(null);
@@ -260,7 +271,26 @@ function AssignmentContent() {
                     }
                 }
 
-                // Ensure strict presence of language keys
+                // Parse type and Web Dev Code
+                // Check if defaultCode has web dev structure or if type is set
+                let type: "CODING" | "WEB_DEV" = (problemData as any).type || "CODING";
+                let webDevInitialCode = undefined;
+
+                // If the DB explicitly says "WEB_DEV", trust it.
+                // Or if defaultCode has html/css/js keys
+                if (type === "WEB_DEV" || (problemData.defaultCode as any).html !== undefined) {
+                    type = "WEB_DEV";
+                    webDevInitialCode = {
+                        html: (problemData.defaultCode as any).html || "",
+                        css: (problemData.defaultCode as any).css || "",
+                        js: (problemData.defaultCode as any).js || ""
+                    };
+                }
+
+                problemData.type = type;
+                problemData.webDevInitialCode = webDevInitialCode;
+
+                // Ensure strict presence of language keys for CODING type
                 const safeDefaultCode = {
                     python: problemData.defaultCode.python || "",
                     cpp: problemData.defaultCode.cpp || "",
@@ -317,8 +347,17 @@ function AssignmentContent() {
                 setProblem(fullProblemData);
 
                 // Safely set initial code
-                const initialCode = fullProblemData.defaultCode[language as keyof typeof fullProblemData.defaultCode] || "";
-                setCode(initialCode);
+                if (fullProblemData.type === "WEB_DEV") {
+                    setWebDevFiles([
+                        { name: "index.html", language: "html", content: fullProblemData.webDevInitialCode?.html || "" },
+                        { name: "styles.css", language: "css", content: fullProblemData.webDevInitialCode?.css || "" },
+                        { name: "script.js", language: "javascript", content: fullProblemData.webDevInitialCode?.js || "" }
+                    ]);
+                    setActiveFileName("index.html");
+                } else {
+                    const initialCode = fullProblemData.defaultCode[language as keyof typeof fullProblemData.defaultCode] || "";
+                    setCode(initialCode);
+                }
             } catch (e: any) {
                 console.error("Error fetching assignment:", e);
                 setPageError(e.message || "Unknown error occurred on loading.");
@@ -728,378 +767,391 @@ function AssignmentContent() {
 
             {/* Main Content */}
             <div className="flex flex-1 overflow-hidden">
-                {/* Left panel: Description & Hints */}
-                <div
-                    className="overflow-y-auto border-r border-gray-800 bg-[#0e0e0e] p-6"
-                    style={{ width: `${leftWidth}%` }}
-                >
-                    <div className="space-y-8">
-                        {/* Description */}
-                        <div>
-                            <h2 className="mb-4 text-lg font-semibold">Problem Description</h2>
-                            <div className="prose prose-invert text-sm leading-relaxed text-gray-300">{problem.description}</div>
-                        </div>
+                {problem.type === "WEB_DEV" ? (
+                    <WebDevEditor
+                        files={webDevFiles}
+                        setFiles={setWebDevFiles}
+                        instructions={problem.description}
+                        activeFileName={activeFileName}
+                        setActiveFileName={setActiveFileName}
+                        videoSolution={problem.videoSolution}
+                    />
+                ) : (
+                    <>
+                        {/* Left panel: Description & Hints */}
+                        <div
+                            className="overflow-y-auto border-r border-gray-800 bg-[#0e0e0e] p-6"
+                            style={{ width: `${leftWidth}%` }}
+                        >
+                            <div className="space-y-8">
+                                {/* Description */}
+                                <div>
+                                    <h2 className="mb-4 text-lg font-semibold">Problem Description</h2>
+                                    <div className="prose prose-invert text-sm leading-relaxed text-gray-300">{problem.description}</div>
+                                </div>
 
-                        {/* Test Cases */}
-                        <div>
-                            <h3 className="mb-4 text-lg font-semibold">Test Cases</h3>
-                            <div className="space-y-3">
-                                {problem.testCases.map((tc, idx) => {
-                                    const result = testCaseResults.find(r => r.id === tc.id);
-                                    return (
-                                        <div
-                                            key={tc.id}
-                                            className={cn(
-                                                "rounded border p-4",
-                                                result
-                                                    ? result.passed
-                                                        ? "border-green-800 bg-green-900/20"
-                                                        : "border-red-800 bg-red-900/20"
-                                                    : "border-gray-700 bg-[#1e1e1e]"
-                                            )}
-                                        >
-                                            <div className="mb-3 flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
-                                                    {tc.isHidden && (
-                                                        <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                {/* Test Cases */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold">Test Cases</h3>
+                                    <div className="space-y-3">
+                                        {problem.testCases.map((tc, idx) => {
+                                            const result = testCaseResults.find(r => r.id === tc.id);
+                                            return (
+                                                <div
+                                                    key={tc.id}
+                                                    className={cn(
+                                                        "rounded border p-4",
+                                                        result
+                                                            ? result.passed
+                                                                ? "border-green-800 bg-green-900/20"
+                                                                : "border-red-800 bg-red-900/20"
+                                                            : "border-gray-700 bg-[#1e1e1e]"
                                                     )}
-                                                </div>
-                                                {result && (
-                                                    <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
-                                                        {result.passed ? "Passed" : "Failed"}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {!tc.isHidden && (
-                                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                    <div className="space-y-1">
-                                                        <span className="text-xs font-medium text-gray-500">Input:</span>
-                                                        <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <span className="text-xs font-medium text-gray-500">Expected Output:</span>
-                                                        <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* AI Complexity Analysis */}
-                        <div>
-                            <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
-                        </div>
-
-
-                        {/* Hints Section */}
-                        <div>
-                            <div className="mb-4 flex items-center gap-3">
-                                <h3 className="text-lg font-semibold">Hints</h3>
-                                <span className="rounded-full bg-gray-800 px-3 py-1 text-xs text-gray-400">
-                                    {problem.hints.filter(h => !h.locked).length}/{problem.hints.length} unlocked
-                                </span>
-                            </div>
-                            <div className="space-y-4">
-                                {problem.hints.map((hint, idx) => (
-                                    <div key={idx} className="overflow-hidden rounded-lg border border-gray-800 bg-[#161616]">
-                                        <button
-                                            onClick={() => toggleHint(idx)}
-                                            className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[#1e1e1e]"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <span className="font-medium text-gray-300">Hint {idx + 1}</span>
-                                                {hint.type === "video" && (
-                                                    <span className="flex items-center gap-1 rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
-                                                        <Video size={12} /> Solution
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                {hint.locked ? (
-                                                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                        <Lock size={14} />
-                                                        <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
-                                                    </div>
-                                                ) : (
-                                                    <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
-                                                )}
-                                            </div>
-                                        </button>
-                                        {expandedHints.includes(idx) && !hint.locked && (
-                                            <div className="border-t border-gray-800 bg-[#111111] p-4 text-sm text-gray-300">
-                                                {hint.type === "text" ? (
-                                                    hint.content || <span className="italic text-gray-500">No text content available.</span>
-                                                ) : (
-                                                    <video src={getProxyUrl(hint.content)} controls className="w-full rounded" />
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Drag Handle */}
-                <div
-                    className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors"
-                    onMouseDown={startResizing}
-                />
-
-                {/* Right panel: Tabbed Interface */}
-                <div
-                    className="flex flex-col bg-[#111111]"
-                    style={{ width: `${100 - leftWidth}%` }}
-                >
-                    {/* Tabs */}
-                    {!problem.leetcodeUrl && (
-                        <div className="flex border-b border-gray-800 bg-[#161616]">
-                            <button
-                                onClick={() => setActiveTab("editor")}
-                                className={cn(
-                                    "px-6 py-3 text-sm font-medium transition-colors",
-                                    activeTab === "editor" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                                )}
-                            >
-                                Editor
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("terminal")}
-                                className={cn(
-                                    "px-6 py-3 text-sm font-medium transition-colors",
-                                    activeTab === "terminal" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                                )}
-                            >
-                                Terminal
-                            </button>
-                            <button
-                                onClick={() => setActiveTab("results")}
-                                className={cn(
-                                    "px-6 py-3 text-sm font-medium transition-colors",
-                                    activeTab === "results" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
-                                )}
-                            >
-                                Test Results
-                            </button>
-                            <button
-                                onClick={() => canAskAi && setActiveTab("ask-ai")}
-                                className={cn(
-                                    "px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2",
-                                    activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]",
-                                    !canAskAi && "opacity-50 cursor-not-allowed"
-                                )}
-                            >
-                                Ask AI
-                                {!canAskAi && <span className="text-xs">({timeToAi})</span>}
-                                {!canAskAi && <Lock size={12} />}
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Tab Content */}
-                    <div className="flex-1 overflow-hidden relative">
-                        {problem.leetcodeUrl ? (
-                            <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
-                                <div className="max-w-md space-y-6">
-                                    <div className="space-y-2">
-                                        <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
-                                        <p className="text-gray-400">
-                                            This problem must be solved on LeetCode. Once you've submitted your solution there, mark it as complete here.
-                                        </p>
-                                    </div>
-
-                                    <a
-                                        href={problem.leetcodeUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-4 text-lg font-bold hover:bg-[#333] transition-colors"
-                                    >
-                                        Open Problem on LeetCode <LogOut size={20} />
-                                    </a>
-
-                                    <div className="relative">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <span className="w-full border-t border-gray-800" />
-                                        </div>
-                                        <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-[#111111] px-2 text-gray-500">Then</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
-                                        <h3 className="mb-4 font-semibold">Completion Status</h3>
-                                        <LeetCodeVerifier
-                                            problemSlug={problem.slug || ""}
-                                            onVerified={async () => {
-                                                alert("Assignment Marked as Completed! ✅");
-                                                await fetch(`/api/assignments/${assignmentId}/submissions`, {
-                                                    method: "POST",
-                                                    headers: { "Content-Type": "application/json" },
-                                                    body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
-                                                });
-                                                if (problem.courseId) {
-                                                    router.push(`/courses/${problem.courseId}`);
-                                                } else {
-                                                    router.push("/");
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
-                                {/* Explicit height wrapper for Monaco to ensure it renders */}
-                                <div className="h-full w-full min-h-[500px]">
-                                    <CodeEditor
-                                        key={activeTab} // Force re-mount when switching tabs
-                                        language={language}
-                                        code={code}
-                                        onChange={(value) => {
-                                            setCode(value || "");
-                                            setTestCaseResults([]); // Reset results on code change
-                                        }}
-                                        errorLine={errorLine}
-                                        errorMessage={status === "error" ? output : null}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === "terminal" && (
-                            <div className="h-full p-4">
-                                <Terminal output={output} status={status} stdin={customInput} onStdinChange={setCustomInput} />
-                            </div>
-                        )}
-
-                        {activeTab === "results" && (
-                            <div className="h-full overflow-y-auto p-4">
-                                <div className="space-y-3">
-                                    {problem.testCases.map((tc, idx) => {
-                                        const result = testCaseResults.find(r => r.id === tc.id);
-                                        return (
-                                            <div
-                                                key={tc.id}
-                                                className={cn(
-                                                    "rounded border p-4",
-                                                    result
-                                                        ? result.passed
-                                                            ? "border-green-800 bg-green-900/20"
-                                                            : "border-red-800 bg-red-900/20"
-                                                        : "border-gray-700 bg-[#1e1e1e]"
-                                                )}
-                                            >
-                                                <div className="mb-3 flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
-                                                        {tc.isHidden && (
-                                                            <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                                >
+                                                    <div className="mb-3 flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
+                                                            {tc.isHidden && (
+                                                                <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                                            )}
+                                                        </div>
+                                                        {result && (
+                                                            <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
+                                                                {result.passed ? "Passed" : "Failed"}
+                                                            </span>
                                                         )}
                                                     </div>
-                                                    {result && (
-                                                        <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
-                                                            {result.passed ? "Passed" : "Failed"}
-                                                        </span>
+                                                    {!tc.isHidden && (
+                                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                            <div className="space-y-1">
+                                                                <span className="text-xs font-medium text-gray-500">Input:</span>
+                                                                <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <span className="text-xs font-medium text-gray-500">Expected Output:</span>
+                                                                <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </div>
-                                                {!tc.isHidden && (
-                                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                        <div className="space-y-1">
-                                                            <span className="text-xs font-medium text-gray-500">Input:</span>
-                                                            <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* AI Complexity Analysis */}
+                                <div>
+                                    <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
+                                </div>
+
+
+                                {/* Hints Section */}
+                                <div>
+                                    <div className="mb-4 flex items-center gap-3">
+                                        <h3 className="text-lg font-semibold">Hints</h3>
+                                        <span className="rounded-full bg-gray-800 px-3 py-1 text-xs text-gray-400">
+                                            {problem.hints.filter(h => !h.locked).length}/{problem.hints.length} unlocked
+                                        </span>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {problem.hints.map((hint, idx) => (
+                                            <div key={idx} className="overflow-hidden rounded-lg border border-gray-800 bg-[#161616]">
+                                                <button
+                                                    onClick={() => toggleHint(idx)}
+                                                    className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[#1e1e1e]"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="font-medium text-gray-300">Hint {idx + 1}</span>
+                                                        {hint.type === "video" && (
+                                                            <span className="flex items-center gap-1 rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
+                                                                <Video size={12} /> Solution
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {hint.locked ? (
+                                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                                <Lock size={14} />
+                                                                <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
+                                                        )}
+                                                    </div>
+                                                </button>
+                                                {expandedHints.includes(idx) && !hint.locked && (
+                                                    <div className="border-t border-gray-800 bg-[#111111] p-4 text-sm text-gray-300">
+                                                        {hint.type === "text" ? (
+                                                            hint.content || <span className="italic text-gray-500">No text content available.</span>
+                                                        ) : (
+                                                            <video src={getProxyUrl(hint.content)} controls className="w-full rounded" />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Drag Handle */}
+                        <div
+                            className="w-1 cursor-col-resize bg-gray-800 hover:bg-blue-500 transition-colors"
+                            onMouseDown={startResizing}
+                        />
+
+                        {/* Right panel: Tabbed Interface */}
+                        <div
+                            className="flex flex-col bg-[#111111]"
+                            style={{ width: `${100 - leftWidth}%` }}
+                        >
+                            {/* Tabs */}
+                            {!problem.leetcodeUrl && (
+                                <div className="flex border-b border-gray-800 bg-[#161616]">
+                                    <button
+                                        onClick={() => setActiveTab("editor")}
+                                        className={cn(
+                                            "px-6 py-3 text-sm font-medium transition-colors",
+                                            activeTab === "editor" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                        )}
+                                    >
+                                        Editor
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("terminal")}
+                                        className={cn(
+                                            "px-6 py-3 text-sm font-medium transition-colors",
+                                            activeTab === "terminal" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                        )}
+                                    >
+                                        Terminal
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("results")}
+                                        className={cn(
+                                            "px-6 py-3 text-sm font-medium transition-colors",
+                                            activeTab === "results" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]"
+                                        )}
+                                    >
+                                        Test Results
+                                    </button>
+                                    <button
+                                        onClick={() => canAskAi && setActiveTab("ask-ai")}
+                                        className={cn(
+                                            "px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2",
+                                            activeTab === "ask-ai" ? "border-b-2 border-blue-500 text-white bg-[#1e1e1e]" : "text-gray-400 hover:text-gray-200 hover:bg-[#1e1e1e]",
+                                            !canAskAi && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
+                                        Ask AI
+                                        {!canAskAi && <span className="text-xs">({timeToAi})</span>}
+                                        {!canAskAi && <Lock size={12} />}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Tab Content */}
+                            <div className="flex-1 overflow-hidden relative">
+                                {problem.leetcodeUrl ? (
+                                    <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
+                                        <div className="max-w-md space-y-6">
+                                            <div className="space-y-2">
+                                                <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
+                                                <p className="text-gray-400">
+                                                    This problem must be solved on LeetCode. Once you've submitted your solution there, mark it as complete here.
+                                                </p>
+                                            </div>
+
+                                            <a
+                                                href={problem.leetcodeUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-4 text-lg font-bold hover:bg-[#333] transition-colors"
+                                            >
+                                                Open Problem on LeetCode <LogOut size={20} />
+                                            </a>
+
+                                            <div className="relative">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <span className="w-full border-t border-gray-800" />
+                                                </div>
+                                                <div className="relative flex justify-center text-xs uppercase">
+                                                    <span className="bg-[#111111] px-2 text-gray-500">Then</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
+                                                <h3 className="mb-4 font-semibold">Completion Status</h3>
+                                                <LeetCodeVerifier
+                                                    problemSlug={problem.slug || ""}
+                                                    onVerified={async () => {
+                                                        alert("Assignment Marked as Completed! ✅");
+                                                        await fetch(`/api/assignments/${assignmentId}/submissions`, {
+                                                            method: "POST",
+                                                            headers: { "Content-Type": "application/json" },
+                                                            body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
+                                                        });
+                                                        if (problem.courseId) {
+                                                            router.push(`/courses/${problem.courseId}`);
+                                                        } else {
+                                                            router.push("/");
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
+                                        {/* Explicit height wrapper for Monaco to ensure it renders */}
+                                        <div className="h-full w-full min-h-[500px]">
+                                            <CodeEditor
+                                                key={activeTab} // Force re-mount when switching tabs
+                                                language={language}
+                                                code={code}
+                                                onChange={(value) => {
+                                                    setCode(value || "");
+                                                    setTestCaseResults([]); // Reset results on code change
+                                                }}
+                                                errorLine={errorLine}
+                                                errorMessage={status === "error" ? output : null}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === "terminal" && (
+                                    <div className="h-full p-4">
+                                        <Terminal output={output} status={status} stdin={customInput} onStdinChange={setCustomInput} />
+                                    </div>
+                                )}
+
+                                {activeTab === "results" && (
+                                    <div className="h-full overflow-y-auto p-4">
+                                        <div className="space-y-3">
+                                            {problem.testCases.map((tc, idx) => {
+                                                const result = testCaseResults.find(r => r.id === tc.id);
+                                                return (
+                                                    <div
+                                                        key={tc.id}
+                                                        className={cn(
+                                                            "rounded border p-4",
+                                                            result
+                                                                ? result.passed
+                                                                    ? "border-green-800 bg-green-900/20"
+                                                                    : "border-red-800 bg-red-900/20"
+                                                                : "border-gray-700 bg-[#1e1e1e]"
+                                                        )}
+                                                    >
+                                                        <div className="mb-3 flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
+                                                                {tc.isHidden && (
+                                                                    <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                                                )}
+                                                            </div>
+                                                            {result && (
+                                                                <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
+                                                                    {result.passed ? "Passed" : "Failed"}
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <span className="text-xs font-medium text-gray-500">Expected Output:</span>
-                                                            <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
-                                                        </div>
-                                                        {result && !result.passed && (
-                                                            <div className="col-span-2 mt-2 border-t border-red-800/30 pt-2">
-                                                                <span className="text-xs font-medium text-red-400">Actual Output:</span>
-                                                                <pre className="mt-1 overflow-x-auto rounded bg-[#111111] p-2 text-xs text-red-300">{result.actualOutput}</pre>
+                                                        {!tc.isHidden && (
+                                                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                                <div className="space-y-1">
+                                                                    <span className="text-xs font-medium text-gray-500">Input:</span>
+                                                                    <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <span className="text-xs font-medium text-gray-500">Expected Output:</span>
+                                                                    <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
+                                                                </div>
+                                                                {result && !result.passed && (
+                                                                    <div className="col-span-2 mt-2 border-t border-red-800/30 pt-2">
+                                                                        <span className="text-xs font-medium text-red-400">Actual Output:</span>
+                                                                        <pre className="mt-1 overflow-x-auto rounded bg-[#111111] p-2 text-xs text-red-300">{result.actualOutput}</pre>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                    {testCaseResults.length === 0 && (
-                                        <div className="flex h-full items-center justify-center text-gray-500">
-                                            Run tests to see results
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === "ask-ai" && (
-                            <div className="h-full overflow-y-auto p-6">
-                                {!canAskAi ? (
-                                    <div className="flex h-full flex-col items-center justify-center text-center">
-                                        <Lock className="mb-4 h-12 w-12 text-gray-600" />
-                                        <h3 className="mb-2 text-xl font-semibold">Ask AI is Locked</h3>
-                                        <p className="text-gray-400">
-                                            You can ask AI for help after 4 minutes.
-                                        </p>
-                                        <p className="mt-4 text-2xl font-mono font-bold text-blue-400">
-                                            {timeToAi}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-6">
-                                        <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
-                                            <h3 className="mb-4 text-lg font-semibold">Ask AI for Help</h3>
-                                            <p className="mb-6 text-sm text-gray-400">
-                                                Stuck? The AI can analyze your code and provide guidance without giving away the answer immediately.
-                                            </p>
-
-                                            {!aiMessage && (
-                                                <button
-                                                    onClick={() => handleAskAi("guide")}
-                                                    disabled={isAskingAi}
-                                                    className="rounded bg-blue-600 px-6 py-3 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                                                >
-                                                    {isAskingAi ? "Analyzing..." : "Ask AI for Guidance"}
-                                                </button>
-                                            )}
-
-                                            {aiMessage && (
-                                                <div className="mt-6 space-y-4">
-                                                    <div className="rounded bg-[#1e1e1e] p-4">
-                                                        <h4 className="mb-2 font-medium text-blue-400">AI Response:</h4>
-                                                        <div className="prose prose-invert text-sm">
-                                                            <pre className="whitespace-pre-wrap font-sans">{aiMessage}</pre>
-                                                        </div>
-                                                    </div>
-
-                                                    {showGiveAnswer && (
-                                                        <div className="border-t border-gray-800 pt-4">
-                                                            <p className="mb-4 text-sm text-gray-400">
-                                                                Still stuck? You can reveal the full solution.
-                                                            </p>
-                                                            <button
-                                                                onClick={() => handleAskAi("solution")}
-                                                                disabled={isAskingAi}
-                                                                className="rounded border border-red-900/50 bg-red-900/10 px-6 py-3 text-sm font-medium text-red-400 hover:bg-red-900/30 disabled:opacity-50"
-                                                            >
-                                                                {isAskingAi ? "Getting Solution..." : "Give Answer"}
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                );
+                                            })}
+                                            {testCaseResults.length === 0 && (
+                                                <div className="flex h-full items-center justify-center text-gray-500">
+                                                    Run tests to see results
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 )}
+
+                                {activeTab === "ask-ai" && (
+                                    <div className="h-full overflow-y-auto p-6">
+                                        {!canAskAi ? (
+                                            <div className="flex h-full flex-col items-center justify-center text-center">
+                                                <Lock className="mb-4 h-12 w-12 text-gray-600" />
+                                                <h3 className="mb-2 text-xl font-semibold">Ask AI is Locked</h3>
+                                                <p className="text-gray-400">
+                                                    You can ask AI for help after 4 minutes.
+                                                </p>
+                                                <p className="mt-4 text-2xl font-mono font-bold text-blue-400">
+                                                    {timeToAi}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-6">
+                                                <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
+                                                    <h3 className="mb-4 text-lg font-semibold">Ask AI for Help</h3>
+                                                    <p className="mb-6 text-sm text-gray-400">
+                                                        Stuck? The AI can analyze your code and provide guidance without giving away the answer immediately.
+                                                    </p>
+
+                                                    {!aiMessage && (
+                                                        <button
+                                                            onClick={() => handleAskAi("guide")}
+                                                            disabled={isAskingAi}
+                                                            className="rounded bg-blue-600 px-6 py-3 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                                        >
+                                                            {isAskingAi ? "Analyzing..." : "Ask AI for Guidance"}
+                                                        </button>
+                                                    )}
+
+                                                    {aiMessage && (
+                                                        <div className="mt-6 space-y-4">
+                                                            <div className="rounded bg-[#1e1e1e] p-4">
+                                                                <h4 className="mb-2 font-medium text-blue-400">AI Response:</h4>
+                                                                <div className="prose prose-invert text-sm">
+                                                                    <pre className="whitespace-pre-wrap font-sans">{aiMessage}</pre>
+                                                                </div>
+                                                            </div>
+
+                                                            {showGiveAnswer && (
+                                                                <div className="border-t border-gray-800 pt-4">
+                                                                    <p className="mb-4 text-sm text-gray-400">
+                                                                        Still stuck? You can reveal the full solution.
+                                                                    </p>
+                                                                    <button
+                                                                        onClick={() => handleAskAi("solution")}
+                                                                        disabled={isAskingAi}
+                                                                        className="rounded border border-red-900/50 bg-red-900/10 px-6 py-3 text-sm font-medium text-red-400 hover:bg-red-900/30 disabled:opacity-50"
+                                                                    >
+                                                                        {isAskingAi ? "Getting Solution..." : "Give Answer"}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

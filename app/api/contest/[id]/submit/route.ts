@@ -82,6 +82,10 @@ export async function POST(
                     }
                 });
             }
+
+            // Update user streak on successful solve
+            const { updateUserStreak } = await import("@/lib/streak");
+            await updateUserStreak(session.user.id);
         }
 
         return NextResponse.json({ success: true });

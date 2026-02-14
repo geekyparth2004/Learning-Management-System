@@ -128,7 +128,36 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                         <div className="p-6 prose prose-invert max-w-none text-sm">
                             <h3 className="text-lg font-bold mb-4">Instructions</h3>
                             <div className="prose prose-invert max-w-none text-sm text-gray-300">
-                                <ReactMarkdown rehypePlugins={[rehypeRaw]}>{instructions}</ReactMarkdown>
+                                <ReactMarkdown
+                                    rehypePlugins={[rehypeRaw]}
+                                    components={{
+                                        img: ({ node, ...props }) => {
+                                            let src = typeof props.src === 'string' ? props.src : "";
+                                            // Check for raw R2/S3 URL matching our private pattern and rewrite to proxy
+                                            if (src.includes("r2.cloudflarestorage.com") && !src.includes("pub-") && !src.includes("/api/image-proxy")) {
+                                                try {
+                                                    const url = new URL(src);
+                                                    const pathParts = url.pathname.split('/');
+                                                    if (pathParts.length >= 3) {
+                                                        const key = pathParts.slice(2).join('/');
+                                                        src = `/api/image-proxy?key=${encodeURIComponent(key)}`;
+                                                    }
+                                                } catch (e) { }
+                                            }
+
+                                            return (
+                                                <img
+                                                    {...props}
+                                                    src={src}
+                                                    className="max-w-full rounded-lg border border-gray-800 my-4"
+                                                    style={{ display: 'block', maxHeight: '400px' }}
+                                                />
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {instructions}
+                                </ReactMarkdown>
                             </div>
                         </div>
                     ) : leftPanelTab === "preview" ? (
