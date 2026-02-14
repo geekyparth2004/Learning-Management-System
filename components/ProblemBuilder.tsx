@@ -66,9 +66,9 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
 
     // Web Dev State
     const [webDevInstructions, setWebDevInstructions] = useState(initialData?.webDevInstructions || "");
-    const [webDevHtml, setWebDevHtml] = useState(initialData?.webDevInitialCode?.html || "<!-- Write your HTML here -->");
-    const [webDevCss, setWebDevCss] = useState(initialData?.webDevInitialCode?.css || "/* Write your CSS here */");
-    const [webDevJs, setWebDevJs] = useState(initialData?.webDevInitialCode?.js || "// Write your JS here");
+    const [webDevHtml, setWebDevHtml] = useState(initialData?.webDevInitialCode?.html || "");
+    const [webDevCss, setWebDevCss] = useState(initialData?.webDevInitialCode?.css || "");
+    const [webDevJs, setWebDevJs] = useState(initialData?.webDevInitialCode?.js || "");
 
     const [uploadingState, setUploadingState] = useState(false);
 

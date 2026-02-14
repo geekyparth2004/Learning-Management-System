@@ -25,6 +25,7 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
     const [leftPanelTab, setLeftPanelTab] = useState<"problem" | "preview" | "solution">("problem");
     const [splitRatio, setSplitRatio] = useState(40);
     const [isResizing, setIsResizing] = useState(false);
+    const [autoScroll, setAutoScroll] = useState(true);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const startResizing = () => setIsResizing(true);
@@ -67,6 +68,15 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
             ${files.find(f => f.name === "index.html")?.content || ""}
             <script>
                 ${files.filter(f => f.language === "javascript").map(f => f.content).join("\n")}
+                
+                // Auto-scroll logic
+                window.onload = function() {
+                    if (${autoScroll}) {
+                        window.scrollTo(0, document.body.scrollHeight);
+                        // Also try scrolling documentElement for some browsers
+                        document.documentElement.scrollTop = document.documentElement.scrollHeight;
+                    }
+                };
             </script>
         </body>
         </html>
@@ -92,6 +102,9 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
 
     const updateFileContent = (value: string) => {
         setFiles(files.map(f => f.name === activeFileName ? { ...f, content: value } : f));
+        if (leftPanelTab !== "preview") {
+            setLeftPanelTab("preview");
+        }
     };
 
     const activeFile = files.find(f => f.name === activeFileName);
@@ -100,26 +113,39 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
         <div className="flex flex-1 overflow-hidden h-full" ref={containerRef}>
             {/* Left Panel */}
             <div className="flex flex-col border-r border-gray-800 bg-[#111111]" style={{ width: `${splitRatio}%` }}>
-                <div className="flex border-b border-gray-800">
-                    <button
-                        onClick={() => setLeftPanelTab("problem")}
-                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "problem" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
-                    >
-                        Problem Statement
-                    </button>
-                    <button
-                        onClick={() => setLeftPanelTab("preview")}
-                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "preview" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
-                    >
-                        Live Preview
-                    </button>
-                    {videoSolution && (
+                <div className="flex shrink-0 border-b border-gray-800 justify-between items-center pr-2">
+                    <div className="flex flex-1">
                         <button
-                            onClick={() => setLeftPanelTab("solution")}
-                            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "solution" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
+                            onClick={() => setLeftPanelTab("problem")}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "problem" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
                         >
-                            Solution
+                            Problem Statement
                         </button>
+                        <button
+                            onClick={() => setLeftPanelTab("preview")}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "preview" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
+                        >
+                            Live Preview
+                        </button>
+                        {videoSolution && (
+                            <button
+                                onClick={() => setLeftPanelTab("solution")}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${leftPanelTab === "solution" ? "bg-[#1e1e1e] text-white border-b-2 border-blue-500" : "text-gray-400 hover:text-white"}`}
+                            >
+                                Solution
+                            </button>
+                        )}
+                    </div>
+                    {leftPanelTab === "preview" && (
+                        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={autoScroll}
+                                onChange={(e) => setAutoScroll(e.target.checked)}
+                                className="rounded border-gray-700 bg-[#1e1e1e]"
+                            />
+                            Auto Scroll
+                        </label>
                     )}
                 </div>
 
@@ -200,7 +226,7 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
 
             {/* Right Panel (Editors) */}
             <div className="flex flex-col bg-[#1e1e1e]" style={{ width: `calc(${100 - splitRatio}% - 4px)` }}>
-                <div className="flex items-center justify-between border-b border-gray-800 bg-[#161616] overflow-x-auto">
+                <div className="flex shrink-0 items-center justify-between border-b border-gray-800 bg-[#161616] overflow-x-auto">
                     <div className="flex">
                         {files.map(file => (
                             <button
@@ -221,7 +247,7 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                     </div>
                 </div>
 
-                <div className="flex-1 relative">
+                <div className="flex-1 relative overflow-hidden">
                     {activeFile && (
                         <CodeEditor
                             key={activeFile.name} // Force re-mount on file change to ensure correct language/content

@@ -246,31 +246,54 @@ export async function POST(
                         const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
                         const { createOrUpdateFile } = await import("@/lib/github");
 
-                        // Determine file extension
-                        const extensionMap: Record<string, string> = {
-                            "javascript": "js",
-                            "python": "py",
-                            "java": "java",
-                            "cpp": "cpp",
-                            "c": "c",
-                            "typescript": "ts",
-                            "go": "go",
-                            "rust": "rs",
-                        };
-                        const ext = extensionMap[language.toLowerCase()] || "txt";
-
-                        // Use problem title for filename
                         const problem = assignment.problems[0];
                         const moduleTitle = moduleItem.module.title.replace(/\s+/g, "_");
-                        const filename = `${moduleTitle}/${problem.title.replace(/\s+/g, "_")}.${ext}`;
+                        const assignmentTitle = problem.title.replace(/\s+/g, "_");
 
-                        await createOrUpdateFile(
-                            githubAccessToken,
-                            repoName,
-                            filename,
-                            code,
-                            `Solved ${problem.title}`
-                        );
+                        if (language === "web-dev") {
+                            // Handle Web Dev Submission (Multiple Files)
+                            try {
+                                const files = JSON.parse(code); // Expecting array of {name, content}
+                                if (Array.isArray(files)) {
+                                    for (const file of files) {
+                                        const filename = `${moduleTitle}/${assignmentTitle}/${file.name}`;
+                                        await createOrUpdateFile(
+                                            githubAccessToken,
+                                            repoName,
+                                            filename,
+                                            file.content,
+                                            `Solved ${problem.title} - ${file.name}`
+                                        );
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Error parsing web dev files for GitHub:", e);
+                            }
+                        } else {
+                            // Handle Standard Coding Submission (Single File)
+                            // Determine file extension
+                            const extensionMap: Record<string, string> = {
+                                "javascript": "js",
+                                "python": "py",
+                                "java": "java",
+                                "cpp": "cpp",
+                                "c": "c",
+                                "typescript": "ts",
+                                "go": "go",
+                                "rust": "rs",
+                            };
+                            const ext = extensionMap[language.toLowerCase()] || "txt";
+
+                            const filename = `${moduleTitle}/${assignmentTitle}.${ext}`;
+
+                            await createOrUpdateFile(
+                                githubAccessToken,
+                                repoName,
+                                filename,
+                                code,
+                                `Solved ${problem.title}`
+                            );
+                        }
                     }
                 }
             } catch (error) {

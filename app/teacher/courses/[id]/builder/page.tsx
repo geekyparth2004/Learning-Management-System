@@ -65,9 +65,9 @@ export default function CourseBuilderPage() {
 
     // Web Dev State
     const [webDevInstructions, setWebDevInstructions] = useState("");
-    const [webDevHtml, setWebDevHtml] = useState("<!-- Write your HTML here -->");
-    const [webDevCss, setWebDevCss] = useState("/* Write your CSS here */");
-    const [webDevJs, setWebDevJs] = useState("// Write your JS here");
+    const [webDevHtml, setWebDevHtml] = useState("");
+    const [webDevCss, setWebDevCss] = useState("");
+    const [webDevJs, setWebDevJs] = useState("");
 
     // Problem Builder State
     const [isProblemBuilderOpen, setIsProblemBuilderOpen] = useState(false);
