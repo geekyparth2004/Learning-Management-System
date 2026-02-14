@@ -538,10 +538,24 @@ function AssignmentContent() {
         const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
         try {
+            const submissionData = problem.type === "WEB_DEV"
+                ? {
+                    code: JSON.stringify(webDevFiles),
+                    language: "web-dev",
+                    passed: true,
+                    duration: timeSpent
+                }
+                : {
+                    code,
+                    language,
+                    passed: true,
+                    duration: timeSpent
+                };
+
             await fetch(`/api/assignments/${assignmentId}/submissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, language, passed: true, duration: timeSpent }),
+                body: JSON.stringify(submissionData),
             });
 
             if (problem.courseId) {
@@ -737,18 +751,22 @@ function AssignmentContent() {
                     </div>
                     {!problem.leetcodeUrl && (
                         <>
-                            <select
-                                value={language}
-                                onChange={e => setLanguage(e.target.value as Language)}
-                                className="rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-sm"
-                            >
-                                <option value="java">Java</option>
-                                <option value="python">Python</option>
-                                <option value="cpp">C++</option>
-                            </select>
-                            <button onClick={handleRun} disabled={status === "running"} className="rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Run</button>
-                            <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
-                            {testCaseResults.length > 0 && testCaseResults.every(r => r.passed) && (
+                            {problem.type !== "WEB_DEV" && (
+                                <>
+                                    <select
+                                        value={language}
+                                        onChange={e => setLanguage(e.target.value as Language)}
+                                        className="rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-sm"
+                                    >
+                                        <option value="java">Java</option>
+                                        <option value="python">Python</option>
+                                        <option value="cpp">C++</option>
+                                    </select>
+                                    <button onClick={handleRun} disabled={status === "running"} className="rounded bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">Run</button>
+                                    <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
+                                </>
+                            )}
+                            {(problem.type === "WEB_DEV" || (testCaseResults.length > 0 && testCaseResults.every(r => r.passed))) && (
                                 <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
                             )}
                         </>
