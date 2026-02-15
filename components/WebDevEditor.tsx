@@ -102,9 +102,6 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
 
     const updateFileContent = (value: string) => {
         setFiles(files.map(f => f.name === activeFileName ? { ...f, content: value } : f));
-        if (leftPanelTab !== "preview") {
-            setLeftPanelTab("preview");
-        }
     };
 
     const activeFile = files.find(f => f.name === activeFileName);
