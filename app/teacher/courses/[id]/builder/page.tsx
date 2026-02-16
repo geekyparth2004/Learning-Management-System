@@ -629,7 +629,12 @@ export default function CourseBuilderPage() {
                                                                         <input
                                                                             type="file"
                                                                             accept="video/*,.mkv,video/x-matroska"
-                                                                            onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                                                                            onChange={(e) => {
+                                                                                setVideoFile(e.target.files?.[0] || null);
+                                                                                if (e.target.files?.[0]) {
+                                                                                    setNewItemContent(""); // Clear manual URL if file selected
+                                                                                }
+                                                                            }}
                                                                             className="hidden"
                                                                             id="video-upload"
                                                                         />
@@ -654,6 +659,25 @@ export default function CourseBuilderPage() {
                                                                                 <span className="text-sm">Click to upload video</span>
                                                                             </label>
                                                                         )}
+                                                                    </div>
+
+                                                                    <div className="relative flex items-center py-2">
+                                                                        <div className="flex-grow border-t border-gray-800"></div>
+                                                                        <span className="flex-shrink-0 mx-4 text-gray-500 text-xs">OR</span>
+                                                                        <div className="flex-grow border-t border-gray-800"></div>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="Paste Video URL (YouTube, Vimeo, etc.)"
+                                                                            value={newItemContent}
+                                                                            onChange={(e) => {
+                                                                                setNewItemContent(e.target.value);
+                                                                                setVideoFile(null); // Clear file if URL entered
+                                                                            }}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm"
+                                                                        />
                                                                     </div>
                                                                     {uploadProgress > 0 && (
                                                                         <div className="flex items-center gap-2">
