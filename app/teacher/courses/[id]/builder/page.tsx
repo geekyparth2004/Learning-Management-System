@@ -246,20 +246,22 @@ export default function CourseBuilderPage() {
 
         try {
             if (newItemType === "VIDEO") {
-                if (!videoFile) {
-                    alert("Please select a video file");
-                    return;
-                }
-                setIsUploading(true);
-                try {
-                    content = await uploadToS3(videoFile);
-                } catch (error: any) {
-                    console.error("Upload failed:", error);
+                if (videoFile) {
+                    setIsUploading(true);
+                    try {
+                        content = await uploadToS3(videoFile);
+                    } catch (error: any) {
+                        console.error("Upload failed:", error);
+                        setIsUploading(false);
+                        alert(`Failed to upload video: ${error.message}`);
+                        return;
+                    }
                     setIsUploading(false);
-                    alert(`Failed to upload video: ${error.message}`);
+                } else if (!newItemContent) {
+                    alert("Please upload a video or enter a URL");
                     return;
                 }
-                setIsUploading(false);
+                // If newItemContent is present (manual URL), it will be used as 'content' (initialized at start of try block)
             } else if (newItemType === "AI_INTERVIEW") {
                 content = JSON.stringify({ topic: aiTopic, count: aiCount, difficulty: aiDifficulty });
             } else if (newItemType === "TEST") {
