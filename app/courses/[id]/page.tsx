@@ -142,6 +142,21 @@ export default function CoursePlayerPage() {
         return url;
     };
 
+    const getYoutubeEmbedUrl = (url: string) => {
+        if (!url) return "";
+        try {
+            if (url.includes("embed/")) return url;
+            let videoId = "";
+            if (url.includes("youtu.be/")) {
+                videoId = url.split("youtu.be/")[1]?.split("?")[0];
+            } else if (url.includes("v=")) {
+                videoId = url.split("v=")[1]?.split("&")[0];
+            }
+            if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+        } catch (e) { console.error(e); }
+        return url.replace("watch?v=", "embed/");
+    };
+
     const startResizing = () => setIsResizing(true);
     const stopResizing = () => setIsResizing(false);
 
@@ -877,9 +892,10 @@ export default function CoursePlayerPage() {
                                             return null; // Fallback handled by iframe check below
                                         })() || (
                                                 <iframe
-                                                    src={activeItem.content?.replace("watch?v=", "embed/")}
+                                                    src={getYoutubeEmbedUrl(activeItem.content || "")}
                                                     className="h-full w-full"
                                                     allowFullScreen
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 />
                                             )}
                                     </div>
