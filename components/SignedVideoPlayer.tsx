@@ -47,15 +47,35 @@ export default function SignedVideoPlayer({ src, className }: SignedVideoPlayerP
         setVideoSrc(src);
     }, [src]);
 
+    const getYoutubeEmbedUrl = (url: string) => {
+        try {
+            if (url.includes("embed/")) return url;
+
+            let videoId = "";
+            if (url.includes("youtu.be/")) {
+                videoId = url.split("youtu.be/")[1]?.split("?")[0];
+            } else if (url.includes("v=")) {
+                videoId = url.split("v=")[1]?.split("&")[0];
+            }
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+        } catch (e) {
+            console.error("Error parsing YouTube URL:", e);
+        }
+        return url;
+    };
+
     const isYoutube = src.includes("youtube.com") || src.includes("youtu.be");
 
     if (isYoutube) {
-        const embedUrl = src.replace("watch?v=", "embed/");
         return (
             <iframe
-                src={embedUrl}
+                src={getYoutubeEmbedUrl(src)}
                 className={`w-full aspect-video rounded-lg ${className}`}
                 allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             />
         );
     }
