@@ -121,10 +121,7 @@ export async function GET(
                 }
             }
 
-            // RESTRICTION: Unlock Module 7 (index 6) for specific email regardless of progress
-            if (index === 6 && session?.user?.email === "aids22013@gmail.com" && status === "LOCKED") {
-                status = "IN_PROGRESS";
-            }
+
 
             return {
                 id: m.id,
