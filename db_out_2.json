@@ -1,0 +1,81 @@
+[
+  {
+    "id": "cmlv7bmvs0000nvnhsrdf07in",
+    "title": "MCQ Assignment",
+    "createdAt": "2026-02-20T18:06:30.575Z",
+    "updatedAt": "2026-02-20T18:06:30.575Z",
+    "problems": [
+      {
+        "id": "cmlv7bmvs0001nvnhwy6zg38e",
+        "title": "Question - 1",
+        "description": "",
+        "type": "CODING",
+        "difficulty": "Medium",
+        "slug": "Question__1",
+        "isPractice": false,
+        "assignmentId": "cmlv7bmvs0000nvnhsrdf07in",
+        "defaultCode": "{\"isWebDev\":true,\"html\":\"\",\"css\":\"\",\"js\":\"\"}",
+        "hints": "[]",
+        "leetcodeUrl": null,
+        "isManualVerification": false,
+        "videoSolution": null,
+        "mcqOptions": null,
+        "mcqCorrectAnswer": null,
+        "moduleItemId": null,
+        "createdAt": "2026-02-20T18:06:30.575Z",
+        "updatedAt": "2026-02-20T18:06:30.575Z",
+        "order": 0
+      },
+      {
+        "id": "cmlv7bmvs0002nvnh647l91zf",
+        "title": "Question - 2",
+        "description": "",
+        "type": "CODING",
+        "difficulty": "Medium",
+        "slug": "Question__2",
+        "isPractice": false,
+        "assignmentId": "cmlv7bmvs0000nvnhsrdf07in",
+        "defaultCode": "{\"isWebDev\":true,\"html\":\"\",\"css\":\"\",\"js\":\"\"}",
+        "hints": "[]",
+        "leetcodeUrl": null,
+        "isManualVerification": false,
+        "videoSolution": null,
+        "mcqOptions": null,
+        "mcqCorrectAnswer": null,
+        "moduleItemId": null,
+        "createdAt": "2026-02-20T18:06:30.575Z",
+        "updatedAt": "2026-02-20T18:06:30.575Z",
+        "order": 0
+      }
+    ]
+  },
+  {
+    "id": "cmlnin5ru0010amm0w8b0i0to",
+    "title": "Assignment - 4",
+    "createdAt": "2026-02-15T09:01:14.874Z",
+    "updatedAt": "2026-02-15T16:52:17.186Z",
+    "problems": [
+      {
+        "id": "cmlnin5ru0011amm01c9emg0d",
+        "title": "Assignment - 4",
+        "description": "\n![TableHw.png](https://eb6b901b00b21ec6cacff3826c972015.r2.cloudflarestorage.com/learningsystem/images/1771174324494-TableHw.png)\n\nCreate this table using HTML",
+        "type": "WEB_DEV",
+        "difficulty": "Medium",
+        "slug": "Assignment__4",
+        "isPractice": false,
+        "assignmentId": "cmlnin5ru0010amm0w8b0i0to",
+        "defaultCode": "{}",
+        "hints": "[]",
+        "leetcodeUrl": null,
+        "isManualVerification": false,
+        "videoSolution": null,
+        "mcqOptions": null,
+        "mcqCorrectAnswer": null,
+        "moduleItemId": null,
+        "createdAt": "2026-02-15T09:01:14.874Z",
+        "updatedAt": "2026-02-15T16:52:17.186Z",
+        "order": 0
+      }
+    ]
+  }
+]

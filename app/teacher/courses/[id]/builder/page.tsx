@@ -86,23 +86,28 @@ export default function CourseBuilderPage() {
                 cpp: "// Write your code here",
                 java: "// Write your code here"
             };
-        } else {
+        } else if (problem.type === "WEB_DEV") {
             defaultCode = {
                 isWebDev: true,
                 html: problem.webDevInitialCode?.html || "",
                 css: problem.webDevInitialCode?.css || "",
                 js: problem.webDevInitialCode?.js || ""
             };
+        } else {
+            defaultCode = {};
         }
 
         const newProblem = {
             title: problem.title,
             description: problem.description, // For Web Dev, this contains instructions
+            type: problem.type || "CODING",
             testCases: problem.testCases,
             hints: JSON.stringify(problem.hints), // Ensure hints are stringified
             defaultCode: JSON.stringify(defaultCode),
             videoSolution: problem.videoSolution,
             leetcodeUrl: problem.leetcodeUrl,
+            mcqOptions: problem.mcqOptions,
+            mcqCorrectAnswer: problem.mcqCorrectAnswer,
             slug: problem.leetcodeUrl
                 ? problem.leetcodeUrl.split("/problems/")[1]?.split("/")[0]
                 : problem.title.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "")
