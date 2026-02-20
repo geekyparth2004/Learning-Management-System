@@ -21,7 +21,7 @@ interface ProblemData {
     testCases: TestCase[];
     hints: any[]; // Changed to allow object array
     videoSolution?: string;
-    type: "CODING" | "WEB_DEV" | "LEETCODE";
+    type: "CODING" | "WEB_DEV" | "LEETCODE" | "MCQ";
     webDevInstructions?: string;
     webDevInitialCode?: {
         html: string;
@@ -30,6 +30,8 @@ interface ProblemData {
     };
     leetcodeUrl?: string;
     isManualVerification?: boolean;
+    mcqOptions?: string[];
+    mcqCorrectAnswer?: string;
 }
 
 interface ProblemBuilderProps {
@@ -61,8 +63,16 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     );
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState(initialData?.videoSolution || "");
-    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE">(initialData?.type || "CODING");
+    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE" | "MCQ">(initialData?.type || "CODING");
     const [isManualVerification, setIsManualVerification] = useState(initialData?.isManualVerification || false);
+
+    // MCQ State
+    const [mcqOptions, setMcqOptions] = useState<string[]>(
+        initialData?.mcqOptions
+            ? (typeof initialData.mcqOptions === 'string' ? JSON.parse(initialData.mcqOptions) : initialData.mcqOptions)
+            : ["", ""]
+    );
+    const [mcqCorrectAnswer, setMcqCorrectAnswer] = useState<string>(initialData?.mcqCorrectAnswer || "");
 
     // Web Dev State
     const [webDevInstructions, setWebDevInstructions] = useState(initialData?.webDevInstructions || "");
@@ -100,6 +110,26 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
         const newHints = [...hints];
         newHints[index] = { ...newHints[index], [field]: value };
         setHints(newHints);
+    };
+
+    const handleAddMcqOption = () => setMcqOptions([...mcqOptions, ""]);
+
+    const handleRemoveMcqOption = (index: number) => {
+        const removedOption = mcqOptions[index];
+        setMcqOptions(mcqOptions.filter((_, i) => i !== index));
+        if (mcqCorrectAnswer === removedOption) {
+            setMcqCorrectAnswer("");
+        }
+    };
+
+    const handleMcqOptionChange = (index: number, value: string) => {
+        const newOptions = [...mcqOptions];
+        const oldOption = newOptions[index];
+        newOptions[index] = value;
+        setMcqOptions(newOptions);
+        if (mcqCorrectAnswer === oldOption) {
+            setMcqCorrectAnswer(value);
+        }
     };
 
     const handleSave = async () => {
@@ -161,7 +191,9 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                     html: webDevHtml,
                     css: webDevCss,
                     js: webDevJs
-                } : undefined
+                } : undefined,
+                mcqOptions: problemType === "MCQ" ? mcqOptions : undefined,
+                mcqCorrectAnswer: problemType === "MCQ" ? mcqCorrectAnswer : undefined
             });
         } catch (e: any) {
             alert(e.message);
@@ -251,12 +283,13 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                         <label className="text-sm font-medium text-gray-300">Problem Type:</label>
                         <select
                             value={problemType}
-                            onChange={(e) => setProblemType(e.target.value as "CODING" | "WEB_DEV" | "LEETCODE")}
+                            onChange={(e) => setProblemType(e.target.value as "CODING" | "WEB_DEV" | "LEETCODE" | "MCQ")}
                             className="rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                         >
                             <option value="CODING">Coding Problem</option>
                             <option value="WEB_DEV">Web Development</option>
                             <option value="LEETCODE">LeetCode/External Problem</option>
+                            <option value="MCQ">Multiple Choice Question</option>
                         </select>
                     </div>
 
@@ -403,7 +436,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                         </div>
                                     </div>
                                 </>
-                            ) : (
+                            ) : problemType === "WEB_DEV" ? (
                                 <>
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
@@ -451,6 +484,75 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                 className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm font-medium text-gray-300">Question Text</label>
+                                            <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1 text-xs font-medium text-blue-400 hover:bg-gray-700 hover:text-blue-300 transition-colors">
+                                                <Upload size={14} />
+                                                Add Image
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageUpload}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                        <textarea
+                                            placeholder="Enter the multiple choice question..."
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            className="h-32 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-lg font-semibold text-white">Options</h3>
+                                            <button
+                                                onClick={handleAddMcqOption}
+                                                className="flex items-center gap-2 rounded-lg border border-gray-700 bg-[#1e1e1e] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+                                            >
+                                                <Plus size={16} /> Add Option
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {mcqOptions.map((opt, idx) => (
+                                                <div key={idx} className="flex items-center gap-3 rounded-lg border border-gray-800 bg-[#161616] p-3">
+                                                    <input
+                                                        type="radio"
+                                                        name="correctAnswer"
+                                                        checked={mcqCorrectAnswer === opt && opt !== ""}
+                                                        onChange={() => setMcqCorrectAnswer(opt)}
+                                                        className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                                                        title="Mark as correct answer"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={opt}
+                                                        onChange={(e) => handleMcqOptionChange(idx, e.target.value)}
+                                                        className="flex-1 rounded border border-gray-700 bg-[#1e1e1e] px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                                                        placeholder={`Option ${idx + 1}`}
+                                                    />
+                                                    {mcqOptions.length > 2 && (
+                                                        <button
+                                                            onClick={() => handleRemoveMcqOption(idx)}
+                                                            className="text-gray-500 hover:text-red-400"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {mcqCorrectAnswer && !mcqOptions.includes(mcqCorrectAnswer) && (
+                                            <p className="text-sm text-red-400 mt-2">Please select a valid correct answer.</p>
+                                        )}
                                     </div>
                                 </>
                             )}

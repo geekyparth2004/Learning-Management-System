@@ -41,12 +41,14 @@ interface Problem {
     slug?: string;
     courseId?: string;
     videoSolution?: string;
-    type?: "CODING" | "WEB_DEV";
+    type?: "CODING" | "WEB_DEV" | "MCQ";
     webDevInitialCode?: {
         html: string;
         css: string;
         js: string;
     };
+    mcqOptions?: string[];
+    mcqCorrectAnswer?: string;
 }
 
 interface TestCaseResult {
@@ -91,6 +93,7 @@ function AssignmentContent() {
     const [leetcodeUsername, setLeetcodeUsername] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
 
+    const [selectedMcqOption, setSelectedMcqOption] = useState<string>("");
 
     const [showGiveAnswer, setShowGiveAnswer] = useState(false);
 
@@ -257,6 +260,18 @@ function AssignmentContent() {
                     problemData.testCases = [];
                 }
 
+                // Ensure mcqOptions is an array
+                if (typeof problemData.mcqOptions === 'string') {
+                    try {
+                        problemData.mcqOptions = JSON.parse(problemData.mcqOptions);
+                    } catch (e) {
+                        problemData.mcqOptions = [];
+                    }
+                }
+                if (!Array.isArray(problemData.mcqOptions)) {
+                    problemData.mcqOptions = [];
+                }
+
                 // Ensure defaultCode matches expected structure
                 if (!problemData.defaultCode || typeof problemData.defaultCode !== 'object') {
                     // try parse if string
@@ -273,7 +288,7 @@ function AssignmentContent() {
 
                 // Parse type and Web Dev Code
                 // Check if defaultCode has web dev structure or if type is set
-                let type: "CODING" | "WEB_DEV" = (problemData as any).type || "CODING";
+                let type: "CODING" | "WEB_DEV" | "MCQ" = (problemData as any).type || "CODING";
                 let webDevInitialCode = undefined;
 
                 // If the DB explicitly says "WEB_DEV", trust it.
@@ -538,19 +553,21 @@ function AssignmentContent() {
         const timeSpent = Math.floor((Date.now() - startTime) / 1000);
 
         try {
-            const submissionData = problem.type === "WEB_DEV"
-                ? {
-                    code: JSON.stringify(webDevFiles),
-                    language: "web-dev",
-                    passed: true,
-                    duration: timeSpent
-                }
-                : {
-                    code,
-                    language,
-                    passed: true,
-                    duration: timeSpent
-                };
+            let submissionData: any = {
+                passed: true,
+                duration: timeSpent
+            };
+
+            if (problem.type === "WEB_DEV") {
+                submissionData.code = JSON.stringify(webDevFiles);
+                submissionData.language = "web-dev";
+            } else if (problem.type === "MCQ") {
+                submissionData.code = selectedMcqOption;
+                submissionData.language = "mcq";
+            } else {
+                submissionData.code = code;
+                submissionData.language = language;
+            }
 
             await fetch(`/api/assignments/${assignmentId}/submissions`, {
                 method: "POST",
@@ -766,8 +783,8 @@ function AssignmentContent() {
                                     <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
                                 </>
                             )}
-                            {(problem.type === "WEB_DEV" || (testCaseResults.length > 0 && testCaseResults.every(r => r.passed))) && (
-                                <button onClick={handleSubmit} disabled={status === "running"} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                            {(problem.type === "WEB_DEV" || problem.type === "MCQ" || (testCaseResults.length > 0 && testCaseResults.every(r => r.passed))) && (
+                                <button onClick={handleSubmit} disabled={status === "running" || (problem.type === "MCQ" && !selectedMcqOption)} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
                             )}
                         </>
                     )}
@@ -925,7 +942,35 @@ function AssignmentContent() {
                             style={{ width: `${100 - leftWidth}%` }}
                         >
                             {/* Tabs */}
-                            {!problem.leetcodeUrl && (
+                            {problem.type === "MCQ" ? (
+                                <div className="flex flex-1 flex-col overflow-y-auto p-8 bg-[#111111]">
+                                    <h2 className="text-xl font-bold mb-6 text-white text-center">Select an Answer</h2>
+                                    <div className="max-w-xl mx-auto w-full space-y-4">
+                                        {problem.mcqOptions && problem.mcqOptions.map((opt, idx) => (
+                                            <div
+                                                key={idx}
+                                                onClick={() => setSelectedMcqOption(opt)}
+                                                className={cn(
+                                                    "cursor-pointer rounded-xl border p-5 transition-all duration-200",
+                                                    selectedMcqOption === opt
+                                                        ? "border-blue-500 bg-blue-900/20 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                                                        : "border-gray-800 bg-[#1a1a1a] hover:border-gray-600 hover:bg-[#222]"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border",
+                                                        selectedMcqOption === opt ? "border-blue-500 bg-blue-500" : "border-gray-600 bg-transparent"
+                                                    )}>
+                                                        {selectedMcqOption === opt && <div className="h-2 w-2 rounded-full bg-white" />}
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-200 leading-relaxed">{opt}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : !problem.leetcodeUrl ? (
                                 <div className="flex border-b border-gray-800 bg-[#161616]">
                                     <button
                                         onClick={() => setActiveTab("editor")}
@@ -967,206 +1012,208 @@ function AssignmentContent() {
                                         {!canAskAi && <Lock size={12} />}
                                     </button>
                                 </div>
-                            )}
+                            ) : null}
 
                             {/* Tab Content */}
-                            <div className="flex-1 overflow-hidden relative">
-                                {problem.leetcodeUrl ? (
-                                    <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
-                                        <div className="max-w-md space-y-6">
-                                            <div className="space-y-2">
-                                                <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
-                                                <p className="text-gray-400">
-                                                    This problem must be solved on LeetCode. Once you've submitted your solution there, mark it as complete here.
-                                                </p>
-                                            </div>
-
-                                            <a
-                                                href={problem.leetcodeUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-4 text-lg font-bold hover:bg-[#333] transition-colors"
-                                            >
-                                                Open Problem on LeetCode <LogOut size={20} />
-                                            </a>
-
-                                            <div className="relative">
-                                                <div className="absolute inset-0 flex items-center">
-                                                    <span className="w-full border-t border-gray-800" />
+                            {problem.type !== "MCQ" && (
+                                <div className="flex-1 overflow-hidden relative">
+                                    {problem.leetcodeUrl ? (
+                                        <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
+                                            <div className="max-w-md space-y-6">
+                                                <div className="space-y-2">
+                                                    <h2 className="text-2xl font-bold">Solve on LeetCode</h2>
+                                                    <p className="text-gray-400">
+                                                        This problem must be solved on LeetCode. Once you've submitted your solution there, mark it as complete here.
+                                                    </p>
                                                 </div>
-                                                <div className="relative flex justify-center text-xs uppercase">
-                                                    <span className="bg-[#111111] px-2 text-gray-500">Then</span>
+
+                                                <a
+                                                    href={problem.leetcodeUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2a2a2a] px-6 py-4 text-lg font-bold hover:bg-[#333] transition-colors"
+                                                >
+                                                    Open Problem on LeetCode <LogOut size={20} />
+                                                </a>
+
+                                                <div className="relative">
+                                                    <div className="absolute inset-0 flex items-center">
+                                                        <span className="w-full border-t border-gray-800" />
+                                                    </div>
+                                                    <div className="relative flex justify-center text-xs uppercase">
+                                                        <span className="bg-[#111111] px-2 text-gray-500">Then</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
+                                                    <h3 className="mb-4 font-semibold">Completion Status</h3>
+                                                    <LeetCodeVerifier
+                                                        problemSlug={problem.slug || ""}
+                                                        onVerified={async () => {
+                                                            alert("Assignment Marked as Completed! ✅");
+                                                            await fetch(`/api/assignments/${assignmentId}/submissions`, {
+                                                                method: "POST",
+                                                                headers: { "Content-Type": "application/json" },
+                                                                body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
+                                                            });
+                                                            if (problem.courseId) {
+                                                                router.push(`/courses/${problem.courseId}`);
+                                                            } else {
+                                                                router.push("/");
+                                                            }
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
-
-                                            <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
-                                                <h3 className="mb-4 font-semibold">Completion Status</h3>
-                                                <LeetCodeVerifier
-                                                    problemSlug={problem.slug || ""}
-                                                    onVerified={async () => {
-                                                        alert("Assignment Marked as Completed! ✅");
-                                                        await fetch(`/api/assignments/${assignmentId}/submissions`, {
-                                                            method: "POST",
-                                                            headers: { "Content-Type": "application/json" },
-                                                            body: JSON.stringify({ code: "LEETCODE_VERIFIED", language: "leetcode", passed: true }),
-                                                        });
-                                                        if (problem.courseId) {
-                                                            router.push(`/courses/${problem.courseId}`);
-                                                        } else {
-                                                            router.push("/");
-                                                        }
+                                        </div>
+                                    ) : (
+                                        <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
+                                            {/* Explicit height wrapper for Monaco to ensure it renders */}
+                                            <div className="h-full w-full min-h-[500px]">
+                                                <CodeEditor
+                                                    key={activeTab} // Force re-mount when switching tabs
+                                                    language={language}
+                                                    code={code}
+                                                    onChange={(value) => {
+                                                        setCode(value || "");
+                                                        setTestCaseResults([]); // Reset results on code change
                                                     }}
+                                                    errorLine={errorLine}
+                                                    errorMessage={status === "error" ? output : null}
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className={cn("absolute inset-0 flex flex-col", activeTab === "editor" ? "z-10 visible" : "z-0 invisible")}>
-                                        {/* Explicit height wrapper for Monaco to ensure it renders */}
-                                        <div className="h-full w-full min-h-[500px]">
-                                            <CodeEditor
-                                                key={activeTab} // Force re-mount when switching tabs
-                                                language={language}
-                                                code={code}
-                                                onChange={(value) => {
-                                                    setCode(value || "");
-                                                    setTestCaseResults([]); // Reset results on code change
-                                                }}
-                                                errorLine={errorLine}
-                                                errorMessage={status === "error" ? output : null}
-                                            />
+                                    )}
+
+                                    {activeTab === "terminal" && (
+                                        <div className="h-full p-4">
+                                            <Terminal output={output} status={status} stdin={customInput} onStdinChange={setCustomInput} />
                                         </div>
-                                    </div>
-                                )}
+                                    )}
 
-                                {activeTab === "terminal" && (
-                                    <div className="h-full p-4">
-                                        <Terminal output={output} status={status} stdin={customInput} onStdinChange={setCustomInput} />
-                                    </div>
-                                )}
-
-                                {activeTab === "results" && (
-                                    <div className="h-full overflow-y-auto p-4">
-                                        <div className="space-y-3">
-                                            {problem.testCases.map((tc, idx) => {
-                                                const result = testCaseResults.find(r => r.id === tc.id);
-                                                return (
-                                                    <div
-                                                        key={tc.id}
-                                                        className={cn(
-                                                            "rounded border p-4",
-                                                            result
-                                                                ? result.passed
-                                                                    ? "border-green-800 bg-green-900/20"
-                                                                    : "border-red-800 bg-red-900/20"
-                                                                : "border-gray-700 bg-[#1e1e1e]"
-                                                        )}
-                                                    >
-                                                        <div className="mb-3 flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
-                                                                {tc.isHidden && (
-                                                                    <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                    {activeTab === "results" && (
+                                        <div className="h-full overflow-y-auto p-4">
+                                            <div className="space-y-3">
+                                                {problem.testCases.map((tc, idx) => {
+                                                    const result = testCaseResults.find(r => r.id === tc.id);
+                                                    return (
+                                                        <div
+                                                            key={tc.id}
+                                                            className={cn(
+                                                                "rounded border p-4",
+                                                                result
+                                                                    ? result.passed
+                                                                        ? "border-green-800 bg-green-900/20"
+                                                                        : "border-red-800 bg-red-900/20"
+                                                                    : "border-gray-700 bg-[#1e1e1e]"
+                                                            )}
+                                                        >
+                                                            <div className="mb-3 flex items-center justify-between">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
+                                                                    {tc.isHidden && (
+                                                                        <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                                                    )}
+                                                                </div>
+                                                                {result && (
+                                                                    <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
+                                                                        {result.passed ? "Passed" : "Failed"}
+                                                                    </span>
                                                                 )}
                                                             </div>
-                                                            {result && (
-                                                                <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
-                                                                    {result.passed ? "Passed" : "Failed"}
-                                                                </span>
+                                                            {!tc.isHidden && (
+                                                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                                    <div className="space-y-1">
+                                                                        <span className="text-xs font-medium text-gray-500">Input:</span>
+                                                                        <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <span className="text-xs font-medium text-gray-500">Expected Output:</span>
+                                                                        <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
+                                                                    </div>
+                                                                    {result && !result.passed && (
+                                                                        <div className="col-span-2 mt-2 border-t border-red-800/30 pt-2">
+                                                                            <span className="text-xs font-medium text-red-400">Actual Output:</span>
+                                                                            <pre className="mt-1 overflow-x-auto rounded bg-[#111111] p-2 text-xs text-red-300">{result.actualOutput}</pre>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        {!tc.isHidden && (
-                                                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                                <div className="space-y-1">
-                                                                    <span className="text-xs font-medium text-gray-500">Input:</span>
-                                                                    <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
+                                                    );
+                                                })}
+                                                {testCaseResults.length === 0 && (
+                                                    <div className="flex h-full items-center justify-center text-gray-500">
+                                                        Run tests to see results
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {activeTab === "ask-ai" && (
+                                        <div className="h-full overflow-y-auto p-6">
+                                            {!canAskAi ? (
+                                                <div className="flex h-full flex-col items-center justify-center text-center">
+                                                    <Lock className="mb-4 h-12 w-12 text-gray-600" />
+                                                    <h3 className="mb-2 text-xl font-semibold">Ask AI is Locked</h3>
+                                                    <p className="text-gray-400">
+                                                        You can ask AI for help after 4 minutes.
+                                                    </p>
+                                                    <p className="mt-4 text-2xl font-mono font-bold text-blue-400">
+                                                        {timeToAi}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
+                                                        <h3 className="mb-4 text-lg font-semibold">Ask AI for Help</h3>
+                                                        <p className="mb-6 text-sm text-gray-400">
+                                                            Stuck? The AI can analyze your code and provide guidance without giving away the answer immediately.
+                                                        </p>
+
+                                                        {!aiMessage && (
+                                                            <button
+                                                                onClick={() => handleAskAi("guide")}
+                                                                disabled={isAskingAi}
+                                                                className="rounded bg-blue-600 px-6 py-3 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                                            >
+                                                                {isAskingAi ? "Analyzing..." : "Ask AI for Guidance"}
+                                                            </button>
+                                                        )}
+
+                                                        {aiMessage && (
+                                                            <div className="mt-6 space-y-4">
+                                                                <div className="rounded bg-[#1e1e1e] p-4">
+                                                                    <h4 className="mb-2 font-medium text-blue-400">AI Response:</h4>
+                                                                    <div className="prose prose-invert text-sm">
+                                                                        <pre className="whitespace-pre-wrap font-sans">{aiMessage}</pre>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="space-y-1">
-                                                                    <span className="text-xs font-medium text-gray-500">Expected Output:</span>
-                                                                    <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
-                                                                </div>
-                                                                {result && !result.passed && (
-                                                                    <div className="col-span-2 mt-2 border-t border-red-800/30 pt-2">
-                                                                        <span className="text-xs font-medium text-red-400">Actual Output:</span>
-                                                                        <pre className="mt-1 overflow-x-auto rounded bg-[#111111] p-2 text-xs text-red-300">{result.actualOutput}</pre>
+
+                                                                {showGiveAnswer && (
+                                                                    <div className="border-t border-gray-800 pt-4">
+                                                                        <p className="mb-4 text-sm text-gray-400">
+                                                                            Still stuck? You can reveal the full solution.
+                                                                        </p>
+                                                                        <button
+                                                                            onClick={() => handleAskAi("solution")}
+                                                                            disabled={isAskingAi}
+                                                                            className="rounded border border-red-900/50 bg-red-900/10 px-6 py-3 text-sm font-medium text-red-400 hover:bg-red-900/30 disabled:opacity-50"
+                                                                        >
+                                                                            {isAskingAi ? "Getting Solution..." : "Give Answer"}
+                                                                        </button>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         )}
                                                     </div>
-                                                );
-                                            })}
-                                            {testCaseResults.length === 0 && (
-                                                <div className="flex h-full items-center justify-center text-gray-500">
-                                                    Run tests to see results
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
-                                )}
-
-                                {activeTab === "ask-ai" && (
-                                    <div className="h-full overflow-y-auto p-6">
-                                        {!canAskAi ? (
-                                            <div className="flex h-full flex-col items-center justify-center text-center">
-                                                <Lock className="mb-4 h-12 w-12 text-gray-600" />
-                                                <h3 className="mb-2 text-xl font-semibold">Ask AI is Locked</h3>
-                                                <p className="text-gray-400">
-                                                    You can ask AI for help after 4 minutes.
-                                                </p>
-                                                <p className="mt-4 text-2xl font-mono font-bold text-blue-400">
-                                                    {timeToAi}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-6">
-                                                <div className="rounded-lg border border-gray-800 bg-[#161616] p-6">
-                                                    <h3 className="mb-4 text-lg font-semibold">Ask AI for Help</h3>
-                                                    <p className="mb-6 text-sm text-gray-400">
-                                                        Stuck? The AI can analyze your code and provide guidance without giving away the answer immediately.
-                                                    </p>
-
-                                                    {!aiMessage && (
-                                                        <button
-                                                            onClick={() => handleAskAi("guide")}
-                                                            disabled={isAskingAi}
-                                                            className="rounded bg-blue-600 px-6 py-3 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                                                        >
-                                                            {isAskingAi ? "Analyzing..." : "Ask AI for Guidance"}
-                                                        </button>
-                                                    )}
-
-                                                    {aiMessage && (
-                                                        <div className="mt-6 space-y-4">
-                                                            <div className="rounded bg-[#1e1e1e] p-4">
-                                                                <h4 className="mb-2 font-medium text-blue-400">AI Response:</h4>
-                                                                <div className="prose prose-invert text-sm">
-                                                                    <pre className="whitespace-pre-wrap font-sans">{aiMessage}</pre>
-                                                                </div>
-                                                            </div>
-
-                                                            {showGiveAnswer && (
-                                                                <div className="border-t border-gray-800 pt-4">
-                                                                    <p className="mb-4 text-sm text-gray-400">
-                                                                        Still stuck? You can reveal the full solution.
-                                                                    </p>
-                                                                    <button
-                                                                        onClick={() => handleAskAi("solution")}
-                                                                        disabled={isAskingAi}
-                                                                        className="rounded border border-red-900/50 bg-red-900/10 px-6 py-3 text-sm font-medium text-red-400 hover:bg-red-900/30 disabled:opacity-50"
-                                                                    >
-                                                                        {isAskingAi ? "Getting Solution..." : "Give Answer"}
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </>
                 )}

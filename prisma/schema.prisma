@@ -11,21 +11,21 @@ datasource db {
 }
 
 model User {
-  id                 String               @id @default(cuid())
+  id                 String  @id @default(cuid())
   name               String?
-  email              String               @unique
+  email              String  @unique
   password           String?
   image              String?
-  role               String               @default("STUDENT") // Was UserRole
+  role               String  @default("STUDENT") // Was UserRole
   githubAccessToken  String?
   leetcodeUsername   String?
   codeforcesUsername String?
   gfgUsername        String?
   codolioUsername    String?
-  
-  externalRatings    Json?                // Cached stats: { totalQuestions: number, contests: { weekly: number, monthly: number, lifetime: number }, lastUpdated: string }
-  codolioBaseline    Int?                 // Baseline for external question count (differential tracking)
-  
+
+  externalRatings Json? // Cached stats: { totalQuestions: number, contests: { weekly: number, monthly: number, lifetime: number }, lastUpdated: string }
+  codolioBaseline Int? // Baseline for external question count (differential tracking)
+
   // Relations
   courses            Course[]             @relation("TeacherCourses")
   enrollments        Enrollment[]
@@ -34,38 +34,38 @@ model User {
   submissions        Submission[]
   assignmentProgress AssignmentProgress[]
 
-  notifications      Notification[]
+  notifications        Notification[]
   contestRegistrations ContestRegistration[]
   contestSubmissions   ContestSubmission[]
-  
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime?            @updatedAt
-  
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
   // Wallet
-  walletBalance      Int                  @default(0)
-  lastWalletReset    DateTime             @default(now())
-  
+  walletBalance   Int      @default(0)
+  lastWalletReset DateTime @default(now())
+
   // Streak Tracking
-  currentStreak      Int                  @default(0)
-  lastActivityDate   DateTime?
-  
+  currentStreak    Int       @default(0)
+  lastActivityDate DateTime?
+
   accounts           Account[]
   discussionMessages DiscussionMessage[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -73,116 +73,120 @@ model Account {
 }
 
 model Course {
-  id          String       @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  
-  teacherId   String
-  teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id])
-  
+
+  teacherId String
+  teacher   User   @relation("TeacherCourses", fields: [teacherId], references: [id])
+
   modules     Module[]
   enrollments Enrollment[]
-  
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Module {
-  id          String           @id @default(cuid())
-  title       String
-  courseId    String
-  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  order       Int
-  timeLimit   Int              // In minutes
-  
-  items       ModuleItem[]
-  progress    ModuleProgress[]
-  
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id        String @id @default(cuid())
+  title     String
+  courseId  String
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order     Int
+  timeLimit Int // In minutes
+
+  items    ModuleItem[]
+  progress ModuleProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ModuleItem {
-  id           String               @id @default(cuid())
-  title        String
-  type         String               // Was ModuleItemType
-  content      String?              // Video URL or Assignment ID (for legacy/simple assignment)
-  order        Int
-  
+  id      String  @id @default(cuid())
+  title   String
+  type    String // Was ModuleItemType
+  content String? // Video URL or Assignment ID (for legacy/simple assignment)
+  order   Int
+
   // Relations
-  moduleId     String
-  module       Module               @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  
+  moduleId String
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
   // AI Interview Fields
   aiInterviewTopic String?
   aiQuestionsCount Int?
-  aiDifficulty     String?          @default("Medium") // "Basic" | "Easy" | "Medium" | "Hard"
+  aiDifficulty     String? @default("Medium") // "Basic" | "Easy" | "Medium" | "Hard"
 
   // Test Fields
-  testDuration      Int?            // in minutes
-  testPassingScore  Int?            // percentage (e.g. 60)
-  testProblems      Problem[]       // Problems specific to this test item
-  
+  testDuration     Int? // in minutes
+  testPassingScore Int? // percentage (e.g. 60)
+  testProblems     Problem[] // Problems specific to this test item
+
   // Content Meta
-  duration          Int             @default(0) // in seconds/minutes (store as seconds for precision)
+  duration Int @default(0) // in seconds/minutes (store as seconds for precision)
 
   // Web Dev Fields
   webDevInstructions String?
-  webDevInitialCode  String?        // Was Json. Store as JSON string.
+  webDevInitialCode  String? // Was Json. Store as JSON string.
 
   assignmentId String?
-  assignment   Assignment?          @relation(fields: [assignmentId], references: [id])
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
 
-  progress     ModuleItemProgress[]
+  progress ModuleItemProgress[]
 
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([moduleId])
   @@index([assignmentId])
 }
 
 model Assignment {
-  id        String               @id @default(cuid())
-  title     String
-  problems  Problem[]
-  progress  AssignmentProgress[]
+  id          String               @id @default(cuid())
+  title       String
+  problems    Problem[]
+  progress    AssignmentProgress[]
   moduleItems ModuleItem[]
-  
-  createdAt DateTime             @default(now())
-  updatedAt DateTime?            @updatedAt
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Problem {
-  id            String       @id @default(cuid())
-  title         String
-  description   String
-  type          String       @default("CODING") // "CODING" | "WEB_DEV" | "LEETCODE"
-  difficulty    String       @default("Medium")
-  slug          String?
-  isPractice    Boolean      @default(false)
-  
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  type        String  @default("CODING") // "CODING" | "WEB_DEV" | "LEETCODE"
+  difficulty  String  @default("Medium")
+  slug        String?
+  isPractice  Boolean @default(false)
+
   // Relations
-  assignmentId  String?
-  assignment    Assignment?  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  
+  assignmentId String?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
   // Content
-  defaultCode   String?      // Was Json. Store as JSON string.
-  hints         String?      // Was String[]. Store as JSON string.
-  leetcodeUrl   String?
+  defaultCode          String? // Was Json. Store as JSON string.
+  hints                String? // Was String[]. Store as JSON string.
+  leetcodeUrl          String?
   isManualVerification Boolean @default(false)
-  videoSolution String?
+  videoSolution        String?
 
-  moduleItemId  String?
-  moduleItem    ModuleItem?  @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
+  // MCQ Fields
+  mcqOptions       String?      // Stored as JSON string array, e.g., '["Option A", "Option B"]'
+  mcqCorrectAnswer String?      // The correct option exactly matching one string from mcqOptions
 
-  testCases     TestCase[]
-  submissions   Submission[]
-  
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime?    @updatedAt
-  
-  order         Int          @default(0)
+  moduleItemId String?
+  moduleItem   ModuleItem? @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
+
+  testCases   TestCase[]
+  submissions Submission[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  order Int @default(0)
 
   @@index([assignmentId])
   @@index([moduleItemId])
@@ -193,24 +197,24 @@ model TestCase {
   input          String
   expectedOutput String
   isHidden       Boolean @default(false)
-  
-  problemId      String
-  problem        Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  problemId String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
 model Submission {
-  id        String   @id @default(cuid())
-  code      String
-  language  String
-  status    String   // "PASSED" | "FAILED"
-  duration  Int      @default(0)
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  code     String
+  language String
+  status   String // "PASSED" | "FAILED"
+  duration Int    @default(0)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   problemId String
-  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
   @@index([userId])
@@ -251,15 +255,15 @@ model ModuleItemProgress {
   isCompleted  Boolean    @default(false)
   completedAt  DateTime?
   startedAt    DateTime?
-  
+
   // AI Interview Review
-  aiSubmission String?    // Was Json. Store as JSON string.
-  reviewStatus String?    // "PENDING" | "APPROVED" | "REJECTED"
+  aiSubmission String? // Was Json. Store as JSON string.
+  reviewStatus String? // "PENDING" | "APPROVED" | "REJECTED"
 
   // Web Dev Submission
   webDevSubmission String? // Was Json. Store as JSON string.
 
-  duration         Int        @default(0) // actual time spent in seconds
+  duration Int @default(0) // actual time spent in seconds
 
   @@unique([userId, moduleItemId])
 }
@@ -276,28 +280,28 @@ model AssignmentProgress {
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  userId      String   // Teacher ID
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  message     String
-  type        String   // "VIDEO_COMPLETED" | "ASSIGNMENT_SUBMITTED"
-  link        String?  // URL to view submission
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String // Teacher ID
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String // "VIDEO_COMPLETED" | "ASSIGNMENT_SUBMITTED"
+  link      String? // URL to view submission
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Contest {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  type        String   // "INTERNAL" | "EXTERNAL"
-  category    String   @default("CONTEST") // "CONTEST" | "HACKATHON"
-  
+  type        String // "INTERNAL" | "EXTERNAL"
+  category    String  @default("CONTEST") // "CONTEST" | "HACKATHON"
+
   // Timings
-  startTime   DateTime
-  endTime     DateTime
-  duration    Int?     // In minutes
+  startTime DateTime
+  endTime   DateTime
+  duration  Int? // In minutes
 
   // External
   platformName String?
@@ -307,52 +311,52 @@ model Contest {
   problems      ContestProblem[]
   registrations ContestRegistration[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ContestProblem {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String
-  difficulty  String   @default("Medium")
+  difficulty  String  @default("Medium")
   slug        String?
 
   // Code
-  defaultCode String?  // JSON
+  defaultCode String? // JSON
   // No hints for contest
-  
-  contestId   String
-  contest     Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  contestId String
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
 
   testCases   ContestTestCase[]
   submissions ContestSubmission[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ContestTestCase {
-  id             String         @id @default(cuid())
+  id             String  @id @default(cuid())
   input          String
   expectedOutput String
-  isHidden       Boolean        @default(false)
-  
-  problemId      String
-  problem        ContestProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  isHidden       Boolean @default(false)
+
+  problemId String
+  problem   ContestProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
 model ContestRegistration {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   contestId String
-  contest   Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
-  
-  score     Int      @default(0)
-  
-  joinedAt  DateTime @default(now())
-  startedAt DateTime?
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+
+  score Int @default(0)
+
+  joinedAt    DateTime  @default(now())
+  startedAt   DateTime?
   completedAt DateTime?
 
   @@unique([userId, contestId])
@@ -361,18 +365,18 @@ model ContestRegistration {
 }
 
 model ContestSubmission {
-  id        String   @id @default(cuid())
-  code      String
-  language  String
-  status    String   // "PASSED" | "FAILED"
-  passed    Boolean  @default(false)
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id       String  @id @default(cuid())
+  code     String
+  language String
+  status   String // "PASSED" | "FAILED"
+  passed   Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   problemId String
   problem   ContestProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
 
   @@index([userId])
@@ -386,7 +390,7 @@ model Job {
   location  String
   salary    String?
   link      String
-  platform  String   // "LinkedIn", "Naukri", etc.
+  platform  String // "LinkedIn", "Naukri", etc.
   postedAt  DateTime
   createdAt DateTime @default(now())
 }
@@ -394,24 +398,24 @@ model Job {
 model UserBadge {
   id        String   @id @default(cuid())
   userId    String
-  badgeType String   // "PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200"
+  badgeType String // "PROBLEMS_50", "PROBLEMS_100", "PROBLEMS_150", "PROBLEMS_200"
   earnedAt  DateTime @default(now())
-  
+
   @@unique([userId, badgeType])
   @@index([userId])
 }
 
 model DiscussionMessage {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  content     String?  // Text content
-  mediaUrl    String?  // URL to media file in R2 (image/voice/video)
-  mediaType   String?  // "image" | "voice" | "video"
-  
-  createdAt   DateTime @default(now())
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content   String? // Text content
+  mediaUrl  String? // URL to media file in R2 (image/voice/video)
+  mediaType String? // "image" | "voice" | "video"
+
+  createdAt DateTime @default(now())
+
   @@index([createdAt])
   @@index([userId])
 }

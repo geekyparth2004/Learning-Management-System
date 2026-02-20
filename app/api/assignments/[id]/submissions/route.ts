@@ -83,7 +83,8 @@ export async function POST(
             );
         }
 
-        const problemId = assignment.problems[0].id;
+        const problem = assignment.problems[0];
+        const problemId = problem.id;
 
         // Check if this is the first submission
         const existingSubmissionsCount = await db.submission.count({
@@ -93,6 +94,12 @@ export async function POST(
             },
         });
 
+        // Evaluate MCQ locally and ignore client's `passed` flag
+        let finalPassed = passed;
+        if (problem.type === "MCQ") {
+            finalPassed = (code === problem.mcqCorrectAnswer);
+        }
+
         // Create submission
         const submission = await db.submission.create({
             data: {
@@ -100,7 +107,7 @@ export async function POST(
                 problemId,
                 code,
                 language,
-                status: passed ? "PASSED" : "FAILED", // Changed ACCEPTED -> PASSED to match dashboard filter
+                status: finalPassed ? "PASSED" : "FAILED", // Changed ACCEPTED -> PASSED to match dashboard filter
                 duration: duration || 0
             },
         });
@@ -124,7 +131,7 @@ export async function POST(
             }
         });
 
-        if (passed) {
+        if (finalPassed) { // Changed from `passed` to `finalPassed`
             // Find the ModuleItem associated with this assignment
             const moduleItem = await db.moduleItem.findFirst({
                 where: { assignmentId: assignmentId },

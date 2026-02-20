@@ -51,12 +51,15 @@ export async function POST(request: Request) {
                         videoSolution: p.videoSolution,
                         leetcodeUrl: p.leetcodeUrl,
                         slug: p.slug,
+                        type: p.type || "CODING",
+                        mcqOptions: p.mcqOptions ? JSON.stringify(p.mcqOptions) : null,
+                        mcqCorrectAnswer: p.mcqCorrectAnswer || null,
                         testCases: {
-                            create: p.testCases.map((tc: any) => ({
+                            create: p.testCases ? p.testCases.map((tc: any) => ({
                                 input: tc.input,
                                 expectedOutput: tc.expectedOutput,
                                 isHidden: tc.isHidden,
-                            })),
+                            })) : [],
                         },
                     })),
                 },

@@ -173,6 +173,8 @@ export async function PUT(
                             videoSolution: p.videoSolution,
                             leetcodeUrl: p.leetcodeUrl,
                             isManualVerification: p.isManualVerification,
+                            mcqOptions: p.mcqOptions ? JSON.stringify(p.mcqOptions) : null,
+                            mcqCorrectAnswer: p.mcqCorrectAnswer || null,
                             order: i
                         }
                     });
@@ -198,6 +200,8 @@ export async function PUT(
                             videoSolution: p.videoSolution,
                             leetcodeUrl: p.leetcodeUrl,
                             isManualVerification: p.isManualVerification,
+                            mcqOptions: p.mcqOptions ? JSON.stringify(p.mcqOptions) : null,
+                            mcqCorrectAnswer: p.mcqCorrectAnswer || null,
                             order: i
                         }
                     });
