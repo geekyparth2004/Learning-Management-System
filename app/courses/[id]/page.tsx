@@ -422,18 +422,9 @@ export default function CoursePlayerPage() {
             if (!res.ok) throw new Error("Failed to fetch course");
             const data = await res.json();
 
-            // Optimization: Only update if there's meaningful change or first load
-            setCourse(prevCourse => {
-                if (!prevCourse || refresh) return data;
-                // If not refreshing, keep previous data to avoid unnecessary re-renders
-                return prevCourse;
-            });
+            // ALWAYS update state with fresh data from API
+            setCourse(data);
 
-            if (!activeModuleId && data.modules.length > 0) {
-                // ... (keep existing logic)
-            }
-
-            // Set active module/item if enrolled
             // Set active module/item if enrolled and NONE selected (initial load)
             if (data.isEnrolled && data.modules.length > 0 && !activeItemId) {
                 // Find first in-progress or first locked (if none in progress)
@@ -441,9 +432,7 @@ export default function CoursePlayerPage() {
                     || data.modules.find((m: Module) => m.status === "LOCKED")
                     || data.modules[0];
 
-                if (!activeModuleId) {
-                    setActiveModuleId(currentModule.id);
-                }
+                setActiveModuleId(currentModule.id);
 
                 if (currentModule.items.length > 0) {
                     const firstIncomplete = currentModule.items.find((i: ModuleItem) => !i.isCompleted);

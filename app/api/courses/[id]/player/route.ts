@@ -74,25 +74,6 @@ export async function GET(
             const progress = moduleProgress.find(mp => mp.moduleId === m.id);
             let status = progress?.status || "LOCKED";
 
-            // Unlock first module if enrolled and no progress
-            if (isEnrolled && index === 0 && !progress) {
-                status = "IN_PROGRESS";
-            }
-
-            // Check validation: If previous module is completed, this one should be unlocked
-            if (index > 0) {
-                const prevModuleId = course.modules[index - 1].id;
-                const prevProgress = moduleProgress.find(mp => mp.moduleId === prevModuleId);
-                if (prevProgress?.status === "COMPLETED" && status === "LOCKED") {
-                    status = "IN_PROGRESS";
-                }
-            }
-
-            // RESTRICTION: Unlock Module 7 (index 6) for specific email regardless of progress
-            if (index === 6 && session?.user?.email === "aids22013@gmail.com" && status === "LOCKED") {
-                status = "IN_PROGRESS";
-            }
-
             // Map items (synchronously - no database calls)
             const items = m.items.map(i => {
                 const ip = itemProgress.find(p => p.moduleItemId === i.id);
@@ -105,7 +86,7 @@ export async function GET(
                     order: i.order,
                     duration: i.duration,
                     assignmentId: i.assignmentId,
-                    // Removed: testProblems (loaded on-demand for performance)
+                    // Removed: testProblems
                     assignment: i.assignment,
                     // Progress fields
                     isCompleted: ip?.isCompleted || false,
@@ -114,10 +95,40 @@ export async function GET(
                 };
             });
 
+            // FAIL-SAFE: If all items are completed, module status should be COMPLETED
+            const allItemsDone = items.length > 0 && items.every(i => i.isCompleted);
+            if (allItemsDone && status !== "COMPLETED") {
+                status = "COMPLETED";
+            }
+
+            // Unlock first module if enrolled and no progress
+            if (isEnrolled && index === 0 && status === "LOCKED") {
+                status = "IN_PROGRESS";
+            }
+
+            // Check validation: If previous module is completed, this one should be unlocked
+            if (index > 0) {
+                const prevModuleId = course.modules[index - 1].id;
+                const prevItems = course.modules[index - 1].items;
+                const prevProgress = moduleProgress.find(mp => mp.moduleId === prevModuleId);
+
+                // Also check if prev items are all done as a fail-safe for unlocking
+                const prevItemsProgress = itemProgress.filter(ip => prevItems.some(i => i.id === ip.moduleItemId));
+                const prevAllDone = prevItems.length > 0 && prevItems.every(pi => prevItemsProgress.find(pip => pip.moduleItemId === pi.id)?.isCompleted);
+
+                if ((prevProgress?.status === "COMPLETED" || prevAllDone) && status === "LOCKED") {
+                    status = "IN_PROGRESS";
+                }
+            }
+
+            // RESTRICTION: Unlock Module 7 (index 6) for specific email regardless of progress
+            if (index === 6 && session?.user?.email === "aids22013@gmail.com" && status === "LOCKED") {
+                status = "IN_PROGRESS";
+            }
+
             return {
                 id: m.id,
                 title: m.title,
-                // description: m.description, // Removed: Field does not exist in Module model
                 order: m.order,
                 status,
                 startedAt: progress?.startedAt || null,
@@ -131,9 +142,6 @@ export async function GET(
             isEnrolled,
             modules: modulesWithProgress,
         });
-
-        // Add cache headers - cache for 10 seconds to reduce load
-        response.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=20');
 
         return response;
     } catch (error) {

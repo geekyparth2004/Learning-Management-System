@@ -43,6 +43,8 @@ export async function checkAndUnlockNextModule(userId: string, moduleItemId: str
             create: { userId, moduleId, status: "COMPLETED", completedAt: new Date() }
         });
 
+        console.log(`Module ${moduleId} marked as COMPLETED for user ${userId}`);
+
         // 4. Unlock next module
         const nextModule = await db.module.findFirst({
             where: {
@@ -53,10 +55,25 @@ export async function checkAndUnlockNextModule(userId: string, moduleItemId: str
         });
 
         if (nextModule) {
+            console.log(`Unlocking next module ${nextModule.id} for user ${userId}`);
             await db.moduleProgress.upsert({
                 where: { userId_moduleId: { userId, moduleId: nextModule.id } },
-                update: { status: "IN_PROGRESS" }, // Don't overwrite if likely already there, but update just in case? "IN_PROGRESS" is safe.
+                update: { status: "IN_PROGRESS" },
                 create: { userId, moduleId: nextModule.id, status: "IN_PROGRESS", startedAt: new Date() }
+            });
+        }
+    } else {
+        // FAIL-SAFE: If not all completed, ensure module is at least IN_PROGRESS 
+        // (if it wasn't already COMPLETED)
+        const currentProgress = await db.moduleProgress.findUnique({
+            where: { userId_moduleId: { userId, moduleId } }
+        });
+
+        if (!currentProgress || currentProgress.status === "LOCKED") {
+            await db.moduleProgress.upsert({
+                where: { userId_moduleId: { userId, moduleId } },
+                update: { status: "IN_PROGRESS" },
+                create: { userId, moduleId, status: "IN_PROGRESS", startedAt: new Date() }
             });
         }
     }
