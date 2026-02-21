@@ -33,7 +33,7 @@ export default function LockedPage() {
                 setSuccess("Code applied successfully! Redirecting...");
                 setTimeout(() => {
                     // Force refresh to pull new subscription state via the guard
-                    window.location.href = "/assignment";
+                    window.location.href = "/";
                 }, 1500);
             }
         } catch (err) {
@@ -59,7 +59,7 @@ export default function LockedPage() {
             } else {
                 setSuccess("Payment successful! Account unlocked.");
                 setTimeout(() => {
-                    window.location.href = "/assignment";
+                    window.location.href = "/";
                 }, 1500);
             }
         } catch (err) {
