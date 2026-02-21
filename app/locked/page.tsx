@@ -108,7 +108,7 @@ export default function LockedPage() {
                                 type="text"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                placeholder="e.g. KHUSHBOO6398 or TCH-XYZ123"
+                                placeholder="e.g. TCH-XYZ123"
                                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 uppercase"
                                 disabled={loading || !!success}
                             />
@@ -126,16 +126,16 @@ export default function LockedPage() {
                     <div className="bg-[#111] border border-gray-800 rounded-2xl p-6 flex flex-col">
                         <div className="flex items-center gap-3 mb-4">
                             <CreditCard className="w-5 h-5 text-blue-400" />
-                            <h2 className="text-lg font-semibold text-white">Annual Subsciption</h2>
+                            <h2 className="text-lg font-semibold text-white">Lifetime Subscription</h2>
                         </div>
                         <p className="text-sm text-gray-400 mb-6 flex-grow">
-                            Ready to dive in? Purchase a full annual subscription for unlimited access to all coding challenges and video lessons.
+                            Ready to dive in? Purchase a full one-time subscription for unlimited lifetime access to all coding challenges and video lessons.
                         </p>
 
                         <div className="mt-auto pt-4">
                             <div className="flex items-end gap-1 mb-4">
                                 <span className="text-3xl font-bold text-white">3999 INR</span>
-                                <span className="text-gray-500 mb-1">/year</span>
+                                <span className="text-gray-500 mb-1">/lifetime</span>
                             </div>
                             <button
                                 onClick={handleSimulatePayment}

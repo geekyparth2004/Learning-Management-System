@@ -46,11 +46,20 @@ export async function POST(request: Request) {
         const referralCodeRecord = await db.referralCode.findUnique({
             where: {
                 code: code
+            },
+            include: {
+                _count: {
+                    select: { users: true }
+                }
             }
         });
 
         if (!referralCodeRecord) {
             return new NextResponse("Invalid referral code.", { status: 404 });
+        }
+
+        if (referralCodeRecord._count.users > 0) {
+            return new NextResponse("This referral code has already been used.", { status: 400 });
         }
 
         // Grant 4-day trial
