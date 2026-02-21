@@ -100,36 +100,35 @@ export async function POST(
             finalPassed = (code === problem.mcqCorrectAnswer);
         }
 
-        // Create submission
-        const submission = await db.submission.create({
-            data: {
-                userId: session.user.id,
-                problemId,
-                code,
-                language,
-                status: finalPassed ? "PASSED" : "FAILED", // Changed ACCEPTED -> PASSED to match dashboard filter
-                duration: duration || 0
-            },
-        });
-
-        // Reset the timer by updating the progress record to NOW
-        // This ensures next visit (or reattempt) starts fresh with new startedAt
-        await db.assignmentProgress.upsert({
-            where: {
-                userId_assignmentId: {
+        // Create submission and update progress in parallel
+        const [submission] = await Promise.all([
+            db.submission.create({
+                data: {
+                    userId: session.user.id,
+                    problemId,
+                    code,
+                    language,
+                    status: finalPassed ? "PASSED" : "FAILED",
+                    duration: duration || 0
+                },
+            }),
+            db.assignmentProgress.upsert({
+                where: {
+                    userId_assignmentId: {
+                        userId: session.user.id,
+                        assignmentId: assignmentId,
+                    }
+                },
+                create: {
                     userId: session.user.id,
                     assignmentId: assignmentId,
+                    startedAt: new Date()
+                },
+                update: {
+                    startedAt: new Date()
                 }
-            },
-            create: {
-                userId: session.user.id,
-                assignmentId: assignmentId,
-                startedAt: new Date()
-            },
-            update: {
-                startedAt: new Date()
-            }
-        });
+            })
+        ]);
 
         if (finalPassed) { // Changed from `passed` to `finalPassed`
             // Find the ModuleItem associated with this assignment
@@ -218,94 +217,100 @@ export async function POST(
                 }
             }
 
-            // Trigger notification for teacher
-            const course = await db.course.findFirst({
-                where: { modules: { some: { items: { some: { assignmentId: assignmentId } } } } },
-                select: { teacherId: true, id: true }
-            });
-
-            if (course && course.teacherId) {
-                await db.notification.create({
-                    data: {
-                        userId: course.teacherId,
-                        title: "Assignment Submitted",
-                        message: `Student submitted assignment: ${assignment.title}`,
-                        type: "ASSIGNMENT_SUBMITTED",
-                        link: `/teacher/courses/${course.id}/assignments/${assignmentId}/submissions`,
-                    },
-                });
-            }
-        }
-
-        // Push to GitHub ONLY if it's the first submission
-        if (existingSubmissionsCount === 0) {
-            try {
-                const { getGitHubAccessToken } = await import("@/lib/github");
-                const githubAccessToken = await getGitHubAccessToken(session.user.id);
-
-                if (githubAccessToken) {
-                    const moduleItem = await db.moduleItem.findFirst({
-                        where: { assignmentId: assignmentId },
-                        include: { module: { include: { course: true } } }
+            // Trigger notification for teacher (Fire and forget)
+            void (async () => {
+                try {
+                    const course = await db.course.findFirst({
+                        where: { modules: { some: { items: { some: { assignmentId: assignmentId } } } } },
+                        select: { teacherId: true, id: true }
                     });
 
-                    if (moduleItem?.module?.course) {
-                        const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
-                        const { createOrUpdateFile } = await import("@/lib/github");
+                    if (course && course.teacherId) {
+                        await db.notification.create({
+                            data: {
+                                userId: course.teacherId,
+                                title: "Assignment Submitted",
+                                message: `Student submitted assignment: ${assignment.title}`,
+                                type: "ASSIGNMENT_SUBMITTED",
+                                link: `/teacher/courses/${course.id}/assignments/${assignmentId}/submissions`,
+                            },
+                        });
+                    }
+                } catch (e) { console.error("Notification Error:", e); }
+            })();
+        }
 
-                        const problem = assignment.problems[0];
-                        const moduleTitle = moduleItem.module.title.replace(/\s+/g, "_");
-                        const assignmentTitle = problem.title.replace(/\s+/g, "_");
+        // Push to GitHub ONLY if it's the first submission (Fire and forget)
+        if (existingSubmissionsCount === 0) {
+            void (async () => {
+                try {
+                    const { getGitHubAccessToken } = await import("@/lib/github");
+                    const userId = session.user.id!;
+                    const githubAccessToken = await getGitHubAccessToken(userId);
 
-                        if (language === "web-dev") {
-                            // Handle Web Dev Submission (Multiple Files)
-                            try {
-                                const files = JSON.parse(code); // Expecting array of {name, content}
-                                if (Array.isArray(files)) {
-                                    for (const file of files) {
-                                        const filename = `${moduleTitle}/${assignmentTitle}/${file.name}`;
-                                        await createOrUpdateFile(
-                                            githubAccessToken,
-                                            repoName,
-                                            filename,
-                                            file.content,
-                                            `Solved ${problem.title} - ${file.name}`
-                                        );
+                    if (githubAccessToken) {
+                        const moduleItem = await db.moduleItem.findFirst({
+                            where: { assignmentId: assignmentId },
+                            include: { module: { include: { course: true } } }
+                        });
+
+                        if (moduleItem?.module?.course) {
+                            const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${userId.slice(-4)}`;
+                            const { createOrUpdateFile } = await import("@/lib/github");
+
+                            const problem = assignment.problems[0];
+                            const moduleTitle = moduleItem.module.title.replace(/\s+/g, "_");
+                            const assignmentTitle = problem.title.replace(/\s+/g, "_");
+
+                            if (language === "web-dev") {
+                                // Handle Web Dev Submission (Multiple Files)
+                                try {
+                                    const files = JSON.parse(code); // Expecting array of {name, content}
+                                    if (Array.isArray(files)) {
+                                        for (const file of files) {
+                                            const filename = `${moduleTitle}/${assignmentTitle}/${file.name}`;
+                                            await createOrUpdateFile(
+                                                githubAccessToken,
+                                                repoName,
+                                                filename,
+                                                file.content,
+                                                `Solved ${problem.title} - ${file.name}`
+                                            );
+                                        }
                                     }
+                                } catch (e) {
+                                    console.error("Error parsing web dev files for GitHub:", e);
                                 }
-                            } catch (e) {
-                                console.error("Error parsing web dev files for GitHub:", e);
+                            } else {
+                                // Handle Standard Coding Submission (Single File)
+                                const extensionMap: Record<string, string> = {
+                                    "javascript": "js",
+                                    "python": "py",
+                                    "java": "java",
+                                    "cpp": "cpp",
+                                    "c": "c",
+                                    "typescript": "ts",
+                                    "go": "go",
+                                    "rust": "rs",
+                                };
+                                const ext = extensionMap[language.toLowerCase()] || "txt";
+
+                                const filename = `${moduleTitle}/${assignmentTitle}.${ext}`;
+
+                                await createOrUpdateFile(
+                                    githubAccessToken,
+                                    repoName,
+                                    filename,
+                                    code,
+                                    `Solved ${problem.title}`
+                                );
                             }
-                        } else {
-                            // Handle Standard Coding Submission (Single File)
-                            // Determine file extension
-                            const extensionMap: Record<string, string> = {
-                                "javascript": "js",
-                                "python": "py",
-                                "java": "java",
-                                "cpp": "cpp",
-                                "c": "c",
-                                "typescript": "ts",
-                                "go": "go",
-                                "rust": "rs",
-                            };
-                            const ext = extensionMap[language.toLowerCase()] || "txt";
-
-                            const filename = `${moduleTitle}/${assignmentTitle}.${ext}`;
-
-                            await createOrUpdateFile(
-                                githubAccessToken,
-                                repoName,
-                                filename,
-                                code,
-                                `Solved ${problem.title}`
-                            );
                         }
                     }
+                } catch (error) {
+                    console.error("Error pushing to GitHub:", error);
                 }
-            } catch (error) {
-                console.error("Error pushing to GitHub:", error);
-            }
+            })();
         }
 
         return NextResponse.json({

@@ -53,57 +53,60 @@ export async function POST(
 
         // Create/Update File in GitHub ONLY if it's the first submission
         if (isFirstSubmission) {
-            try {
-                const { getGitHubAccessToken } = await import("@/lib/github");
-                const githubAccessToken = await getGitHubAccessToken(session.user.id);
+            void (async () => {
+                try {
+                    const { getGitHubAccessToken } = await import("@/lib/github");
+                    const userId = session.user.id!;
+                    const githubAccessToken = await getGitHubAccessToken(userId);
 
-                if (githubAccessToken) {
-                    // Find course title to construct repo name
-                    const moduleItem = await db.moduleItem.findUnique({
-                        where: { id },
-                        include: { module: { include: { course: true } } },
-                    });
+                    if (githubAccessToken) {
+                        // Find course title to construct repo name
+                        const moduleItem = await db.moduleItem.findUnique({
+                            where: { id },
+                            include: { module: { include: { course: true } } },
+                        });
 
-                    if (moduleItem?.module?.course) {
-                        const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${session.user.id.slice(-4)}`;
-                        const { createOrUpdateFile } = await import("@/lib/github");
+                        if (moduleItem?.module?.course) {
+                            const repoName = `${moduleItem.module.course.title.toLowerCase().replace(/\s+/g, "-")}-${userId.slice(-4)}`;
+                            const { createOrUpdateFile } = await import("@/lib/github");
 
-                        // Include module order number in folder name for better sorting
-                        const moduleOrder = moduleItem.module.order ?? 0;
-                        const moduleTitle = `${moduleOrder + 1} ${moduleItem.module.title.replace(/\s+/g, " ")}`;
-                        const itemTitle = moduleItem.title.replace(/\s+/g, "-");
+                            // Include module order number in folder name for better sorting
+                            const moduleOrder = moduleItem.module.order ?? 0;
+                            const moduleTitle = `${moduleOrder + 1} ${moduleItem.module.title.replace(/\s+/g, " ")}`;
+                            const itemTitle = moduleItem.title.replace(/\s+/g, "-");
 
-                        // Create HTML file
-                        await createOrUpdateFile(
-                            githubAccessToken,
-                            repoName,
-                            `${moduleTitle}/${itemTitle}/index.html`,
-                            html,
-                            `Update ${moduleItem.title} - HTML`
-                        );
+                            // Create HTML file
+                            await createOrUpdateFile(
+                                githubAccessToken,
+                                repoName,
+                                `${moduleTitle}/${itemTitle}/index.html`,
+                                html,
+                                `Update ${moduleItem.title} - HTML`
+                            );
 
-                        // Create CSS file
-                        await createOrUpdateFile(
-                            githubAccessToken,
-                            repoName,
-                            `${moduleTitle}/${itemTitle}/styles.css`,
-                            css,
-                            `Update ${moduleItem.title} - CSS`
-                        );
+                            // Create CSS file
+                            await createOrUpdateFile(
+                                githubAccessToken,
+                                repoName,
+                                `${moduleTitle}/${itemTitle}/styles.css`,
+                                css,
+                                `Update ${moduleItem.title} - CSS`
+                            );
 
-                        // Create JS file
-                        await createOrUpdateFile(
-                            githubAccessToken,
-                            repoName,
-                            `${moduleTitle}/${itemTitle}/script.js`,
-                            js,
-                            `Update ${moduleItem.title} - JS`
-                        );
+                            // Create JS file
+                            await createOrUpdateFile(
+                                githubAccessToken,
+                                repoName,
+                                `${moduleTitle}/${itemTitle}/script.js`,
+                                js,
+                                `Update ${moduleItem.title} - JS`
+                            );
+                        }
                     }
+                } catch (error) {
+                    console.error("Error pushing to GitHub:", error);
                 }
-            } catch (error) {
-                console.error("Error pushing to GitHub:", error);
-            }
+            })();
         }
 
         // Update streak on any successful submission

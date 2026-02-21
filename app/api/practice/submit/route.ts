@@ -61,50 +61,51 @@ export async function POST(req: Request) {
 
         // 3. Reward Logic (Only if passed)
         if (passed) {
-            // 3.1 GitHub Sync (Fire and forget or await?) - Let's await to be safe but catch errors
-            const { getGitHubAccessToken } = await import("@/lib/github");
-            const githubAccessToken = await getGitHubAccessToken(session.user.id);
-
-            if (githubAccessToken) {
+            // 3.1 GitHub Sync (Fire and forget)
+            void (async () => {
                 try {
-                    // Fetch problem for title
-                    const problem = await db.problem.findUnique({
-                        where: { id: problemId },
-                        select: { title: true }
-                    });
+                    const { getGitHubAccessToken } = await import("@/lib/github");
+                    const githubAccessToken = await getGitHubAccessToken(userId);
 
-                    if (problem) {
-                        const { createOrUpdateFile } = await import("@/lib/github");
+                    if (githubAccessToken) {
+                        // Fetch problem for title
+                        const problem = await db.problem.findUnique({
+                            where: { id: problemId },
+                            select: { title: true }
+                        });
 
-                        // Map language to extension
-                        const extMap: Record<string, string> = {
-                            "python": "py",
-                            "java": "java",
-                            "cpp": "cpp",
-                            "c": "c",
-                            "javascript": "js"
-                        };
-                        const ext = extMap[language.toLowerCase()] || "txt";
+                        if (problem) {
+                            const { createOrUpdateFile } = await import("@/lib/github");
 
-                        // Sanitize title for folder name
-                        const folderName = problem.title.replace(/[^a-zA-Z0-9-_]/g, "_");
-                        const fileName = `Solution.${ext}`;
-                        const path = `${folderName}/${fileName}`;
-                        const message = `Solved: ${problem.title}`;
+                            // Map language to extension
+                            const extMap: Record<string, string> = {
+                                "python": "py",
+                                "java": "java",
+                                "cpp": "cpp",
+                                "c": "c",
+                                "javascript": "js"
+                            };
+                            const ext = extMap[language.toLowerCase()] || "txt";
 
-                        await createOrUpdateFile(
-                            githubAccessToken,
-                            "Practice-Questions", // Repo Name
-                            path,
-                            code,
-                            message
-                        );
+                            // Sanitize title for folder name
+                            const folderName = problem.title.replace(/[^a-zA-Z0-9-_]/g, "_");
+                            const fileName = `Solution.${ext}`;
+                            const path = `${folderName}/${fileName}`;
+                            const message = `Solved: ${problem.title}`;
+
+                            await createOrUpdateFile(
+                                githubAccessToken,
+                                "Practice-Questions", // Repo Name
+                                path,
+                                code,
+                                message
+                            );
+                        }
                     }
                 } catch (ghError) {
                     console.error("GitHub Sync Error:", ghError);
-                    // Don't fail the submission if GitHub fails, just log it
                 }
-            }
+            })();
 
             // Check if ALREADY solved before this specific submission
             // We search for ANY *previous* passed submission for this problem
