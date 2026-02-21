@@ -200,6 +200,8 @@ export default function WebDevEditor({ files, setFiles, instructions, activeFile
                                     <video
                                         src={videoSolution}
                                         controls
+                                        controlsList="nodownload"
+                                        onContextMenu={(e) => e.preventDefault()}
                                         className="h-full w-full object-contain"
                                     />
                                 ) : (

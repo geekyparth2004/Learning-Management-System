@@ -252,6 +252,8 @@ export default function DiscussionPanel({ onClose }: DiscussionPanelProps) {
                                     <video
                                         src={msg.mediaUrl}
                                         controls
+                                        controlsList="nodownload"
+                                        onContextMenu={(e) => e.preventDefault()}
                                         className="mt-2 max-w-full rounded-lg max-h-48"
                                     />
                                 )}

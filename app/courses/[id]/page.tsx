@@ -855,6 +855,8 @@ export default function CoursePlayerPage() {
                                                     <video
                                                         src={signedVideoUrl || activeItem.content}
                                                         controls
+                                                        controlsList="nodownload"
+                                                        onContextMenu={(e) => e.preventDefault()}
                                                         preload="auto"
                                                         playsInline
                                                         className="h-full w-full object-contain"
@@ -1021,6 +1023,8 @@ export default function CoursePlayerPage() {
                                                                                     <video
                                                                                         src={signedSolutionUrl || getProxyUrl(videoUrl)}
                                                                                         controls
+                                                                                        controlsList="nodownload"
+                                                                                        onContextMenu={(e) => e.preventDefault()}
                                                                                         className="w-full"
                                                                                     />
                                                                                 ) : (
@@ -1183,6 +1187,8 @@ export default function CoursePlayerPage() {
                                                                                     <video
                                                                                         src={signedSolutionUrl || getProxyUrl(videoSolutionUrl)}
                                                                                         controls
+                                                                                        controlsList="nodownload"
+                                                                                        onContextMenu={(e) => e.preventDefault()}
                                                                                         className="w-full"
                                                                                     />
                                                                                 ) : (

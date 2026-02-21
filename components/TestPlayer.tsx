@@ -842,7 +842,13 @@ export default function TestPlayer({ duration, passingScore, problems, onComplet
                                                         {hint.type === "text" ? (
                                                             hint.content || <span className="italic text-gray-500">No text content available.</span>
                                                         ) : (
-                                                            <video src={hint.content} controls className="w-full rounded" />
+                                                            <video
+                                                                src={hint.content}
+                                                                controls
+                                                                controlsList="nodownload"
+                                                                onContextMenu={(e) => e.preventDefault()}
+                                                                className="w-full rounded"
+                                                            />
                                                         )}
                                                     </div>
                                                 )}

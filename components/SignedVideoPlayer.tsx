@@ -84,8 +84,9 @@ export default function SignedVideoPlayer({ src, className }: SignedVideoPlayerP
         <video
             src={videoSrc}
             controls
-            className={`w-full rounded-lg bg-black ${className}`}
             controlsList="nodownload"
+            onContextMenu={(e) => e.preventDefault()}
+            className={`w-full rounded-lg bg-black ${className}`}
         />
     );
 }

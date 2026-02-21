@@ -919,7 +919,13 @@ function AssignmentContent() {
                                                         {hint.type === "text" ? (
                                                             hint.content || <span className="italic text-gray-500">No text content available.</span>
                                                         ) : (
-                                                            <video src={getProxyUrl(hint.content)} controls className="w-full rounded" />
+                                                            <video
+                                                                src={getProxyUrl(hint.content)}
+                                                                controls
+                                                                controlsList="nodownload"
+                                                                onContextMenu={(e) => e.preventDefault()}
+                                                                className="w-full rounded"
+                                                            />
                                                         )}
                                                     </div>
                                                 )}
