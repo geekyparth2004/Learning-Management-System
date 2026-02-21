@@ -1,0 +1,6 @@
+﻿app/api/teacher/referrals/route.ts(74,13): error TS2322: Type '{ code: string; teacherId: string | undefined; }' is not assignable to type '(Without<ReferralCodeCreateInput, ReferralCodeUncheckedCreateInput> & ReferralCodeUncheckedCreateInput) | (Without<...> & ReferralCodeCreateInput)'.
+  Type '{ code: string; teacherId: string | undefined; }' is not assignable to type 'Without<ReferralCodeUncheckedCreateInput, ReferralCodeCreateInput> & ReferralCodeCreateInput'.
+    Type '{ code: string; teacherId: string | undefined; }' is not assignable to type 'Without<ReferralCodeUncheckedCreateInput, ReferralCodeCreateInput>'.
+      Types of property 'teacherId' are incompatible.
+        Type 'string | undefined' is not assignable to type 'undefined'.
+          Type 'string' is not assignable to type 'undefined'.
