@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import { Lock, Key, CreditCard, ArrowRight, CheckCircle } from "lucide-react";
 
 export default function LockedPage() {
@@ -43,34 +44,85 @@ export default function LockedPage() {
         }
     };
 
-    const handleSimulatePayment = async () => {
+    const handleCheckout = async () => {
         setLoading(true);
         setError("");
         setSuccess("");
 
         try {
-            const res = await fetch("/api/student/pay", {
-                method: "POST",
-            });
-            const data = await res.json();
+            // 1. Create order on the backend
+            const res = await fetch("/api/razorpay/create-order", { method: "POST" });
 
             if (!res.ok) {
-                setError(data || "Payment failed.");
-            } else {
-                setSuccess("Payment successful! Account unlocked.");
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 1500);
+                const errText = await res.text();
+                setError(errText || "Failed to initialize checkout.");
+                setLoading(false);
+                return;
             }
+
+            const data = await res.json();
+
+            // 2. Open Razorpay Modal
+            const options = {
+                key: data.key_id,
+                amount: data.amount,
+                currency: data.currency,
+                name: "Learning Platform",
+                description: "Lifetime Premium Subscription",
+                order_id: data.order_id,
+                handler: async function (response: any) {
+                    setLoading(true);
+                    setError("");
+                    try {
+                        // 3. Verify signature securely
+                        const verifyRes = await fetch("/api/razorpay/verify", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature
+                            })
+                        });
+
+                        if (verifyRes.ok) {
+                            setSuccess("Payment successful! Account unlocked.");
+                            setTimeout(() => {
+                                window.location.href = "/";
+                            }, 1500);
+                        } else {
+                            const verifyErr = await verifyRes.text();
+                            setError(verifyErr || "Payment verification failed.");
+                            setLoading(false);
+                        }
+                    } catch (err) {
+                        setError("Verification network error.");
+                        setLoading(false);
+                    }
+                },
+                theme: {
+                    color: "#2563eb" // matches blue-600
+                }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+
+            rzp.on("payment.failed", function (response: any) {
+                setError("Payment cancelled or failed.");
+                setLoading(false);
+            });
+
+            rzp.open();
+
         } catch (err) {
-            setError("Network error. Please try again.");
-        } finally {
+            setError("Network error bridging to payment gateway.");
             setLoading(false);
         }
     };
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
             <div className="max-w-xl w-full flex flex-col items-center">
                 <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
                     <Lock className="w-10 h-10 text-blue-500" />
@@ -138,7 +190,7 @@ export default function LockedPage() {
                                 <span className="text-gray-500 mb-1">/lifetime</span>
                             </div>
                             <button
-                                onClick={handleSimulatePayment}
+                                onClick={handleCheckout}
                                 disabled={loading || !!success}
                                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-3 font-medium transition-all flex items-center justify-center gap-2"
                             >
