@@ -61,8 +61,8 @@ export async function POST(req: Request) {
 
         // 3. Reward Logic (Only if passed)
         if (passed) {
-            // 3.1 GitHub Sync (Fire and forget)
-            void (async () => {
+            // 3.1 GitHub Sync
+            await (async () => {
                 try {
                     const { getGitHubAccessToken } = await import("@/lib/github");
                     const githubAccessToken = await getGitHubAccessToken(userId);

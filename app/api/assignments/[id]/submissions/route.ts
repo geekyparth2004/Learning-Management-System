@@ -217,8 +217,8 @@ export async function POST(
                 }
             }
 
-            // Trigger notification for teacher (Fire and forget)
-            void (async () => {
+            // Trigger notification for teacher
+            await (async () => {
                 try {
                     const course = await db.course.findFirst({
                         where: { modules: { some: { items: { some: { assignmentId: assignmentId } } } } },
@@ -240,9 +240,9 @@ export async function POST(
             })();
         }
 
-        // Push to GitHub ONLY if it's the first submission (Fire and forget)
+        // Push to GitHub ONLY if it's the first submission
         if (existingSubmissionsCount === 0) {
-            void (async () => {
+            await (async () => {
                 try {
                     const { getGitHubAccessToken } = await import("@/lib/github");
                     const userId = session.user.id!;

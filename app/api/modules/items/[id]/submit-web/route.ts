@@ -53,7 +53,7 @@ export async function POST(
 
         // Create/Update File in GitHub ONLY if it's the first submission
         if (isFirstSubmission) {
-            void (async () => {
+            await (async () => {
                 try {
                     const { getGitHubAccessToken } = await import("@/lib/github");
                     const userId = session.user.id!;

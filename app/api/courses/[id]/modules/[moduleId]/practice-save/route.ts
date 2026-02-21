@@ -15,8 +15,8 @@ export async function POST(
         const { id: courseId, moduleId } = await params;
         const { code, language, videoTitle } = await req.json();
 
-        // Push to GitHub (Fire and forget)
-        void (async () => {
+        // Push to GitHub
+        await (async () => {
             try {
                 const { getGitHubAccessToken } = await import("@/lib/github");
                 const userId = session.user.id!;
