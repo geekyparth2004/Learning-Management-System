@@ -8,7 +8,6 @@ import StreakIndicator from "@/components/StreakIndicator";
 import BadgeCheckOnLogin from "@/components/BadgeCheckOnLogin";
 import NewContestBanner from "@/components/NewContestBanner";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
-import DiscussionButton from "@/components/DiscussionButton";
 import { StatsSkeleton } from "@/components/dashboard/DashboardSkeletons";
 
 // Force dynamic only if auth() requires it, but usually standard Next.js 15 handles this.
@@ -221,9 +220,6 @@ export default async function Home() {
 
         {/* Badge Check on Login - Awards pending badges and shows celebration */}
         <BadgeCheckOnLogin />
-
-        {/* Floating Discussion Button */}
-        <DiscussionButton />
       </div>
     </div>
   );
