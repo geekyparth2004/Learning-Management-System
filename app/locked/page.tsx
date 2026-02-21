@@ -30,7 +30,7 @@ export default function LockedPage() {
             if (!res.ok) {
                 setError(data || "Invalid code or an error occurred.");
             } else {
-                setSuccess("Trial activated! Redirecting to dashboard...");
+                setSuccess("Code applied successfully! Redirecting...");
                 setTimeout(() => {
                     // Force refresh to pull new subscription state via the guard
                     window.location.href = "/assignment";
@@ -108,7 +108,7 @@ export default function LockedPage() {
                                 type="text"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
-                                placeholder="e.g. TCH-XYZ123"
+                                placeholder="e.g. KHUSHBOO6398 or TCH-XYZ123"
                                 className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500 uppercase"
                                 disabled={loading || !!success}
                             />
@@ -134,7 +134,7 @@ export default function LockedPage() {
 
                         <div className="mt-auto pt-4">
                             <div className="flex items-end gap-1 mb-4">
-                                <span className="text-3xl font-bold text-white">$99</span>
+                                <span className="text-3xl font-bold text-white">3999 INR</span>
                                 <span className="text-gray-500 mb-1">/year</span>
                             </div>
                             <button
