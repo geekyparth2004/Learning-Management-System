@@ -8,6 +8,9 @@ import { Lock, Key, CreditCard, ArrowRight, CheckCircle } from "lucide-react";
 export default function LockedPage() {
     const router = useRouter();
     const [code, setCode] = useState("");
+    const [discountCode, setDiscountCode] = useState("");
+    const [computedPrice, setComputedPrice] = useState(3999);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -50,8 +53,12 @@ export default function LockedPage() {
         setSuccess("");
 
         try {
-            // 1. Create order on the backend
-            const res = await fetch("/api/razorpay/create-order", { method: "POST" });
+            // 1. Create order on the backend with optional discount
+            const res = await fetch("/api/razorpay/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ discountCode: discountCode.trim() })
+            });
 
             if (!res.ok) {
                 const errText = await res.text();
@@ -184,11 +191,30 @@ export default function LockedPage() {
                             Ready to dive in? Purchase a full one-time subscription for unlimited lifetime access to all coding challenges and video lessons.
                         </p>
 
-                        <div className="mt-auto pt-4">
-                            <div className="flex items-end gap-1 mb-4">
-                                <span className="text-3xl font-bold text-white">3999 INR</span>
+                        <div className="mt-auto pt-4 flex flex-col gap-4">
+                            <div>
+                                <input
+                                    type="text"
+                                    value={discountCode}
+                                    onChange={(e) => {
+                                        const val = e.target.value.toUpperCase();
+                                        setDiscountCode(val);
+                                        if (val === "KPM012") setComputedPrice(2499);
+                                        else if (val === "KPM024") setComputedPrice(3499);
+                                        else if (val === "KPM036") setComputedPrice(1999);
+                                        else setComputedPrice(3999);
+                                    }}
+                                    placeholder="Got a discount code?"
+                                    className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase text-sm"
+                                    disabled={loading || !!success}
+                                />
+                            </div>
+
+                            <div className="flex items-end gap-1">
+                                <span className="text-3xl font-bold text-white">{computedPrice} INR</span>
                                 <span className="text-gray-500 mb-1">/lifetime</span>
                             </div>
+
                             <button
                                 onClick={handleCheckout}
                                 disabled={loading || !!success}

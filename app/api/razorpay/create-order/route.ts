@@ -9,13 +9,24 @@ export async function POST(req: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
+        const { discountCode } = await req.json().catch(() => ({ discountCode: "" }));
+
+        let finalAmount = 3999; // Base price
+
+        if (discountCode) {
+            const code = discountCode.toUpperCase().trim();
+            if (code === "KPM012") finalAmount = 2499;
+            else if (code === "KPM024") finalAmount = 3499;
+            else if (code === "KPM036") finalAmount = 1999;
+        }
+
         const razorpay = new Razorpay({
             key_id: process.env.RAZORPAY_KEY_ID as string,
             key_secret: process.env.RAZORPAY_KEY_SECRET as string,
         });
 
         const options = {
-            amount: 399900, // amount in the smallest currency unit (paise for INR, so 3999 * 100)
+            amount: finalAmount * 100, // amount in the smallest currency unit (paise for INR)
             currency: "INR",
             receipt: `rcpt_${session.user.id.slice(0, 10)}_${Date.now()}`
         };
