@@ -21,6 +21,17 @@ export async function POST(request: Request) {
         const languageId = languageMap[language.toLowerCase()] || 71;
 
         let normalizedInput = input || "";
+        let normalizedCode = code;
+
+        // Judge0 expects Java main class to be named "Main"
+        if (language.toLowerCase() === "java") {
+            normalizedCode = normalizedCode.replace(/public\s+class\s+[a-zA-Z0-9_]+/i, "public class Main");
+
+            // If they didn't use "public", they might have just used "class main"
+            if (!normalizedCode.includes("public class Main")) {
+                normalizedCode = normalizedCode.replace(/class\s+[a-zA-Z0-9_]+/i, "class Main");
+            }
+        }
 
         // Normalize input for Python to mimic cin behavior (token-based input)
         // This allows "3 2" to be read by two calls to input()
@@ -38,7 +49,7 @@ export async function POST(request: Request) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                source_code: code,
+                source_code: normalizedCode,
                 language_id: languageId,
                 stdin: normalizedInput,
             }),
