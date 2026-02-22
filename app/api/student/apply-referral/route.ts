@@ -43,37 +43,35 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true, message: "Full access activated." });
         }
 
+        // We fetch without count since it's one-time use
         const referralCodeRecord = await db.referralCode.findUnique({
             where: {
                 code: code
-            },
-            include: {
-                _count: {
-                    select: { users: true }
-                }
             }
         });
 
         if (!referralCodeRecord) {
-            return new NextResponse("Invalid referral code.", { status: 404 });
-        }
-
-        if (referralCodeRecord._count.users > 0) {
-            return new NextResponse("This referral code has already been used.", { status: 400 });
+            return new NextResponse("Invalid or expired referral code.", { status: 404 });
         }
 
         // Grant 4-day trial
         const trialExpiresAt = new Date();
         trialExpiresAt.setDate(trialExpiresAt.getDate() + 4);
 
-        await db.user.update({
-            where: { id: user.id },
-            data: {
-                subscriptionStatus: "TRIAL",
-                trialExpiresAt: trialExpiresAt,
-                referralCodeId: referralCodeRecord.id
-            }
-        });
+        // Use a transaction to apply trial and IMMEDIATELY delete the referral code so it's a true single-use
+        await db.$transaction([
+            db.user.update({
+                where: { id: user.id },
+                data: {
+                    subscriptionStatus: "TRIAL",
+                    trialExpiresAt: trialExpiresAt,
+                    // We don't link the referralCodeId anymore since we are deleting the record outright
+                }
+            }),
+            db.referralCode.delete({
+                where: { id: referralCodeRecord.id }
+            })
+        ]);
 
         return NextResponse.json({ success: true, message: "Trial activated for 4 days." });
     } catch (error) {

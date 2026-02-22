@@ -52,12 +52,9 @@ model User {
   accounts           Account[]
   discussionMessages DiscussionMessage[]
   
-  // Subscriptions & Referrals
+  // Subscriptions
   subscriptionStatus String?       @default("FREE") // "FREE" | "TRIAL" | "PAID"
   trialExpiresAt     DateTime?
-  
-  referralCodeId     String?
-  referralCode       ReferralCode? @relation("UserReferralInfo", fields: [referralCodeId], references: [id])
   
   generatedReferrals ReferralCode[] @relation("TeacherReferralCode")
 }
@@ -70,8 +67,6 @@ model ReferralCode {
   teacher   User     @relation("TeacherReferralCode", fields: [teacherId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
-  
-  users     User[]   @relation("UserReferralInfo")
 }
 
 model Account {

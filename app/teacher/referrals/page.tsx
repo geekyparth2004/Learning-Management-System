@@ -7,9 +7,6 @@ interface ReferralCode {
     id: string;
     code: string;
     createdAt: string;
-    _count: {
-        users: number;
-    };
 }
 
 export default function TeacherReferralsPage() {
@@ -98,7 +95,6 @@ export default function TeacherReferralsPage() {
                         <thead>
                             <tr className="border-b border-gray-800 bg-[#0a0a0a]">
                                 <th className="p-4 text-sm font-semibold text-gray-400">REFERRAL CODE</th>
-                                <th className="p-4 text-sm font-semibold text-gray-400">STUDENTS USED</th>
                                 <th className="p-4 text-sm font-semibold text-gray-400">CREATED AT</th>
                                 <th className="p-4 text-sm font-semibold text-gray-400 text-right">ACTION</th>
                             </tr>
@@ -109,12 +105,6 @@ export default function TeacherReferralsPage() {
                                     <td className="p-4">
                                         <div className="inline-flex items-center gap-2 bg-[#1a1a1a] border border-gray-700 px-3 py-1.5 rounded-lg text-white font-mono text-lg tracking-wider">
                                             {code.code}
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-gray-300">
-                                        <div className="flex items-center gap-2">
-                                            <Users className="w-4 h-4 text-purple-400" />
-                                            {code._count.users} students
                                         </div>
                                     </td>
                                     <td className="p-4 text-gray-400">

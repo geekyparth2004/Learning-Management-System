@@ -25,11 +25,6 @@ export async function GET(request: Request) {
             where: {
                 teacherId: session.user.id
             },
-            include: {
-                _count: {
-                    select: { users: true }
-                }
-            },
             orderBy: {
                 createdAt: 'desc'
             }
