@@ -73,7 +73,7 @@ export default async function Home() {
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href="/login"
+              href="/register"
               className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all hover:scale-105 hover:bg-indigo-500 hover:shadow-[0_0_40px_rgba(99,102,241,0.6)]"
             >
               Start Learning Now
