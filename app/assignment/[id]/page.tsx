@@ -835,117 +835,131 @@ function AssignmentContent() {
                                 {/* Description */}
                                 <div>
                                     <h2 className="mb-4 text-lg font-semibold">Problem Description</h2>
-                                    <div className="prose prose-invert text-sm leading-relaxed text-gray-300">{problem.description}</div>
-                                </div>
-
-                                {/* Test Cases */}
-                                <div>
-                                    <h3 className="mb-4 text-lg font-semibold">Test Cases</h3>
-                                    <div className="space-y-3">
-                                        {problem.testCases.map((tc, idx) => {
-                                            const result = testCaseResults.find(r => r.id === tc.id);
-                                            return (
-                                                <div
-                                                    key={tc.id}
-                                                    className={cn(
-                                                        "rounded border p-4",
-                                                        result
-                                                            ? result.passed
-                                                                ? "border-green-800 bg-green-900/20"
-                                                                : "border-red-800 bg-red-900/20"
-                                                            : "border-gray-700 bg-[#1e1e1e]"
-                                                    )}
-                                                >
-                                                    <div className="mb-3 flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
-                                                            {tc.isHidden && (
-                                                                <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
-                                                            )}
-                                                        </div>
-                                                        {result && (
-                                                            <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
-                                                                {result.passed ? "Passed" : "Failed"}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    {!tc.isHidden && (
-                                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                                            <div className="space-y-1">
-                                                                <span className="text-xs font-medium text-gray-500">Input:</span>
-                                                                <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
-                                                            </div>
-                                                            <div className="space-y-1">
-                                                                <span className="text-xs font-medium text-gray-500">Expected Output:</span>
-                                                                <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
+                                    <div className="prose prose-invert text-sm leading-relaxed text-gray-300">
+                                        {problem.description.split('\n').map((line, i) => {
+                                            const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
+                                            if (imgMatch) {
+                                                return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} className="max-w-full rounded-lg my-4 border border-gray-800" />;
+                                            }
+                                            return <p key={i} className="min-h-[1rem]">{line}</p>;
                                         })}
                                     </div>
                                 </div>
 
+                                {/* Test Cases */}
+                                {problem.type !== "FILE_UPLOAD" && problem.type !== "MCQ" && (
+                                    <div>
+                                        <h3 className="mb-4 text-lg font-semibold">Test Cases</h3>
+                                        <div className="space-y-3">
+                                            {problem.testCases.map((tc, idx) => {
+                                                const result = testCaseResults.find(r => r.id === tc.id);
+                                                return (
+                                                    <div
+                                                        key={tc.id}
+                                                        className={cn(
+                                                            "rounded border p-4",
+                                                            result
+                                                                ? result.passed
+                                                                    ? "border-green-800 bg-green-900/20"
+                                                                    : "border-red-800 bg-red-900/20"
+                                                                : "border-gray-700 bg-[#1e1e1e]"
+                                                        )}
+                                                    >
+                                                        <div className="mb-3 flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-sm font-medium text-gray-400">Case {idx + 1}</span>
+                                                                {tc.isHidden && (
+                                                                    <span className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">Hidden</span>
+                                                                )}
+                                                            </div>
+                                                            {result && (
+                                                                <span className={cn("text-sm font-bold", result.passed ? "text-green-400" : "text-red-400")}>
+                                                                    {result.passed ? "Passed" : "Failed"}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {!tc.isHidden && (
+                                                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                                                <div className="space-y-1">
+                                                                    <span className="text-xs font-medium text-gray-500">Input:</span>
+                                                                    <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.input || "(empty)"}</pre>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <span className="text-xs font-medium text-gray-500">Expected Output:</span>
+                                                                    <pre className="overflow-x-auto rounded bg-[#111111] p-2 text-xs text-gray-300">{tc.expectedOutput}</pre>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* AI Complexity Analysis */}
-                                <div>
-                                    <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
-                                </div>
+                                {problem.type !== "FILE_UPLOAD" && problem.type !== "MCQ" && (
+                                    <div>
+                                        <ComplexityAnalysis analysis={analysis} loading={isAnalyzing} />
+                                    </div>
+                                )}
 
 
                                 {/* Hints Section */}
-                                <div>
-                                    <div className="mb-4 flex items-center gap-3">
-                                        <h3 className="text-lg font-semibold">Hints</h3>
-                                        <span className="rounded-full bg-gray-800 px-3 py-1 text-xs text-gray-400">
-                                            {problem.hints.filter(h => !h.locked).length}/{problem.hints.length} unlocked
-                                        </span>
+                                {problem.type !== "FILE_UPLOAD" && problem.type !== "MCQ" && problem.hints && problem.hints.length > 0 && (
+                                    <div>
+                                        <div className="mb-4 flex items-center gap-3">
+                                            <h3 className="text-lg font-semibold">Hints</h3>
+                                            <span className="rounded-full bg-gray-800 px-3 py-1 text-xs text-gray-400">
+                                                {problem.hints.filter(h => !h.locked).length}/{problem.hints.length} unlocked
+                                            </span>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {problem.hints.map((hint, idx) => (
+                                                <div key={idx} className="overflow-hidden rounded-lg border border-gray-800 bg-[#161616]">
+                                                    <button
+                                                        onClick={() => toggleHint(idx)}
+                                                        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[#1e1e1e]"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="font-medium text-gray-300">Hint {idx + 1}</span>
+                                                            {hint.type === "video" && (
+                                                                <span className="flex items-center gap-1 rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
+                                                                    <Video size={12} /> Solution
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            {hint.locked ? (
+                                                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                                    <Lock size={14} />
+                                                                    <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                    {expandedHints.includes(idx) && !hint.locked && (
+                                                        <div className="border-t border-gray-800 bg-[#111111] p-4 text-sm text-gray-300">
+                                                            {hint.type === "text" ? (
+                                                                hint.content || <span className="italic text-gray-500">No text content available.</span>
+                                                            ) : (
+                                                                <video
+                                                                    src={getProxyUrl(hint.content)}
+                                                                    controls
+                                                                    controlsList="nodownload"
+                                                                    onContextMenu={(e) => e.preventDefault()}
+                                                                    className="w-full rounded"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="space-y-4">
-                                        {problem.hints.map((hint, idx) => (
-                                            <div key={idx} className="overflow-hidden rounded-lg border border-gray-800 bg-[#161616]">
-                                                <button
-                                                    onClick={() => toggleHint(idx)}
-                                                    className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[#1e1e1e]"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="font-medium text-gray-300">Hint {idx + 1}</span>
-                                                        {hint.type === "video" && (
-                                                            <span className="flex items-center gap-1 rounded bg-blue-900/30 px-2 py-0.5 text-xs text-blue-400">
-                                                                <Video size={12} /> Solution
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        {hint.locked ? (
-                                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                                <Lock size={14} />
-                                                                <span>Unlocks in {formatTimeRemaining(hint.unlockTime)}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <ChevronDown size={16} className={cn("transition-transform text-gray-400", expandedHints.includes(idx) && "rotate-180")} />
-                                                        )}
-                                                    </div>
-                                                </button>
-                                                {expandedHints.includes(idx) && !hint.locked && (
-                                                    <div className="border-t border-gray-800 bg-[#111111] p-4 text-sm text-gray-300">
-                                                        {hint.type === "text" ? (
-                                                            hint.content || <span className="italic text-gray-500">No text content available.</span>
-                                                        ) : (
-                                                            <video
-                                                                src={getProxyUrl(hint.content)}
-                                                                controls
-                                                                controlsList="nodownload"
-                                                                onContextMenu={(e) => e.preventDefault()}
-                                                                className="w-full rounded"
-                                                            />
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
 
@@ -1079,7 +1093,7 @@ function AssignmentContent() {
                             ) : null}
 
                             {/* Tab Content */}
-                            {problem.type !== "MCQ" && (
+                            {problem.type !== "MCQ" && problem.type !== "FILE_UPLOAD" && (
                                 <div className="flex-1 overflow-hidden relative">
                                     {problem.leetcodeUrl ? (
                                         <div className="flex h-full flex-col items-center justify-center space-y-8 p-8 text-center">
