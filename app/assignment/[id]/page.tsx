@@ -781,7 +781,7 @@ function AssignmentContent() {
                     </div>
                     {!problem.leetcodeUrl && (
                         <>
-                            {problem.type !== "WEB_DEV" && (
+                            {problem.type !== "WEB_DEV" && problem.type !== "FILE_UPLOAD" && (
                                 <>
                                     <select
                                         value={language}
@@ -796,8 +796,8 @@ function AssignmentContent() {
                                     <button onClick={handleRunTestCases} disabled={status === "running"} className="rounded bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50">Test</button>
                                 </>
                             )}
-                            {(problem.type === "WEB_DEV" || problem.type === "MCQ" || (testCaseResults.length > 0 && testCaseResults.every(r => r.passed))) && (
-                                <button onClick={handleSubmit} disabled={status === "running" || (problem.type === "MCQ" && !selectedMcqOption)} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
+                            {(problem.type === "WEB_DEV" || problem.type === "MCQ" || problem.type === "FILE_UPLOAD" || (testCaseResults.length > 0 && testCaseResults.every(r => r.passed))) && (
+                                <button onClick={handleSubmit} disabled={status === "running" || (problem.type === "MCQ" && !selectedMcqOption) || (problem.type === "FILE_UPLOAD" && !fileUploadContent)} className="rounded bg-purple-600 px-4 py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-50">Submit</button>
                             )}
                         </>
                     )}
