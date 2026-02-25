@@ -839,7 +839,7 @@ function AssignmentContent() {
                                         {problem.description.split('\n').map((line, i) => {
                                             const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
                                             if (imgMatch) {
-                                                return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} className="max-w-full rounded-lg my-4 border border-gray-800" />;
+                                                return <img key={i} src={getProxyUrl(imgMatch[2])} alt={imgMatch[1]} className="max-w-full rounded-lg my-4 border border-gray-800" />;
                                             }
                                             return <p key={i} className="min-h-[1rem]">{line}</p>;
                                         })}
