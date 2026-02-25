@@ -956,7 +956,7 @@ export default function CoursePlayerPage() {
                                             />
                                         </div>
                                     )
-                                ) : activeItem.type === "ASSIGNMENT" ? (
+                                ) : (activeItem.type === "ASSIGNMENT" || activeItem.type === "FILE_UPLOAD") ? (
                                     activeItem.assignment?.problems?.[0]?.leetcodeUrl ? (
                                         <div className="flex h-full w-full flex-col items-center justify-start gap-6 p-8 text-center overflow-y-auto">
                                             {/* ... LeetCode UI ... */}
@@ -1057,9 +1057,9 @@ export default function CoursePlayerPage() {
                                     ) : (
                                         <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                                             <FileText className="h-16 w-16 text-gray-600" />
-                                            <h2 className="text-xl font-bold">Coding Assignment</h2>
+                                            <h2 className="text-xl font-bold">{activeItem.type === "FILE_UPLOAD" ? "File Upload Assignment" : "Coding Assignment"}</h2>
                                             <p className="text-gray-400">
-                                                This module contains a coding assignment. Click below to start.
+                                                This module contains an assignment. Click below to start.
                                             </p>
                                             {activeItem.assignmentId ? (
                                                 <Link
@@ -1266,8 +1266,8 @@ export default function CoursePlayerPage() {
                                                                     }
                                                                 }}
                                                                 className={`flex items-center gap-2 rounded-lg px-6 py-3 font-bold transition-all ${activeItem.isCompleted
-                                                                        ? "bg-green-600/20 text-green-500 cursor-default"
-                                                                        : "bg-[#2a2a2a] hover:bg-[#333] text-gray-300"
+                                                                    ? "bg-green-600/20 text-green-500 cursor-default"
+                                                                    : "bg-[#2a2a2a] hover:bg-[#333] text-gray-300"
                                                                     }`}
                                                             >
                                                                 {activeItem.isCompleted ? (

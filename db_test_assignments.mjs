@@ -3,10 +3,11 @@ import fs from 'fs'
 const prisma = new PrismaClient()
 
 async function main() {
-    const item = await prisma.moduleItem.findFirst({
+    const assignments = await prisma.assignment.findMany({
         where: { title: 'HTML Forms Assignment' },
+        orderBy: { createdAt: 'desc' }
     })
-    fs.writeFileSync('out.json', JSON.stringify(item, null, 2))
+    fs.writeFileSync('out_assignments.json', JSON.stringify(assignments, null, 2))
 }
 
 main()

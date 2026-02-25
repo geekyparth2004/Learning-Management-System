@@ -35,7 +35,7 @@ export async function POST(
             duration: duration ? parseInt(duration) * 60 : 0, // Convert minutes to seconds
         };
 
-        if (type === "VIDEO") {
+        if (type === "VIDEO" || type === "DOCUMENT") {
             itemData.content = content;
         } else if (type === "LEETCODE") {
             try {
@@ -61,7 +61,7 @@ export async function POST(
                 // Fallback: treat content as direct URL (legacy)
                 itemData.content = content;
             }
-        } else if (type === "ASSIGNMENT") {
+        } else if (type === "ASSIGNMENT" || type === "FILE_UPLOAD") {
             // content is expected to be assignmentId
             itemData.assignmentId = content;
         } else if (type === "AI_INTERVIEW") {

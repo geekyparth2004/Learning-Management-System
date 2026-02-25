@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client'
-import fs from 'fs'
 const prisma = new PrismaClient()
 
 async function main() {
-    const item = await prisma.moduleItem.findFirst({
-        where: { title: 'HTML Forms Assignment' },
+    await prisma.moduleItem.update({
+        where: { id: 'cmm29q2nu0003o2hpjxiioh1e' },
+        data: { assignmentId: 'cmm29q0fr0000o2hpf3ogulqd' }
     })
-    fs.writeFileSync('out.json', JSON.stringify(item, null, 2))
+    console.log("Successfully linked item to assignment.")
 }
 
 main()
