@@ -130,15 +130,29 @@ export const STREAK_BADGE_DEFINITIONS = {
     }
 } as const;
 
+// Course Completion badges
+export const COURSE_BADGE_DEFINITIONS = {
+    HTML_COMPLETION: {
+        id: "HTML_COMPLETION",
+        title: "HTML Expert",
+        description: "Completed the entire HTML Module",
+        threshold: 1, // 1 course
+        image: "/badges/html_completion.png",
+        category: "course"
+    }
+} as const;
+
 // Combined badge definitions
 export const BADGE_DEFINITIONS = {
     ...PROBLEM_BADGE_DEFINITIONS,
-    ...STREAK_BADGE_DEFINITIONS
+    ...STREAK_BADGE_DEFINITIONS,
+    ...COURSE_BADGE_DEFINITIONS
 } as const;
 
 export type BadgeType = keyof typeof BADGE_DEFINITIONS;
 export type ProblemBadgeType = keyof typeof PROBLEM_BADGE_DEFINITIONS;
 export type StreakBadgeType = keyof typeof STREAK_BADGE_DEFINITIONS;
+export type CourseBadgeType = keyof typeof COURSE_BADGE_DEFINITIONS;
 
 /**
  * Check if user has earned any new problem badges based on their problem count.

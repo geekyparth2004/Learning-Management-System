@@ -214,6 +214,23 @@ export async function POST(
                             data: { status: "COMPLETED" },
                         });
                     }
+
+                    // 4. Award Badges
+                    if (module.id === "cmll8lo3d001d4fzxib3kez4j") {
+                        await db.userBadge.upsert({
+                            where: {
+                                userId_badgeType: {
+                                    userId,
+                                    badgeType: "HTML_COMPLETION",
+                                },
+                            },
+                            update: {},
+                            create: {
+                                userId,
+                                badgeType: "HTML_COMPLETION",
+                            },
+                        });
+                    }
                 }
             }
 

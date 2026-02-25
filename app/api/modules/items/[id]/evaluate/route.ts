@@ -121,6 +121,23 @@ export async function POST(
                     } else {
                         console.log("DEBUG: No next module found.");
                     }
+
+                    // Award Badge
+                    if (moduleId === "cmll8lo3d001d4fzxib3kez4j") {
+                        await db.userBadge.upsert({
+                            where: {
+                                userId_badgeType: {
+                                    userId,
+                                    badgeType: "HTML_COMPLETION",
+                                },
+                            },
+                            update: {},
+                            create: {
+                                userId,
+                                badgeType: "HTML_COMPLETION",
+                            },
+                        });
+                    }
                 }
             }
         }
