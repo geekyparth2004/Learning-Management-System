@@ -16,7 +16,7 @@ import { Language } from "@/types";
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE" | "DOCUMENT" | "FILE_UPLOAD";
     content?: string;
     assignmentId?: string;
     isCompleted: boolean;
@@ -1214,6 +1214,75 @@ export default function CoursePlayerPage() {
                                                                 }
                                                             })()
                                                         )}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+                                ) : activeItem.type === "DOCUMENT" ? (
+                                    <div className="flex h-full w-full flex-col items-start justify-start gap-6 p-8 overflow-y-auto">
+                                        <div className="space-y-4 w-full">
+                                            <h2 className="text-3xl font-bold">{activeItem.title}</h2>
+
+                                            {(() => {
+                                                let text = "";
+                                                let fileUrl = "";
+                                                try {
+                                                    const payload = JSON.parse(activeItem.content || "{}");
+                                                    text = payload.text || "";
+                                                    fileUrl = payload.fileUrl || "";
+                                                } catch (e) { }
+
+                                                return (
+                                                    <div className="flex flex-col gap-8 w-full">
+                                                        {text && (
+                                                            <div className="prose prose-invert max-w-none w-full bg-[#1e1e1e] rounded-lg p-6 border border-gray-800">
+                                                                <div className="whitespace-pre-wrap text-gray-300 leading-relaxed font-sans">{text}</div>
+                                                            </div>
+                                                        )}
+
+                                                        {fileUrl && (
+                                                            <div className="flex flex-col gap-2 p-6 rounded-lg bg-[#1a1a1a] border border-blue-900/50 items-start">
+                                                                <h3 className="text-lg font-bold text-blue-400 flex items-center gap-2">
+                                                                    <FileText size={20} /> Attached Resource
+                                                                </h3>
+                                                                <p className="text-sm text-gray-400">Download the attached file to review the supplementary material.</p>
+                                                                <a
+                                                                    href={fileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="mt-2 flex items-center gap-2 rounded bg-blue-600 hover:bg-blue-700 font-bold px-4 py-2 transition-colors disabled:opacity-50"
+                                                                >
+                                                                    Download File
+                                                                </a>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex justify-end pt-4 border-t border-gray-800">
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (!activeItem.isCompleted) {
+                                                                        completeItem(activeItem.id);
+                                                                    }
+                                                                }}
+                                                                className={`flex items-center gap-2 rounded-lg px-6 py-3 font-bold transition-all ${activeItem.isCompleted
+                                                                        ? "bg-green-600/20 text-green-500 cursor-default"
+                                                                        : "bg-[#2a2a2a] hover:bg-[#333] text-gray-300"
+                                                                    }`}
+                                                            >
+                                                                {activeItem.isCompleted ? (
+                                                                    <>
+                                                                        <CheckCircle size={20} />
+                                                                        Marked as Read
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <CheckCircle size={20} />
+                                                                        Mark as Read (Optional)
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 );
                                             })()}

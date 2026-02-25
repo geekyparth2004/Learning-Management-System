@@ -84,6 +84,7 @@ export async function POST(
                 console.log("DEBUG: Progress Items Count:", allItemsProgress.length);
 
                 const allCompleted = moduleItems.every(i => {
+                    if (i.type === "DOCUMENT") return true;
                     const p = allItemsProgress.find(ap => ap.moduleItemId === i.id);
                     const completed = p?.isCompleted;
                     if (!completed) console.log("DEBUG: Item incomplete:", i.title, i.id);

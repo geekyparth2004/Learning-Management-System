@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Lock, Video, Zap, LogOut, Clock, Upload, FileCode } from "lucide-react";
 
 import CodeEditor from "@/components/CodeEditor";
 import WebDevEditor from "@/components/WebDevEditor";
@@ -41,7 +41,7 @@ interface Problem {
     slug?: string;
     courseId?: string;
     videoSolution?: string;
-    type?: "CODING" | "WEB_DEV" | "MCQ";
+    type?: "CODING" | "WEB_DEV" | "MCQ" | "FILE_UPLOAD";
     webDevInitialCode?: {
         html: string;
         css: string;
@@ -94,6 +94,8 @@ function AssignmentContent() {
     const [isVerifying, setIsVerifying] = useState(false);
 
     const [selectedMcqOption, setSelectedMcqOption] = useState<string>("");
+    const [fileUploadName, setFileUploadName] = useState<string>("");
+    const [fileUploadContent, setFileUploadContent] = useState<string>("");
 
     const [showGiveAnswer, setShowGiveAnswer] = useState(false);
 
@@ -562,8 +564,19 @@ function AssignmentContent() {
                 submissionData.code = JSON.stringify(webDevFiles);
                 submissionData.language = "web-dev";
             } else if (problem.type === "MCQ") {
+                if (!selectedMcqOption) {
+                    alert("Please select an option.");
+                    return;
+                }
                 submissionData.code = selectedMcqOption;
                 submissionData.language = "mcq";
+            } else if (problem.type === "FILE_UPLOAD") {
+                if (!fileUploadName || !fileUploadContent) {
+                    alert("Please select a file to upload first.");
+                    return;
+                }
+                submissionData.code = JSON.stringify([{ name: fileUploadName, content: fileUploadContent }]);
+                submissionData.language = "file-upload";
             } else {
                 submissionData.code = code;
                 submissionData.language = language;
@@ -974,6 +987,51 @@ function AssignmentContent() {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            ) : problem.type === "FILE_UPLOAD" ? (
+                                <div className="flex flex-1 flex-col items-center justify-center p-8 bg-[#111111] overflow-y-auto">
+                                    <div className="max-w-2xl w-full">
+                                        <h2 className="text-2xl font-bold mb-4 text-white">Upload Your Assignment</h2>
+                                        <p className="text-gray-400 mb-8 leading-relaxed">
+                                            Please follow the provided instructions and complete the assignment locally. Once you are finished, upload your final code file here. The system will automatically publish it to your GitHub profile.
+                                        </p>
+
+                                        <div className="rounded-xl border-2 border-dashed border-gray-700 bg-[#161616] p-8 text-center transition-all hover:border-blue-500 hover:bg-[#1a1a1a]">
+                                            <input
+                                                type="file"
+                                                id="file-upload-input"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setFileUploadName(file.name);
+                                                        const reader = new FileReader();
+                                                        reader.onload = (e) => setFileUploadContent(e.target?.result as string);
+                                                        reader.readAsText(file);
+                                                    }
+                                                }}
+                                            />
+                                            <label htmlFor="file-upload-input" className="cursor-pointer block w-full h-full">
+                                                {!fileUploadName ? (
+                                                    <div className="flex flex-col items-center justify-center h-40 space-y-4">
+                                                        <div className="rounded-full bg-blue-900/30 p-4">
+                                                            <Upload size={32} className="text-blue-400" />
+                                                        </div>
+                                                        <span className="text-lg font-medium text-gray-300">Click to browse or drag and drop</span>
+                                                        <span className="text-sm text-gray-500">Supports text-based files (.py, .js, .html, .txt, etc.)</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center h-40 space-y-3">
+                                                        <div className="rounded-full bg-green-900/30 p-4">
+                                                            <FileCode size={32} className="text-green-400" />
+                                                        </div>
+                                                        <span className="text-lg font-medium text-green-400">File attached: {fileUploadName}</span>
+                                                        <span className="text-sm text-gray-400 hover:text-white underline" onClick={(e) => { e.preventDefault(); setFileUploadName(""); setFileUploadContent(""); }}>Remove and select another file</span>
+                                                    </div>
+                                                )}
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             ) : !problem.leetcodeUrl ? (

@@ -174,7 +174,7 @@ export async function POST(
                 });
 
                 const allCompleted = allItems.every(i =>
-                    allProgress.some(p => p.moduleItemId === i.id && p.isCompleted)
+                    i.type === "DOCUMENT" || allProgress.some(p => p.moduleItemId === i.id && p.isCompleted)
                 );
 
                 if (allCompleted) {
@@ -280,6 +280,23 @@ export async function POST(
                                     }
                                 } catch (e) {
                                     console.error("Error parsing web dev files for GitHub:", e);
+                                }
+                            } else if (language === "file-upload") {
+                                try {
+                                    const files = JSON.parse(code);
+                                    if (Array.isArray(files) && files.length > 0) {
+                                        const file = files[0]; // Currently supports a single file upload
+                                        const filename = `${moduleTitle}/${assignmentTitle}/${file.name}`;
+                                        await createOrUpdateFile(
+                                            githubAccessToken,
+                                            repoName,
+                                            filename,
+                                            file.content,
+                                            `Solved ${problem.title} - ${file.name}`
+                                        );
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing file upload for GitHub:", e);
                                 }
                             } else {
                                 // Handle Standard Coding Submission (Single File)

@@ -57,7 +57,7 @@ export async function POST(
         });
 
         const allCompleted = allItems.every(i =>
-            allProgress.some(p => p.moduleItemId === i.id && p.isCompleted)
+            i.type === "DOCUMENT" || allProgress.some(p => p.moduleItemId === i.id && p.isCompleted)
         );
 
         if (allCompleted) {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload, Edit, Brain, Users } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Clock, Video, FileCode, GripVertical, Upload, Edit, Brain, Users, FileText } from "lucide-react";
 import Link from "next/link";
 import ProblemBuilder from "@/components/ProblemBuilder";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
@@ -10,7 +10,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 interface ModuleItem {
     id: string;
     title: string;
-    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE";
+    type: "VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE" | "FILE_UPLOAD" | "DOCUMENT";
     content?: string;
     assignmentId?: string;
 }
@@ -42,11 +42,13 @@ export default function CourseBuilderPage() {
 
     // New Item State
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
-    const [newItemType, setNewItemType] = useState<"VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV">("VIDEO");
+    const [newItemType, setNewItemType] = useState<"VIDEO" | "ASSIGNMENT" | "AI_INTERVIEW" | "TEST" | "WEB_DEV" | "LEETCODE" | "FILE_UPLOAD" | "DOCUMENT">("VIDEO");
     const [newItemTitle, setNewItemTitle] = useState("");
     const [newItemContent, setNewItemContent] = useState(""); // URL or Assignment ID
     // const [newItemDuration, setNewItemDuration] = useState(0); // Removed Manual Duration
     const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [documentFile, setDocumentFile] = useState<File | null>(null);
+    const [documentText, setDocumentText] = useState("");
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -298,7 +300,7 @@ export default function CourseBuilderPage() {
                     },
                     videoSolution: videoUrl
                 });
-            } else if (newItemType === "ASSIGNMENT") {
+            } else if (newItemType === "ASSIGNMENT" || newItemType === "FILE_UPLOAD") {
                 const formData = new FormData();
                 formData.append("title", newItemTitle);
                 formData.append("problems", JSON.stringify(assignProblems));
@@ -332,6 +334,24 @@ export default function CourseBuilderPage() {
                     leetcodeUrl: newItemContent,
                     videoSolution: videoUrl
                 });
+            } else if (newItemType === "DOCUMENT") {
+                let docUrl = undefined;
+                if (documentFile) {
+                    setIsUploading(true);
+                    try {
+                        docUrl = await uploadToS3(documentFile);
+                    } catch (error: any) {
+                        console.error("Upload failed:", error);
+                        setIsUploading(false);
+                        alert(`Failed to upload document: ${error.message}`);
+                        return;
+                    }
+                    setIsUploading(false);
+                }
+                content = JSON.stringify({
+                    text: documentText,
+                    fileUrl: docUrl
+                });
             }
 
             const res = await fetch(`/api/modules/${activeModuleId}/items`, {
@@ -360,6 +380,8 @@ export default function CourseBuilderPage() {
                 setTestProblems([]);
                 setAssignProblems([]);
                 setUploadProgress(0);
+                setDocumentFile(null);
+                setDocumentText("");
                 fetchCourse();
             } else {
                 const data = await res.json();
@@ -554,7 +576,9 @@ export default function CourseBuilderPage() {
                                                                                         <FileCode size={16} className="text-green-400" />
                                                                                     ) : item.type === "AI_INTERVIEW" ? (
                                                                                         <Brain size={16} className="text-pink-400" />
-                                                                                    ) : item.type === "ASSIGNMENT" ? (
+                                                                                    ) : item.type === "DOCUMENT" ? (
+                                                                                        <FileText size={16} className="text-blue-300" />
+                                                                                    ) : (item.type === "ASSIGNMENT" || item.type === "FILE_UPLOAD") ? (
                                                                                         <FileCode size={16} className="text-purple-400" />
                                                                                     ) : (
                                                                                         <FileCode size={16} className="text-gray-400" />
@@ -562,7 +586,7 @@ export default function CourseBuilderPage() {
                                                                                     <span className="text-sm">{item.title}</span>
                                                                                 </div>
                                                                                 <div className="flex items-center gap-2">
-                                                                                    {item.type === "ASSIGNMENT" && (
+                                                                                    {(item.type === "ASSIGNMENT" || item.type === "WEB_DEV" || item.type === "LEETCODE" || item.type === "FILE_UPLOAD") && (
                                                                                         <>
                                                                                             <Link
                                                                                                 href={`/teacher/courses/${courseId}/assignments/${item.assignmentId || item.content}/edit`}
@@ -618,7 +642,9 @@ export default function CourseBuilderPage() {
                                                                     <option value="AI_INTERVIEW">AI Interview</option>
                                                                     <option value="TEST">Test</option>
                                                                     <option value="WEB_DEV">Coding Assignment (Web Dev)</option>
+                                                                    <option value="FILE_UPLOAD">File Upload Assignment</option>
                                                                     <option value="LEETCODE">LeetCode Problem</option>
+                                                                    <option value="DOCUMENT">Reading Material / Document</option>
                                                                 </select>
                                                                 <input
                                                                     type="text"
@@ -812,7 +838,7 @@ export default function CourseBuilderPage() {
                                                                         />
                                                                     </div>
                                                                 </div>
-                                                            ) : newItemType === "ASSIGNMENT" ? (
+                                                            ) : newItemType === "ASSIGNMENT" || newItemType === "FILE_UPLOAD" ? (
                                                                 <div className="space-y-3 rounded border border-gray-800 p-3">
                                                                     <div className="border-t border-gray-800 pt-2">
                                                                         <div className="mb-2 flex items-center justify-between">
@@ -881,6 +907,61 @@ export default function CourseBuilderPage() {
                                                                                 >
                                                                                     <Upload className="h-6 w-6" />
                                                                                     <span className="text-xs">Upload Solution Video</span>
+                                                                                </label>
+                                                                            )}
+                                                                        </div>
+                                                                        {uploadProgress > 0 && (
+                                                                            <div className="flex items-center gap-2">
+                                                                                <div className="h-1 flex-1 overflow-hidden rounded-full bg-gray-800">
+                                                                                    <div
+                                                                                        className="h-full bg-blue-500 transition-all duration-300"
+                                                                                        style={{ width: `${uploadProgress}%` }}
+                                                                                    />
+                                                                                </div>
+                                                                                <span className="text-xs text-gray-400">{uploadProgress}%</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            ) : newItemType === "DOCUMENT" ? (
+                                                                <div className="space-y-3 rounded border border-gray-800 p-3">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Content (Markdown supported)</label>
+                                                                        <textarea
+                                                                            value={documentText}
+                                                                            onChange={(e) => setDocumentText(e.target.value)}
+                                                                            className="w-full rounded bg-[#111111] border border-gray-700 px-3 py-2 text-sm min-h-[100px]"
+                                                                            placeholder="Type your notes or instructions here..."
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-xs text-gray-400">Optional File Attachment (PDF, Zip, etc)</label>
+                                                                        <div className="flex flex-col items-center justify-center rounded border-2 border-dashed border-gray-700 bg-[#111111] p-6">
+                                                                            <input
+                                                                                type="file"
+                                                                                onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
+                                                                                className="hidden"
+                                                                                id="document-file-upload"
+                                                                            />
+                                                                            {documentFile ? (
+                                                                                <div className="w-full space-y-2">
+                                                                                    <div className="flex items-center justify-between p-4 bg-[#1e1e1e] rounded border border-gray-800">
+                                                                                        <span className="text-sm font-medium text-blue-400 truncate max-w-[200px]">{documentFile.name}</span>
+                                                                                        <label
+                                                                                            htmlFor="document-file-upload"
+                                                                                            className="cursor-pointer text-xs text-gray-400 hover:text-white bg-gray-800 px-2 py-1 rounded"
+                                                                                        >
+                                                                                            Change
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <label
+                                                                                    htmlFor="document-file-upload"
+                                                                                    className="flex cursor-pointer flex-col items-center gap-2 text-gray-400 hover:text-white"
+                                                                                >
+                                                                                    <Upload className="h-6 w-6" />
+                                                                                    <span className="text-xs">Click to attach file</span>
                                                                                 </label>
                                                                             )}
                                                                         </div>

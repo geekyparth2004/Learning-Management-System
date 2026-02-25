@@ -21,7 +21,7 @@ interface ProblemData {
     testCases: TestCase[];
     hints: any[]; // Changed to allow object array
     videoSolution?: string;
-    type: "CODING" | "WEB_DEV" | "LEETCODE" | "MCQ";
+    type: "CODING" | "WEB_DEV" | "LEETCODE" | "MCQ" | "FILE_UPLOAD";
     webDevInstructions?: string;
     webDevInitialCode?: {
         html: string;
@@ -63,7 +63,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
     );
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState(initialData?.videoSolution || "");
-    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE" | "MCQ">(initialData?.type || "CODING");
+    const [problemType, setProblemType] = useState<"CODING" | "WEB_DEV" | "LEETCODE" | "MCQ" | "FILE_UPLOAD">(initialData?.type || "CODING");
     const [isManualVerification, setIsManualVerification] = useState(initialData?.isManualVerification || false);
 
     // MCQ State
@@ -143,6 +143,11 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
             return;
         }
 
+        if (problemType === "FILE_UPLOAD" && !description) {
+            alert("Instructions are required for file upload assignments");
+            return;
+        }
+
         if (problemType === "WEB_DEV" && !webDevInstructions) {
             alert("Instructions are required for web dev problems");
             return;
@@ -179,7 +184,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
 
             onSave({
                 title,
-                description: problemType === "CODING" ? description : problemType === "WEB_DEV" ? webDevInstructions : "",
+                description: problemType === "CODING" || problemType === "FILE_UPLOAD" ? description : problemType === "WEB_DEV" ? webDevInstructions : "",
                 testCases: problemType === "CODING" ? testCases : [],
                 hints: processedHints,
                 videoSolution: finalVideoUrl || undefined,
@@ -283,12 +288,13 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                         <label className="text-sm font-medium text-gray-300">Problem Type:</label>
                         <select
                             value={problemType}
-                            onChange={(e) => setProblemType(e.target.value as "CODING" | "WEB_DEV" | "LEETCODE" | "MCQ")}
+                            onChange={(e) => setProblemType(e.target.value as "CODING" | "WEB_DEV" | "LEETCODE" | "MCQ" | "FILE_UPLOAD")}
                             className="rounded bg-[#111111] border border-gray-700 px-3 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                         >
                             <option value="CODING">Coding Problem</option>
-                            <option value="WEB_DEV">Web Development</option>
-                            <option value="LEETCODE">LeetCode/External Problem</option>
+                            <option value="WEB_DEV">Coding Assignment (Web Dev)</option>
+                            <option value="FILE_UPLOAD">File Upload</option>
+                            <option value="LEETCODE">LeetCode Problem</option>
                             <option value="MCQ">Multiple Choice Question</option>
                         </select>
                     </div>
@@ -484,6 +490,34 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                 className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
                                             />
                                         </div>
+                                    </div>
+                                </>
+                            ) : problemType === "FILE_UPLOAD" ? (
+                                <>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm font-medium text-gray-300">Instructions & Prompt</label>
+                                            <label className="flex cursor-pointer items-center gap-2 rounded bg-gray-800 px-3 py-1 text-xs font-medium text-blue-400 hover:bg-gray-700 hover:text-blue-300 transition-colors">
+                                                <Upload size={14} />
+                                                Add Image
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleImageUpload}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                        <textarea
+                                            placeholder="Provide instructions for the file upload assignment. E.g., 'Upload your solution.py file to your GitHub repository. Ensure it passes all tests locally before submitting.'"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            className="h-40 w-full rounded-lg border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none font-mono text-sm"
+                                        />
+                                    </div>
+                                    <div className="rounded border border-dashed border-gray-700 bg-gray-900/50 p-6 text-center text-sm text-gray-400 mb-6">
+                                        Students will be asked to upload a file (e.g. .pdf, .zip, .js, .py) based on your instructions.
+                                        The system will automatically upload this file to their verified GitHub repository upon submission.
                                     </div>
                                 </>
                             ) : (
