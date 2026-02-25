@@ -233,7 +233,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
             const imageUrl = data.publicUrl;
             const markdownImage = `![${file.name}](${imageUrl})`;
 
-            if (problemType === "CODING" || problemType === "LEETCODE") {
+            if (problemType === "CODING" || problemType === "LEETCODE" || problemType === "FILE_UPLOAD" || problemType === "MCQ") {
                 setDescription((prev: string) => prev + "\n" + markdownImage + "\n");
             } else if (problemType === "WEB_DEV") {
                 setWebDevInstructions((prev: string) => prev + "\n" + markdownImage + "\n");
@@ -378,6 +378,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                     type="file"
                                                     accept="image/*"
                                                     onChange={handleImageUpload}
+                                                    onClick={(e) => { (e.target as HTMLInputElement).value = "" }}
                                                     className="hidden"
                                                 />
                                             </label>
@@ -454,6 +455,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                     type="file"
                                                     accept="image/*"
                                                     onChange={handleImageUpload}
+                                                    onClick={(e) => { (e.target as HTMLInputElement).value = "" }}
                                                     className="hidden"
                                                 />
                                             </label>
@@ -504,6 +506,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                     type="file"
                                                     accept="image/*"
                                                     onChange={handleImageUpload}
+                                                    onClick={(e) => { (e.target as HTMLInputElement).value = "" }}
                                                     className="hidden"
                                                 />
                                             </label>
@@ -532,6 +535,7 @@ export default function ProblemBuilder({ onSave, onCancel, uploadVideo, isUpload
                                                     type="file"
                                                     accept="image/*"
                                                     onChange={handleImageUpload}
+                                                    onClick={(e) => { (e.target as HTMLInputElement).value = "" }}
                                                     className="hidden"
                                                 />
                                             </label>
