@@ -48,7 +48,9 @@ export default async function ProfilePage() {
     const streakBadges: StreakBadgeType[] = ["STREAK_25", "STREAK_50", "STREAK_100", "STREAK_200", "STREAK_365"];
     const courseBadges: CourseBadgeType[] = ["HTML_COMPLETION"];
 
-    const earnedBadgeTypes = new Set(badges.map((b: { id: string }) => b.id));
+    const earnedBadgeTypes = new Set(badges.map((b: { id: string }) => b?.id).filter(Boolean));
+    console.log("SERVER LOG:", badges);
+    console.log("DB BADGES:", await db.userBadge.findMany({ where: { userId: session.user.id } }));
 
     return (
         <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">

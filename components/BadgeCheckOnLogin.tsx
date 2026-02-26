@@ -15,9 +15,9 @@ export default function BadgeCheckOnLogin() {
     useEffect(() => {
         // Only check once per session
         const sessionKey = 'badge_check_done';
-        if (sessionStorage.getItem(sessionKey)) {
-            return;
-        }
+        // if (sessionStorage.getItem(sessionKey)) {
+        //     return;
+        // }
 
         async function checkBadges() {
             try {
