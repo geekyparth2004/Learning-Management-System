@@ -49,8 +49,6 @@ export default async function ProfilePage() {
     const courseBadges: CourseBadgeType[] = ["HTML_COMPLETION"];
 
     const earnedBadgeTypes = new Set(badges.map((b: { id: string }) => b?.id).filter(Boolean));
-    console.log("SERVER LOG:", badges);
-    console.log("DB BADGES:", await db.userBadge.findMany({ where: { userId: session.user.id } }));
 
     return (
         <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
