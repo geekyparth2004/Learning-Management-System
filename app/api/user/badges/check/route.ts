@@ -42,7 +42,7 @@ export async function POST() {
         for (const badgeType of badgesToCheck) {
             const badge = BADGE_DEFINITIONS[badgeType];
 
-            if (solvedCount >= badge.threshold && !earnedBadgeTypes.has(badgeType)) {
+            if (badge && solvedCount >= badge.threshold && !earnedBadgeTypes.has(badgeType)) {
                 // Award this badge
                 await db.userBadge.create({
                     data: {
@@ -51,6 +51,28 @@ export async function POST() {
                     }
                 });
                 newlyEarnedBadges.push(badgeType);
+            }
+        }
+
+        // Check for course badges (HTML_COMPLETION)
+        if (!earnedBadgeTypes.has("HTML_COMPLETION")) {
+            const hasCompletedHTML = await db.moduleProgress.findUnique({
+                where: {
+                    userId_moduleId: {
+                        userId,
+                        moduleId: "cmll8lo3d001d4fzxib3kez4j",
+                    },
+                },
+            });
+
+            if (hasCompletedHTML?.status === "COMPLETED") {
+                await db.userBadge.create({
+                    data: {
+                        userId,
+                        badgeType: "HTML_COMPLETION",
+                    },
+                });
+                newlyEarnedBadges.push("HTML_COMPLETION" as BadgeType);
             }
         }
 

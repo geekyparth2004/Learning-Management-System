@@ -1248,7 +1248,7 @@ export default function CoursePlayerPage() {
                                                                 </h3>
                                                                 <p className="text-sm text-gray-400">Download the attached file to review the supplementary material.</p>
                                                                 <a
-                                                                    href={fileUrl}
+                                                                    href={`/api/file/download?url=${encodeURIComponent(fileUrl)}`}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="mt-2 flex items-center gap-2 rounded bg-blue-600 hover:bg-blue-700 font-bold px-4 py-2 transition-colors disabled:opacity-50"
