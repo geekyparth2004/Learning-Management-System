@@ -857,11 +857,12 @@ export default function CoursePlayerPage() {
                                                         controls
                                                         controlsList="nodownload"
                                                         onContextMenu={(e) => e.preventDefault()}
-                                                        preload="auto"
+                                                        preload="metadata"
                                                         playsInline
                                                         className="h-full w-full object-contain"
                                                         onTimeUpdate={handleVideoTimeUpdate}
                                                         onPause={saveVideoProgress}
+
                                                         onEnded={(e) => {
                                                             const video = e.currentTarget;
                                                             // Auto-complete and advance when video ends

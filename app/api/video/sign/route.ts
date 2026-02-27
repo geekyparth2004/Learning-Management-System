@@ -69,7 +69,7 @@ export async function POST(request: Request) {
             ResponseContentType: "video/mp4", // Force browser to treat content as MP4 (fixes MKV playback issues)
         });
 
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // 1 hour
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 604800 }); // 7 days
 
         return NextResponse.json({ signedUrl });
 
