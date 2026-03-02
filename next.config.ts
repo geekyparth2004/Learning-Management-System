@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@vercel/og": false,
+      "@huggingface/transformers": false,
+      "googleapis": false,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
