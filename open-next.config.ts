@@ -30,7 +30,21 @@ const config = {
         minify: true,
         // Exclude large image optimization and open graph dependencies from the edge bundle
         // since Cloudflare has a strict 3MB size limit on the free tier.
-        external: ["@vercel/og", "resvg.wasm", "yoga.wasm", "satori"],
+        external: [
+            "@vercel/og",
+            "resvg.wasm",
+            "yoga.wasm",
+            "satori",
+            "@huggingface/transformers",
+            "googleapis",
+            "@aws-sdk/client-s3",
+            "cheerio",
+            "framer-motion",
+            "recharts",
+            "monaco-editor",
+            "@monaco-editor/react",
+            "bcryptjs"
+        ],
     }
 };
 
