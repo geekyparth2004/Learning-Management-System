@@ -88,6 +88,16 @@ export async function GET(
                     assignmentId: i.assignmentId,
                     // Removed: testProblems
                     assignment: i.assignment,
+                    // AI Interview fields
+                    aiInterviewTopic: i.aiInterviewTopic,
+                    aiQuestionsCount: i.aiQuestionsCount,
+                    aiDifficulty: i.aiDifficulty,
+                    // Test fields
+                    testDuration: i.testDuration,
+                    testPassingScore: i.testPassingScore,
+                    // Web dev fields
+                    webDevInstructions: i.webDevInstructions,
+                    webDevInitialCode: i.webDevInitialCode,
                     // Progress fields
                     isCompleted: ip?.isCompleted || false,
                     reviewStatus: ip?.reviewStatus || null,
