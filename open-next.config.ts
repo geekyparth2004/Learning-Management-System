@@ -25,6 +25,11 @@ const config = {
     },
     dangerously: {
         disableNodeModulesSymlink: true
+    },
+    build: {
+        // Exclude large image optimization and open graph dependencies from the edge bundle
+        // since Cloudflare has a strict 3MB size limit on the free tier.
+        external: ["@vercel/og", "resvg.wasm", "yoga.wasm", "satori"],
     }
 };
 
