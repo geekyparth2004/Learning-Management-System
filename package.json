@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -16,6 +18,8 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@huggingface/transformers": "^3.8.0",
     "@monaco-editor/react": "^4.7.0",
+    "@opennextjs/aws": "^3.9.16",
+    "@opennextjs/cloudflare": "^1.17.1",
     "@upstash/redis": "^1.36.2",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.1.2",
