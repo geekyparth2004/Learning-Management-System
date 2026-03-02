@@ -1,109 +1,431 @@
 ﻿
-> temp-app@0.1.1 build
-> next build
+> learning-management-system@0.1.1 deploy
+> opennextjs-cloudflare build && opennextjs-cloudflare deploy
 
-   Γû▓ Next.js 16.0.7 (Turbopack)
-   - Environments: .env.local, .env.production, .env
 
-node.exe :  ΓÜá The 
-"middleware" file 
-convention is 
-deprecated. Please 
-use "proxy" instead. 
-Learn more: https://n
-extjs.org/docs/messag
-es/middleware-to-prox
-y
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé OpenNext ΓÇö Cloudflare build Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+node.exe : WARN 
+OpenNext is not fully 
+compatible with 
+Windows.
 At line:1 char:1
-+ & "C:\Program Files
-\nodejs/node.exe" 
++ & "C:\Program Files\
+nodejs/node.exe" 
 "C:\Program 
 Files\nodejs/node_mo 
 ...
-+ ~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~
-    + CategoryInfo   
-           : NotSpe  
-  cified: ( ΓÜá Th   
- e "middl...lewar    
-e-to-proxy:Strin    
-g) [], RemoteExc    
-eption
-    + FullyQualified 
-   ErrorId : Native  
-  CommandError
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (WARN OpenN   
+ ext i...e with Wi    
+ndows.:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
  
-   Creating an optimized production build ...
- Γ£ô Compiled successfully in 21.3s
-   Running TypeScript ...
-Failed to compile.
+WARN For optimal 
+performance, it is 
+recommended to use 
+Windows Subsystem for 
+Linux (WSL).
+WARN While OpenNext 
+may function on 
+Windows, it could 
+encounter 
+unpredictable 
+failures during 
+runtime.
+App directory: C:\Users\Parth Goel\OneDrive\Desktop\Learning Platform
+Next.js version : 16.1.6
+@opennextjs/cloudflare version: 1.17.1
+@opennextjs/aws version: 3.9.16
 
-./components/TestPlay
-er.tsx:942:37
-Type error: Type '{ 
-output: string; 
-error: string | 
-undefined; status: 
-"error" | "success" 
-| "idle" | 
-"running"; stdin: 
-string; 
-onStdinChange: Dispat
-ch<SetStateAction<str
-ing>>; }' is not 
-assignable to type 
-'IntrinsicAttributes 
-& Omit<LucideProps, 
-"ref"> & RefAttribute
-s<SVGSVGElement>'.
-  Property 'output' 
-does not exist on 
-type 
-'IntrinsicAttributes 
-& Omit<LucideProps, 
-"ref"> & RefAttribute
-s<SVGSVGElement>'.
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé OpenNext ΓÇö Building Next.js app Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 
-[0m [90m 940 
-|[39m               
-              
-{activeTab 
-[33m===[39m 
-[32m"console"[39m 
-[33m?[39m (
- [90m 941 |[39m    
-                     
-        [33m<[39m[
-33mTerminal[39m
-[31m[1m>[22m[39m
-[90m 942 |[39m      
-                     
-          output[33m
-=[39m{output}
- [90m     |[39m    
-                     
-            
-[31m[1m^[22m[39m
- [90m 943 |[39m    
-                     
-            error[33
-m=[39m{status 
-[33m===[39m 
-[32m"error"[39m 
-[33m?[39m output 
-[33m:[39m 
-undefined}
- [90m 944 |[39m    
-                     
-            status[3
-3m=[39m{status}
- [90m 945 |[39m    
-                     
-            stdin[33
-m=[39m{customInput}
-[0m
-Next.js build worker 
-exited with code: 1 
-and signal: null
+
+> learning-management-system@0.1.1 build
+> next build
+
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env.production, .env
+
+ΓÜá The "middleware" 
+file convention is 
+deprecated. Please 
+use "proxy" instead. 
+Learn more: https://ne
+xtjs.org/docs/messages
+/middleware-to-proxy
+  Creating an optimized production build ...
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+Γ£ô Compiled successfully in 50s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+  Generating static pages using 11 workers (0/74) ...
+  Generating static pages using 11 workers (18/74) 
+  Generating static pages using 11 workers (36/74) 
+  Generating static pages using 11 workers (55/74) 
+Γ£ô Generating static pages using 11 workers (74/74) in 2.4s
+  Finalizing page optimization ...
+
+Route (app)
+Γöî ╞Æ /
+Γö£ Γùï /_not-found
+Γö£ Γùï /admin/diagnostics
+Γö£ ╞Æ /api/admin/debug-env
+Γö£ ╞Æ /api/admin/fix-cors
+Γö£ ╞Æ /api/analyze
+Γö£ ╞Æ /api/ask-ai
+Γö£ ╞Æ /api/assignments
+Γö£ ╞Æ /api/assignments/[id]
+Γö£ ╞Æ /api/assignments/[id]/submissions
+Γö£ ╞Æ /api/auth/[...nextauth]
+Γö£ ╞Æ /api/auth/register
+Γö£ ╞Æ /api/compile
+Γö£ ╞Æ /api/contest
+Γö£ ╞Æ /api/contest/[id]/complete
+Γö£ ╞Æ /api/contest/[id]/finish
+Γö£ ╞Æ /api/contest/[id]/join
+Γö£ ╞Æ /api/contest/[id]/problem
+Γö£ ╞Æ /api/contest/[id]/start
+Γö£ ╞Æ /api/contest/[id]/submit
+Γö£ ╞Æ /api/courses
+Γö£ ╞Æ /api/courses/[id]
+Γö£ ╞Æ /api/courses/[id]/builder
+Γö£ ╞Æ /api/courses/[id]/enroll
+Γö£ ╞Æ /api/courses/[id]/modules
+Γö£ ╞Æ /api/courses/[id]/modules/[moduleId]/practice-save
+Γö£ ╞Æ /api/courses/[id]/modules/reorder
+Γö£ ╞Æ /api/courses/[id]/player
+Γö£ ╞Æ /api/courses/[id]/students
+Γö£ ╞Æ /api/courses/[id]/students/[studentId]/progress
+Γö£ ╞Æ /api/cron/cleanup-discussion
+Γö£ ╞Æ /api/discussion/messages
+Γö£ ╞Æ /api/discussion/upload
+Γö£ ╞Æ /api/events
+Γö£ ╞Æ /api/external-stats
+Γö£ ╞Æ /api/file/download
+Γö£ ╞Æ /api/focus/next
+Γö£ ╞Æ /api/github/sync-web
+Γö£ ╞Æ /api/image-proxy
+Γö£ ╞Æ /api/interview
+Γö£ ╞Æ /api/items/[id]
+Γö£ ╞Æ /api/items/[id]/complete
+Γö£ ╞Æ /api/jobs
+Γö£ ╞Æ /api/leaderboard
+Γö£ ╞Æ /api/leaderboard/refresh
+Γö£ ╞Æ /api/leetcode/verify
+Γö£ ╞Æ /api/modules/[id]
+Γö£ ╞Æ /api/modules/[id]/items
+Γö£ ╞Æ /api/modules/[id]/items/reorder
+Γö£ ╞Æ /api/modules/[id]/start
+Γö£ ╞Æ /api/modules/items/[id]/complete
+Γö£ ╞Æ /api/modules/items/[id]/evaluate
+Γö£ ╞Æ /api/modules/items/[id]/review
+Γö£ ╞Æ /api/modules/items/[id]/start
+Γö£ ╞Æ /api/modules/items/[id]/submissions
+Γö£ ╞Æ /api/modules/items/[id]/submit-web
+Γö£ ╞Æ /api/modules/items/[id]/test-details
+Γö£ ╞Æ /api/notifications
+Γö£ ╞Æ /api/notifications/contests
+Γö£ ╞Æ /api/practice
+Γö£ ╞Æ /api/practice/[id]
+Γö£ ╞Æ /api/practice/submit
+Γö£ ╞Æ /api/razorpay/create-order
+Γö£ ╞Æ /api/razorpay/verify
+Γö£ ╞Æ /api/reviews
+Γö£ ╞Æ /api/student/apply-referral
+Γö£ ╞Æ /api/student/dashboard
+Γö£ ╞Æ /api/student/pay
+Γö£ ╞Æ /api/submissions
+Γö£ ╞Æ /api/teacher/referrals
+Γö£ ╞Æ /api/transcribe
+Γö£ ╞Æ /api/upload/image
+Γö£ ╞Æ /api/upload/presigned-url
+Γö£ ╞Æ /api/upload/video
+Γö£ ╞Æ /api/user/badges
+Γö£ ╞Æ /api/user/badges/check
+Γö£ ╞Æ /api/user/leetcode
+Γö£ ╞Æ /api/user/platforms
+Γö£ ╞Æ /api/user/streak
+Γö£ ╞Æ /api/user/subscription
+Γö£ ╞Æ /api/verify-leetcode
+Γö£ ╞Æ /api/video/sign
+Γö£ ╞Æ /assignment/[id]
+Γö£ ╞Æ /assignment/[id]/submissions
+Γö£ Γùï /assignment/create
+Γö£ ╞Æ /contest
+Γö£ ╞Æ /contest/[id]
+Γö£ ╞Æ /courses
+Γö£ ╞Æ /courses/[id]
+Γö£ Γùï /events
+Γö£ ╞Æ /hackathon
+Γö£ Γùï /interview
+Γö£ Γùï /interview/behavioural
+Γö£ Γùï /interview/core
+Γö£ Γùï /interview/dsa
+Γö£ Γùï /interview/mock
+Γö£ Γùï /interview/project
+Γö£ Γùï /interview/sql
+Γö£ ╞Æ /jobs
+Γö£ Γùï /locked
+Γö£ Γùï /login
+Γö£ ╞Æ /practice
+Γö£ ╞Æ /practice/[id]
+Γö£ ╞Æ /profile
+Γö£ Γùï /register
+Γö£ ╞Æ /teacher/analytics
+Γö£ ╞Æ /teacher/contest
+Γö£ ╞Æ /teacher/contest/[id]
+Γö£ ╞Æ /teacher/contest/create
+Γö£ ╞Æ /teacher/courses
+Γö£ ╞Æ /teacher/courses/[id]/assignments/[assignmentId]/edit
+Γö£ ╞Æ /teacher/courses/[id]/assignments/[assignmentId]/submissions
+Γö£ ╞Æ /teacher/courses/[id]/builder
+Γö£ ╞Æ /teacher/courses/[id]/interview/[itemId]/submissions
+Γö£ ╞Æ /teacher/courses/[id]/students
+Γö£ ╞Æ /teacher/courses/[id]/students/[studentId]
+Γö£ ╞Æ /teacher/courses/create
+Γö£ ╞Æ /teacher/hackathon
+Γö£ ╞Æ /teacher/hackathon/create
+Γö£ ╞Æ /teacher/practice
+Γö£ ╞Æ /teacher/practice/create
+Γö£ ╞Æ /teacher/referrals
+Γöö ╞Æ /teacher/reviews
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
+
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé OpenNext ΓÇö Generating bundle Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+
+Bundling middleware function...
+Bundling static assets...
+Bundling cache assets...
+Building server function: default...
+node:fs:1879
+  binding.symlink(
+          ^
+
+Error: EPERM: 
+operation not 
+permitted, symlink 
+'C:\Users\Parth Goel\O
+neDrive\Desktop\Learni
+ng Platform\node_modul
+es\@aws-sdk\client-s3'
+ -> 'C:\Users\Parth Go
+el\OneDrive\Desktop\Le
+arning Platform\.open-
+next\server-functions\
+default\.next\node_mod
+ules\@aws-sdk\client-s
+3-ecbef8e33fd0b8f0'
+    at symlinkSync 
+(node:fs:1879:11)
+    at file:///C:/User
+s/Parth%20Goel/OneDriv
+e/Desktop/Learning%20P
+latform/node_modules/@
+opennextjs/aws/dist/bu
+ild/copyTracedFiles.js
+:211:17
+    at Map.forEach 
+(<anonymous>)
+    at 
+copyTracedFiles (file:
+///C:/Users/Parth%20Go
+el/OneDrive/Desktop/Le
+arning%20Platform/node
+_modules/@opennextjs/a
+ws/dist/build/copyTrac
+edFiles.js:193:17)
+    at generateBundle 
+(file:///C:/Users/Part
+h%20Goel/OneDrive/Desk
+top/Learning%20Platfor
+m/node_modules/@openne
+xtjs/cloudflare/dist/c
+li/build/open-next/cre
+ateServerBundle.js:121
+:60)
+    at 
+createServerBundle (fi
+le:///C:/Users/Parth%2
+0Goel/OneDrive/Desktop
+/Learning%20Platform/n
+ode_modules/@opennextj
+s/cloudflare/dist/cli/
+build/open-next/create
+ServerBundle.js:75:11)
+    at process.process
+TicksAndRejections (no
+de:internal/process/ta
+sk_queues:103:5)
+    at async build (fi
+le:///C:/Users/Parth%2
+0Goel/OneDrive/Desktop
+/Learning%20Platform/n
+ode_modules/@opennextj
+s/cloudflare/dist/cli/
+build/build.js:74:5)
+    at async 
+buildCommand (file:///
+C:/Users/Parth%20Goel/
+OneDrive/Desktop/Learn
+ing%20Platform/node_mo
+dules/@opennextjs/clou
+dflare/dist/cli/comman
+ds/build.js:33:5) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'symlink',
+  path: 
+'C:\\Users\\Parth Goel
+\\OneDrive\\Desktop\\L
+earning Platform\\node
+_modules\\@aws-sdk\\cl
+ient-s3',
+  dest: 
+'C:\\Users\\Parth Goel
+\\OneDrive\\Desktop\\L
+earning Platform\\.ope
+n-next\\server-functio
+ns\\default\\.next\\no
+de_modules\\@aws-sdk\\
+client-s3-ecbef8e33fd0
+b8f0'
+}
+
+Node.js v24.11.1
