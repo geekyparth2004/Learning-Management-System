@@ -202,6 +202,7 @@ export default function LockedPage() {
                                         if (val === "KPM012") setComputedPrice(2499);
                                         else if (val === "KPM024") setComputedPrice(3499);
                                         else if (val === "KPM036") setComputedPrice(1999);
+                                        else if (val === "IITMADRAS") setComputedPrice(24999);
                                         else setComputedPrice(3999);
                                     }}
                                     placeholder="Got a discount code?"
