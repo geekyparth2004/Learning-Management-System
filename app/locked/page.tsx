@@ -197,8 +197,9 @@ export default function LockedPage() {
                                     type="text"
                                     value={discountCode}
                                     onChange={(e) => {
-                                        const val = e.target.value.toUpperCase();
-                                        setDiscountCode(val);
+                                        const rawVal = e.target.value;
+                                        setDiscountCode(rawVal);
+                                        const val = rawVal.toUpperCase().trim();
                                         if (val === "KPM012") setComputedPrice(2499);
                                         else if (val === "KPM024") setComputedPrice(3499);
                                         else if (val === "KPM036") setComputedPrice(1999);
