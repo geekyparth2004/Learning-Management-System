@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy, Code } from "lucide-react";
 import { auth, signOut } from "@/auth";
+import { db } from "@/lib/db";
 import GitHubConnect from "@/components/GitHubConnect";
 import NotificationBell from "@/components/NotificationBell";
 import StreakIndicator from "@/components/StreakIndicator";
@@ -17,6 +18,13 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const session = await auth();
   const isTeacher = session?.user?.role === "TEACHER";
+  const isCoordinator = session?.user?.role === "COORDINATOR";
+
+  // Redirect coordinators to their dashboard
+  if (isCoordinator) {
+    const { redirect } = await import("next/navigation");
+    redirect("/coordinator");
+  }
 
   if (!session) {
     return (
@@ -244,6 +252,13 @@ export default async function Home() {
   }
 
   // STUDENT VIEW
+  // Check if student belongs to an organization
+  const studentUser = await db.user.findUnique({
+    where: { id: session.user?.id },
+    select: { organizationId: true },
+  });
+  const isOrgStudent = !!studentUser?.organizationId;
+
   return (
     <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
       <NewContestBanner />
@@ -279,12 +294,21 @@ export default async function Home() {
               >
                 Hackathons
               </Link>
-              <Link
-                href="/jobs"
-                className="text-sm font-medium text-gray-400 hover:text-yellow-400 transition-colors"
-              >
-                Jobs
-              </Link>
+              {isOrgStudent ? (
+                <Link
+                  href="/placement"
+                  className="text-sm font-medium text-gray-400 hover:text-teal-400 transition-colors"
+                >
+                  Placement
+                </Link>
+              ) : (
+                <Link
+                  href="/jobs"
+                  className="text-sm font-medium text-gray-400 hover:text-yellow-400 transition-colors"
+                >
+                  Jobs
+                </Link>
+              )}
             </nav>
           </div>
 
@@ -323,3 +347,4 @@ export default async function Home() {
     </div>
   );
 }
+

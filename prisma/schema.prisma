@@ -57,6 +57,117 @@ model User {
   trialExpiresAt     DateTime?
   
   generatedReferrals ReferralCode[] @relation("TeacherReferralCode")
+
+  // Organization (for placement cell)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // Placement
+  placementProfile      PlacementProfile?
+  placementApplications PlacementApplication[]
+  placementGroupMembers PlacementGroupMember[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String   // Derived from domain initially
+  domain    String   @unique // e.g. "college.edu"
+  users     User[]
+  recruitmentDrives RecruitmentDrive[]
+  placementGroups   PlacementGroup[]
+  createdAt DateTime @default(now())
+}
+
+model PlacementProfile {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cgpa          Float?
+  batch         String? // e.g. "2020 - 2024"
+  department    String? // e.g. "CSE/IT", "Computer Science"
+  degree        String? // e.g. "Bachelor of Technology"
+  resumeUrl     String?
+  resumeName    String? // Display name e.g. "rivers_cv_v3.pdf"
+  fatherName    String?
+  ugPercentage  Float?
+  pgPercentage  Float?
+  skills        String? // Comma-separated e.g. "React, Python, SQL"
+
+  @@index([userId])
+}
+
+model RecruitmentDrive {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company        String
+  role           String
+  location       String?
+  driveDate      DateTime
+  status         String       @default("UPCOMING") // "UPCOMING" | "ONGOING" | "COMPLETED"
+  type           String       @default("ON_CAMPUS") // "ON_CAMPUS" | "OFF_CAMPUS"
+  eligibility    String?      // e.g. "8.5+ CGPA - CSE/IT Only"
+  description    String?
+  companyLogo    String?      // URL to logo
+  skillsRequired String?      // Comma-separated e.g. "React, Python, SQL"
+  minCgpa        Float?
+  batchYear      String?      // e.g. "2024"
+  isDraft        Boolean      @default(false)
+  applications   PlacementApplication[]
+  group          PlacementGroup?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model PlacementApplication {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driveId     String
+  drive       RecruitmentDrive @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  status      String           @default("APPLIED") // "APPLIED"|"SHORTLISTED"|"INTERVIEW"|"PLACED"|"REJECTED"|"WITHDRAWN"
+  stage       String?          // e.g. "Technical Interview: Oct 20"
+  stageNumber Int              @default(1)
+  totalStages Int              @default(4)
+  appliedAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([userId, driveId])
+  @@index([userId])
+  @@index([driveId])
+}
+
+model PlacementGroup {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  driveId        String?      @unique
+  drive          RecruitmentDrive? @relation(fields: [driveId], references: [id], onDelete: SetNull)
+  name           String
+  description    String?
+  icon           String?      // Emoji or color identifier
+  color          String?      // Accent color e.g. "blue", "green"
+  members        PlacementGroupMember[]
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([driveId])
+}
+
+model PlacementGroupMember {
+  id       String         @id @default(cuid())
+  userId   String
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId  String
+  group    PlacementGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  joinedAt DateTime       @default(now())
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
 }
 
 model ReferralCode {

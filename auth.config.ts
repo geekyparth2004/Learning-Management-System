@@ -27,12 +27,18 @@ export const authConfig = {
                 // @ts-ignore
                 session.user.role = token.role;
             }
+            if (session.user) {
+                // @ts-ignore
+                session.user.organizationId = token.organizationId || null;
+            }
             return session;
         },
         async jwt({ token, user }) {
             if (user) {
                 // @ts-ignore
                 token.role = user.role;
+                // @ts-ignore
+                token.organizationId = user.organizationId || null;
             }
             return token;
         },

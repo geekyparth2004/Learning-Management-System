@@ -76,6 +76,8 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             if (user) {
                 // @ts-ignore
                 token.role = user.role;
+                // @ts-ignore
+                token.organizationId = user.organizationId || null;
             }
             return token;
         },
@@ -90,6 +92,10 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
             if (token.accessToken && session.user) {
                 // @ts-ignore
                 session.user.githubAccessToken = token.accessToken as string;
+            }
+            if (session.user) {
+                // @ts-ignore
+                session.user.organizationId = token.organizationId || null;
             }
             return session;
         }
