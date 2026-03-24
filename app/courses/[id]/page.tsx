@@ -8,6 +8,7 @@ import AIInterviewPlayer from "@/components/AIInterviewPlayer";
 import TestPlayer from "@/components/TestPlayer";
 import WebDevPlayer from "@/components/WebDevPlayer";
 import LeetCodeVerifier from "@/components/LeetCodeVerifier";
+import AskDoubtButton from "@/components/AskDoubtButton";
 
 import CodeEditor from "@/components/CodeEditor";
 import Terminal from "@/components/Terminal";
@@ -823,6 +824,14 @@ export default function CoursePlayerPage() {
                                     )}
                                 </div>
                             </div>
+                        )}
+
+                        {!isWebDevFullScreen && !isTestFullScreen && activeItem && (
+                            <AskDoubtButton
+                                moduleItemId={activeItem.id}
+                                courseId={course.id}
+                                itemTitle={activeItem.title}
+                            />
                         )}
 
                         <div

@@ -51,6 +51,7 @@ model User {
 
   accounts           Account[]
   discussionMessages DiscussionMessage[]
+  doubts             Doubt[]              @relation("StudentDoubts")
   
   // Subscriptions
   subscriptionStatus String?       @default("FREE") // "FREE" | "TRIAL" | "PAID"
@@ -261,6 +262,7 @@ model ModuleItem {
   assignment   Assignment? @relation(fields: [assignmentId], references: [id])
 
   progress ModuleItemProgress[]
+  doubts   Doubt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -545,4 +547,23 @@ model DiscussionMessage {
 
   @@index([createdAt])
   @@index([userId])
+}
+
+model Doubt {
+  id           String     @id @default(cuid())
+  content      String
+  studentId    String
+  student      User       @relation("StudentDoubts", fields: [studentId], references: [id], onDelete: Cascade)
+  moduleItemId String
+  moduleItem   ModuleItem @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
+  courseId     String
+  status       String     @default("PENDING") // "PENDING" | "ANSWERED"
+  answer       String?
+  answeredById String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([moduleItemId])
+  @@index([courseId])
+  @@index([studentId])
 }
