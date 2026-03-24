@@ -11,11 +11,12 @@ export async function POST(req: Request) {
 
         const { discountCode } = await req.json().catch(() => ({ discountCode: "" }));
 
-        let finalAmount = 3999; // Base price
+        let finalAmount = 4999; // Base price (discounted from 9999)
 
         if (discountCode) {
             const code = discountCode.toUpperCase().trim();
-            if (code === "KPM012") finalAmount = 2499;
+            if (code === "OZI50") finalAmount = 2499;
+            else if (code === "KPM012") finalAmount = 2499;
             else if (code === "KPM024") finalAmount = 3499;
             else if (code === "KPM036") finalAmount = 1999;
             else if (code === "IITMADRAS") finalAmount = 24999;

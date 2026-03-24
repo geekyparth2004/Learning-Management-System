@@ -9,7 +9,7 @@ export default function LockedPage() {
     const router = useRouter();
     const [code, setCode] = useState("");
     const [discountCode, setDiscountCode] = useState("");
-    const [computedPrice, setComputedPrice] = useState(3999);
+    const [computedPrice, setComputedPrice] = useState(4999);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -200,11 +200,12 @@ export default function LockedPage() {
                                         const rawVal = e.target.value;
                                         setDiscountCode(rawVal);
                                         const val = rawVal.toUpperCase().trim();
-                                        if (val === "KPM012") setComputedPrice(2499);
+                                        if (val === "OZI50") setComputedPrice(2499);
+                                        else if (val === "KPM012") setComputedPrice(2499);
                                         else if (val === "KPM024") setComputedPrice(3499);
                                         else if (val === "KPM036") setComputedPrice(1999);
                                         else if (val === "IITMADRAS") setComputedPrice(24999);
-                                        else setComputedPrice(3999);
+                                        else setComputedPrice(4999);
                                     }}
                                     placeholder="Got a discount code?"
                                     className="w-full bg-black border border-gray-800 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase text-sm"
@@ -212,8 +213,9 @@ export default function LockedPage() {
                                 />
                             </div>
 
-                            <div className="flex items-end gap-1">
-                                <span className="text-3xl font-bold text-white">{computedPrice} INR</span>
+                            <div className="flex items-end gap-2 flex-wrap">
+                                <span className="text-lg text-gray-500 line-through">₹9,999</span>
+                                <span className="text-3xl font-bold text-white">₹{computedPrice.toLocaleString('en-IN')}</span>
                                 <span className="text-gray-500 mb-1">/lifetime</span>
                             </div>
 
