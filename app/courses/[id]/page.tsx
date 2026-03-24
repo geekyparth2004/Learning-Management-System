@@ -811,7 +811,11 @@ export default function CoursePlayerPage() {
                             <div className="mb-6 flex items-center justify-between">
                                 <h1 className="text-2xl font-bold">{activeItem.title}</h1>
                                 <div className="flex items-center gap-4">
-
+                                    <AskDoubtButton
+                                        moduleItemId={activeItem.id}
+                                        courseId={course.id}
+                                        itemTitle={activeItem.title}
+                                    />
                                     {activeItem.type === "VIDEO" && (
                                         <button
                                             onClick={() => setShowPractice(!showPractice)}
@@ -826,12 +830,13 @@ export default function CoursePlayerPage() {
                             </div>
                         )}
 
-                        {!isWebDevFullScreen && !isTestFullScreen && activeItem && (
-                            <AskDoubtButton
-                                moduleItemId={activeItem.id}
-                                courseId={course.id}
-                                itemTitle={activeItem.title}
-                            />
+                        {!isWebDevFullScreen && !isTestFullScreen && (
+                            <div className="mb-6 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle size={20} className={activeItem.isCompleted ? "text-green-500" : "text-gray-500"} />
+                                    <h1 className="text-2xl font-bold">{activeItem.title}</h1>
+                                </div>
+                            </div>
                         )}
 
                         <div
