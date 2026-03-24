@@ -830,14 +830,7 @@ export default function CoursePlayerPage() {
                             </div>
                         )}
 
-                        {!isWebDevFullScreen && !isTestFullScreen && (
-                            <div className="mb-6 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle size={20} className={activeItem.isCompleted ? "text-green-500" : "text-gray-500"} />
-                                    <h1 className="text-2xl font-bold">{activeItem.title}</h1>
-                                </div>
-                            </div>
-                        )}
+
 
                         <div
                             ref={containerRef}
