@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+
 
 export async function POST(request: Request) {
     try {
@@ -16,9 +15,7 @@ export async function POST(request: Request) {
         const problems = JSON.parse(problemsJson);
         const processedProblems = [];
 
-        // Ensure upload directory exists
-        const uploadDir = path.join(process.cwd(), "public/uploads/solutions");
-        await mkdir(uploadDir, { recursive: true });
+
 
         for (let i = 0; i < problems.length; i++) {
             const p = problems[i];
