@@ -27,7 +27,7 @@ export default function EditAssignmentPage() {
         const fetchAssignment = async () => {
             try {
                 console.log("Fetching assignment:", assignmentId);
-                const res = await fetch(`/api/assignments/${assignmentId}`);
+                const res = await fetch(`/api/assignments/${assignmentId}?t=${Date.now()}`);
                 if (!res.ok) {
                     const text = await res.text();
                     console.error("Fetch failed:", res.status, text);
@@ -96,11 +96,18 @@ export default function EditAssignmentPage() {
     };
 
     const handleSaveProblem = (problem: any) => {
+        const existingData = editingProblemIndex !== null ? problems[editingProblemIndex] : {};
+        
         let defaultCode = {};
-        if (problem.type === "CODING" || !problem.type) { // Default to coding
-            // If problem already has defaultCode and it's an object, keep it?
-            // ProblemBuilder returns a constructed object usually.
+        if (existingData.defaultCode) {
+            try {
+                defaultCode = typeof existingData.defaultCode === 'string' ? JSON.parse(existingData.defaultCode) : existingData.defaultCode;
+            } catch (e) {
+                defaultCode = {};
+            }
+        }
 
+        if (Object.keys(defaultCode).length === 0 && (problem.type === "CODING" || !problem.type)) { // Default to coding
             // Re-construct default code structure if needed
             defaultCode = {
                 python: "# Write your code here",
@@ -110,8 +117,9 @@ export default function EditAssignmentPage() {
         }
 
         const newProblem = {
-            ...problem, // Keep existing fields like ID if present (for editing existing)
-            id: editingProblemIndex !== null ? problems[editingProblemIndex].id : undefined, // Preserve ID if editing
+            ...existingData,
+            ...problem, // Overwrite with edits
+            id: editingProblemIndex !== null ? existingData.id : undefined, // Preserve ID if editing
             title: problem.title,
             description: problem.description,
             testCases: problem.testCases,
