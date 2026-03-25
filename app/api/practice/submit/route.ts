@@ -18,31 +18,14 @@ export async function POST(req: Request) {
 
         const userId = session.user.id;
 
-        // 1. Fetch User and Check Monthly Reset
+        // 1. Fetch User
         const user = await db.user.findUnique({
             where: { id: userId },
-            select: { id: true, walletBalance: true, lastWalletReset: true }
+            select: { id: true }
         });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        const now = new Date();
-        const lastReset = new Date(user.lastWalletReset);
-        let currentBalance = user.walletBalance;
-
-        // Check if we are in a new month compared to last reset
-        if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
-            currentBalance = 0;
-            // Update reset date
-            await db.user.update({
-                where: { id: userId },
-                data: {
-                    walletBalance: 0,
-                    lastWalletReset: now
-                }
-            });
         }
 
         // 2. Record Submission
@@ -127,24 +110,15 @@ export async function POST(req: Request) {
 
             // If passedCount is 1, it means this is the FIRST success (the one we just added).
             // If > 1, they solved it before.
-            // Only reward coins and badge on FIRST solve of a problem
+            // Only reward badge on FIRST solve of a problem
 
             if (passedCount === 1) {
-                currentBalance += 5;
-                await db.user.update({
-                    where: { id: userId },
-                    data: { walletBalance: currentBalance }
-                });
-                rewarded = true;
-
                 // Check for badge achievements
                 const { checkAndAwardBadges } = await import("@/lib/badges");
                 const newBadge = await checkAndAwardBadges(userId);
                 if (newBadge) {
                     return NextResponse.json({
                         success: true,
-                        walletBalance: currentBalance,
-                        rewarded,
                         newBadge, // Return the badge type to trigger celebration
                         message: "Submission recorded"
                     });
@@ -154,8 +128,6 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             success: true,
-            walletBalance: currentBalance,
-            rewarded,
             newBadge: null,
             message: "Submission recorded"
         });

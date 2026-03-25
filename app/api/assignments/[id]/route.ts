@@ -113,6 +113,12 @@ export async function PUT(
         const { id } = await params;
         const { title, problems } = await req.json();
 
+        const safeStringify = (val: any) => {
+            if (!val) return null;
+            if (typeof val === 'string') return val;
+            return JSON.stringify(val);
+        };
+
         // Transaction to update assignment and sync problems
         await db.$transaction(async (tx) => {
             // 1. Update Assignment Details
@@ -159,7 +165,7 @@ export async function PUT(
                             type: p.type || "CODING",
                             difficulty: p.difficulty || "Medium",
                             slug: p.slug,
-                            defaultCode: p.defaultCode,
+                            defaultCode: safeStringify(p.defaultCode),
                             // Replace test cases
                             testCases: {
                                 deleteMany: {},
@@ -169,11 +175,11 @@ export async function PUT(
                                     isHidden: tc.isHidden || false
                                 })) : []
                             },
-                            hints: p.hints,
+                            hints: safeStringify(p.hints),
                             videoSolution: p.videoSolution,
                             leetcodeUrl: p.leetcodeUrl,
                             isManualVerification: p.isManualVerification,
-                            mcqOptions: p.mcqOptions ? JSON.stringify(p.mcqOptions) : null,
+                            mcqOptions: safeStringify(p.mcqOptions),
                             mcqCorrectAnswer: p.mcqCorrectAnswer || null,
                             order: i
                         }
@@ -188,7 +194,7 @@ export async function PUT(
                             type: p.type || "CODING",
                             difficulty: p.difficulty || "Medium",
                             slug: p.slug,
-                            defaultCode: p.defaultCode,
+                            defaultCode: safeStringify(p.defaultCode),
                             testCases: {
                                 create: Array.isArray(p.testCases) ? p.testCases.map((tc: any) => ({
                                     input: tc.input,
@@ -196,11 +202,11 @@ export async function PUT(
                                     isHidden: tc.isHidden || false
                                 })) : []
                             },
-                            hints: p.hints,
+                            hints: safeStringify(p.hints),
                             videoSolution: p.videoSolution,
                             leetcodeUrl: p.leetcodeUrl,
                             isManualVerification: p.isManualVerification,
-                            mcqOptions: p.mcqOptions ? JSON.stringify(p.mcqOptions) : null,
+                            mcqOptions: safeStringify(p.mcqOptions),
                             mcqCorrectAnswer: p.mcqCorrectAnswer || null,
                             order: i
                         }

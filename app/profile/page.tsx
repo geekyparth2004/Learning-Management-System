@@ -21,8 +21,7 @@ export default async function ProfilePage() {
             email: true,
             image: true,
             createdAt: true,
-            currentStreak: true,
-            walletBalance: true
+            currentStreak: true
         }
     });
 
@@ -78,10 +77,6 @@ export default async function ProfilePage() {
                                 <div className="flex items-center gap-2 text-orange-500">
                                     <span className="text-2xl">🔥</span>
                                     <span className="font-bold">{user.currentStreak} day streak</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-green-500">
-                                    <span className="text-2xl">💰</span>
-                                    <span className="font-bold">{user.walletBalance} coins</span>
                                 </div>
                             </div>
                         </div>
