@@ -10,6 +10,7 @@ import BadgeCheckOnLogin from "@/components/BadgeCheckOnLogin";
 import NewContestBanner from "@/components/NewContestBanner";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { StatsSkeleton } from "@/components/dashboard/DashboardSkeletons";
+import MentorshipStrip from "@/components/MentorshipStrip";
 
 // Force dynamic only if auth() requires it, but usually standard Next.js 15 handles this.
 // Keeping it to ensure fresh data.
@@ -340,6 +341,8 @@ export default async function Home() {
         <Suspense fallback={<StatsSkeleton />}>
           <StudentDashboard userId={session.user?.id || ""} />
         </Suspense>
+
+        <MentorshipStrip />
 
         {/* Badge Check on Login - Awards pending badges and shows celebration */}
         <BadgeCheckOnLogin />

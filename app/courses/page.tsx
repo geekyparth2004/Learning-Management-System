@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { BookOpen, User } from "lucide-react";
 import { db } from "@/lib/db";
+import MentorshipStrip from "@/components/MentorshipStrip";
 
 // Revalidate every hour
 export const revalidate = 0;
@@ -57,6 +58,10 @@ export default async function CoursesPage() {
                             No courses available at the moment.
                         </p>
                     )}
+                </div>
+
+                <div className="mt-8">
+                    <MentorshipStrip />
                 </div>
             </main>
         </div>
