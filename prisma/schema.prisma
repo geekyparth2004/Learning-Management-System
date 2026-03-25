@@ -67,6 +67,8 @@ model User {
   placementProfile      PlacementProfile?
   placementApplications PlacementApplication[]
   placementGroupMembers PlacementGroupMember[]
+  
+  resumeRequests        ResumeRequest[]
 }
 
 model Organization {
@@ -566,4 +568,22 @@ model Doubt {
   @@index([moduleItemId])
   @@index([courseId])
   @@index([studentId])
+}
+
+model ResumeRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name        String
+  email       String
+  contact     String
+  resumeUrl   String
+  
+  status      String   @default("PENDING") // "PENDING" | "COMPLETED"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }

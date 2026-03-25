@@ -23,7 +23,7 @@ export default function MentorshipStrip() {
 
             if (!res.ok) {
                 const errText = await res.text();
-                setError(errText || "Failed to initialize checkout.");
+                setError("Transaction failed, try again.");
                 setLoading(false);
                 return;
             }
@@ -57,31 +57,36 @@ export default function MentorshipStrip() {
                             // Redirect to Calendly immediately upon successful payment verification
                             window.location.href = "https://calendly.com/goelparth20049/30min";
                         } else {
-                            const verifyErr = await verifyRes.text();
-                            setError(verifyErr || "Payment verification failed.");
+                            setError("Transaction failed, try again.");
                             setLoading(false);
                         }
                     } catch (err) {
-                        setError("Verification network error.");
+                        setError("Transaction failed, try again.");
                         setLoading(false);
                     }
                 },
                 theme: {
                     color: "#8b5cf6" // matches purple-500
+                },
+                modal: {
+                    ondismiss: function() {
+                        setLoading(false);
+                        setError("Transaction failed, try again.");
+                    }
                 }
             };
 
             const rzp = new (window as any).Razorpay(options);
 
             rzp.on("payment.failed", function (response: any) {
-                setError("Payment cancelled or failed.");
+                setError("Transaction failed, try again.");
                 setLoading(false);
             });
 
             rzp.open();
 
         } catch (err) {
-            setError("Network error bridging to payment gateway.");
+            setError("Transaction failed, try again.");
             setLoading(false);
         }
     };
