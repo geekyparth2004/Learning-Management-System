@@ -59,11 +59,11 @@ export default async function CoursesPage() {
                         </p>
                     )}
                 </div>
-
-                <div className="mt-8">
-                    <ServicesGrid />
-                </div>
             </main>
+
+            <div className="mx-auto max-w-7xl px-8 pb-12">
+                <ServicesGrid />
+            </div>
         </div>
     );
 }
