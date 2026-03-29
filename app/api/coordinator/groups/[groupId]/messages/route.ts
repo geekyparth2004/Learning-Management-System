@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
-export async function GET(req: Request, { params }: { params: { groupId: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ groupId: string }> }) {
+    const { groupId } = await params;
     try {
         const session = await auth();
         if (!session?.user?.id || session.user.role !== "COORDINATOR") {
@@ -19,7 +20,7 @@ export async function GET(req: Request, { params }: { params: { groupId: string 
         }
 
         const group = await db.placementGroup.findUnique({
-            where: { id: params.groupId },
+            where: { id: groupId },
         });
 
         if (!group || group.organizationId !== user.organizationId) {
@@ -27,7 +28,7 @@ export async function GET(req: Request, { params }: { params: { groupId: string 
         }
 
         const messages = await db.placementGroupMessage.findMany({
-            where: { groupId: params.groupId },
+            where: { groupId },
             orderBy: { createdAt: "asc" },
             include: {
                 user: {
@@ -42,7 +43,8 @@ export async function GET(req: Request, { params }: { params: { groupId: string 
     }
 }
 
-export async function POST(req: Request, { params }: { params: { groupId: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ groupId: string }> }) {
+    const { groupId: gId } = await params;
     try {
         const session = await auth();
         if (!session?.user?.id || session.user.role !== "COORDINATOR") {
@@ -59,7 +61,7 @@ export async function POST(req: Request, { params }: { params: { groupId: string
         }
 
         const group = await db.placementGroup.findUnique({
-            where: { id: params.groupId },
+            where: { id: gId },
         });
 
         if (!group || group.organizationId !== user.organizationId) {
@@ -74,7 +76,7 @@ export async function POST(req: Request, { params }: { params: { groupId: string
 
         const message = await db.placementGroupMessage.create({
             data: {
-                groupId: params.groupId,
+                groupId: gId,
                 userId: session.user.id,
                 content: content || "",
                 fileUrl,
