@@ -25,12 +25,12 @@ const statusStyles: Record<string, string> = {
 };
 
 const actionLabels: Record<string, string> = {
-    SHORTLISTED: "View Details",
-    REJECTED: "View Feedback",
-    PLACED: "View Details",
-    WITHDRAWN: "Details",
-    APPLIED: "View Status",
-    INTERVIEW: "View Details",
+    SHORTLISTED: "Shortlisted",
+    REJECTED: "Rejected",
+    PLACED: "Placed",
+    WITHDRAWN: "Withdrawn",
+    APPLIED: "Applied",
+    INTERVIEW: "Interview",
 };
 
 export default function ApplicationHistoryTable({
@@ -100,9 +100,9 @@ export default function ApplicationHistoryTable({
                                     </span>
                                 </td>
                                 <td className="py-3.5">
-                                    <button className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
-                                        {actionLabels[app.status] || "View"}
-                                    </button>
+                                    <span className="text-sm font-medium text-gray-400">
+                                        {actionLabels[app.status] || app.status}
+                                    </span>
                                 </td>
                             </tr>
                         ))}
