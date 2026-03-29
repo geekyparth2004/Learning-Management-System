@@ -50,8 +50,8 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
                     return;
                 }
 
-                // Teachers and Admins have full access
-                if (user.role === "TEACHER" || user.role === "ADMIN") {
+                // Teachers, Admins and Coordinators have full access
+                if (user.role === "TEACHER" || user.role === "ADMIN" || user.role === "COORDINATOR") {
                     if (isMounted) {
                         setAuthorized(true);
                         setLoading(false);
