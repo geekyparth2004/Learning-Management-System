@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Bell, Search, Plus } from "lucide-react";
+import { Bell, Search, Plus, LogOut } from "lucide-react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import OpportunitiesTable from "@/components/coordinator/OpportunitiesTable";
 
 export default function OpportunitiesPage() {
@@ -22,13 +23,19 @@ export default function OpportunitiesPage() {
                         <input
                             type="text"
                             placeholder="Search opportunities..."
-                            className="w-56 rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                            className="w-56 rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
                         />
                     </div>
                     <button className="relative rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50">
                         <Bell className="h-4 w-4" />
                     </button>
-                    <div className="h-8 w-8 rounded-full bg-gray-200" />
+                    <button
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                    >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                    </button>
                 </div>
             </header>
 

@@ -93,7 +93,7 @@ export default function StudentsTable() {
                                 value={search}
                                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                                 placeholder="Name, ID or Email"
-                                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
                             />
                         </div>
                     </div>
@@ -149,7 +149,7 @@ export default function StudentsTable() {
                                 value={cgpaMin}
                                 onChange={(e) => { setCgpaMin(e.target.value); setPage(1); }}
                                 placeholder="0.0"
-                                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
                             />
                             <span className="text-xs text-gray-400">to</span>
                             <input
@@ -160,7 +160,7 @@ export default function StudentsTable() {
                                 value={cgpaMax}
                                 onChange={(e) => setCgpaMax(e.target.value)}
                                 placeholder="10.0"
-                                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
                             />
                         </div>
                     </div>

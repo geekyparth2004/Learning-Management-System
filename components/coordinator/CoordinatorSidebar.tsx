@@ -9,7 +9,6 @@ import {
     Users,
     MessageSquare,
     BarChart3,
-    Settings,
     LogOut,
 } from "lucide-react";
 
@@ -68,16 +67,6 @@ export default function CoordinatorSidebar({
                 })}
             </nav>
 
-            {/* Bottom: User + Settings */}
-            <div className="border-t border-gray-200 p-3 space-y-1">
-                <Link
-                    href="/coordinator/settings"
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
-                >
-                    <Settings className="h-4 w-4" />
-                    Settings
-                </Link>
-            </div>
 
             {/* User Info */}
             <div className="border-t border-gray-200 px-4 py-4">

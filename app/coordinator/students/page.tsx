@@ -16,7 +16,7 @@ export default function StudentsPage() {
                         <input
                             type="text"
                             placeholder="Search students or jobs..."
-                            className="w-56 rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                            className="w-56 rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
                         />
                     </div>
                     <button className="relative rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50">
