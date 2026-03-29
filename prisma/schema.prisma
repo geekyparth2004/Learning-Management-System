@@ -67,7 +67,9 @@ model User {
   placementProfile      PlacementProfile?
   placementApplications PlacementApplication[]
   placementGroupMembers PlacementGroupMember[]
-  
+  placementGroupMessages PlacementGroupMessage[]
+
+
   resumeRequests        ResumeRequest[]
 }
 
@@ -154,11 +156,13 @@ model PlacementGroup {
   icon           String?      // Emoji or color identifier
   color          String?      // Accent color e.g. "blue", "green"
   members        PlacementGroupMember[]
+  messages       PlacementGroupMessage[]
   createdAt      DateTime     @default(now())
 
   @@index([organizationId])
   @@index([driveId])
 }
+
 
 model PlacementGroupMember {
   id       String         @id @default(cuid())
@@ -585,5 +589,21 @@ model ResumeRequest {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([userId])
+}
+
+model PlacementGroupMessage {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     PlacementGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  fileUrl   String?
+  fileName  String?
+  fileSize  String?
+  createdAt DateTime @default(now())
+
+  @@index([groupId])
   @@index([userId])
 }
