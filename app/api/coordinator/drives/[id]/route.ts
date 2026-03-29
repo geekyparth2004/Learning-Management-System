@@ -68,6 +68,16 @@ export async function DELETE(
 
         const { id } = await params;
 
+        // Fetch drive to get the associated group ID
+        const drive = await db.recruitmentDrive.findUnique({
+            where: { id },
+            include: { group: true }
+        });
+
+        if (drive?.group) {
+            await db.placementGroup.delete({ where: { id: drive.group.id } });
+        }
+
         await db.recruitmentDrive.delete({ where: { id } });
 
         return NextResponse.json({ success: true });

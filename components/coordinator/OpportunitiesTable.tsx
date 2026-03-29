@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Edit, Eye, Bell } from "lucide-react";
+import { Edit, Eye, Bell, Trash2 } from "lucide-react";
 
 interface Drive {
     id: string;
@@ -28,6 +28,19 @@ export default function OpportunitiesTable() {
             })
             .catch(() => setLoading(false));
     }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this opportunity? The associated group will also be deleted.")) return;
+        
+        try {
+            const res = await fetch(`/api/coordinator/drives/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setDrives(prev => prev.filter(d => d.id !== id));
+            }
+        } catch (error) {
+            console.error("Failed to delete drive", error);
+        }
+    };
 
     const tabs = ["ALL", "ON_CAMPUS", "OFF_CAMPUS"];
     const filtered = filter === "ALL" ? drives : drives.filter((d) => d.type === filter);
@@ -161,6 +174,13 @@ export default function OpportunitiesTable() {
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Link>
+                                            <button 
+                                                onClick={() => handleDelete(drive.id)}
+                                                className="rounded-md p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+                                                title="Delete Opportunity"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
