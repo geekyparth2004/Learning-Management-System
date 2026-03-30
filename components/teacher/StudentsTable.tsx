@@ -7,6 +7,7 @@ interface StudentRow {
     id: string;
     name: string | null;
     email: string;
+    phone: string | null;
     image: string | null;
     subscriptionStatus: string | null;
     trialExpiresAt: string | null;
@@ -102,6 +103,7 @@ export default function StudentsTable() {
                             <tr>
                                 <th className="px-4 py-3 font-semibold">Student</th>
                                 <th className="px-4 py-3 font-semibold">Email</th>
+                                <th className="px-4 py-3 font-semibold">Phone</th>
                                 <th className="px-4 py-3 font-semibold">Access</th>
                             </tr>
                         </thead>
@@ -145,6 +147,9 @@ export default function StudentsTable() {
                                         </td>
                                         <td className="px-4 py-4 text-gray-400">
                                             {s.email}
+                                        </td>
+                                        <td className="px-4 py-4 text-gray-400">
+                                            {s.phone || "—"}
                                         </td>
                                         <td className="px-4 py-4 text-gray-400">
                                             {accessLabel}

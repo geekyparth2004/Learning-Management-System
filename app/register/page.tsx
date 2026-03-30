@@ -9,6 +9,7 @@ export default function RegisterPage() {
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -22,7 +23,7 @@ export default function RegisterPage() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ name, email, password, phone }),
             });
 
             if (!res.ok) {
@@ -72,6 +73,23 @@ export default function RegisterPage() {
                             className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
                             placeholder="you@example.com"
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">Phone Number</label>
+                        <input
+                            type="tel"
+                            required
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
+                            placeholder="+91XXXXXXXXXX or XXXXXXXXXX"
+                            inputMode="numeric"
+                            autoComplete="tel"
+                        />
+                        <p className="text-xs text-gray-500">
+                            Enter 10 digits (we’ll save as +91) or +91 followed by 10 digits.
+                        </p>
                     </div>
 
                     <div className="space-y-2">

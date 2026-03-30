@@ -21,11 +21,33 @@ const FREE_EMAIL_PROVIDERS = new Set([
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password } = await req.json();
+        const { name, email, password, phone: rawPhone } = await req.json();
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !rawPhone) {
             return NextResponse.json(
                 { error: "Missing required fields" },
+                { status: 400 }
+            );
+        }
+
+        const normalizePhone = (input: string) => {
+            // Remove common separators/spaces; keep leading + if present
+            const trimmed = String(input).trim();
+            const cleaned = trimmed.replace(/[ \-\(\)]/g, "");
+
+            if (/^\d{10}$/.test(cleaned)) {
+                return `+91${cleaned}`;
+            }
+            if (/^\+91\d{10}$/.test(cleaned)) {
+                return cleaned;
+            }
+            return null;
+        };
+
+        const phone = normalizePhone(rawPhone);
+        if (!phone) {
+            return NextResponse.json(
+                { error: "Invalid phone number. Use 10 digits (XXXXXXXXXX) or +91 followed by 10 digits (+91XXXXXXXXXX)." },
                 { status: 400 }
             );
         }
@@ -37,6 +59,17 @@ export async function POST(req: Request) {
         if (existingUser) {
             return NextResponse.json(
                 { error: "Email already in use" },
+                { status: 400 }
+            );
+        }
+
+        const existingPhone = await db.user.findUnique({
+            where: { phone },
+        });
+
+        if (existingPhone) {
+            return NextResponse.json(
+                { error: "Phone number already in use" },
                 { status: 400 }
             );
         }
@@ -64,6 +97,7 @@ export async function POST(req: Request) {
             data: {
                 name,
                 email,
+                phone,
                 password: hashedPassword,
                 role: "STUDENT",
                 ...(organizationId && { organizationId }),
