@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
     try {
         const session = await auth();
+        console.log("Teacher API session:", session?.user);
+        
         if (!session?.user?.id || session.user.role !== "TEACHER") {
+            console.log("Teacher API Unauthorized. Expected TEACHER, got:", session?.user?.role);
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -50,6 +55,8 @@ export async function GET(req: Request) {
             }),
             db.user.count({ where: where as any })
         ]);
+        
+        console.log(`Teacher API students found: ${total}`);
 
         return NextResponse.json({
             students,
