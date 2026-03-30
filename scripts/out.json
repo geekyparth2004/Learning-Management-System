@@ -1,0 +1,3 @@
+{
+  "error": "\nInvalid `db.user.findMany()` invocation in\nC:\\Users\\Parth Goel\\OneDrive\\Desktop\\Learning Platform\\scripts\\test3.js:8:9\n\n  5 const where = {\n  6     role: \"STUDENT\"\n  7 };\n→ 8 db.user.findMany(\nThe column `User.phone` does not exist in the current database."
+}
