@@ -8,6 +8,8 @@ interface StudentRow {
     name: string | null;
     email: string;
     image: string | null;
+    subscriptionStatus: string | null;
+    trialExpiresAt: string | null;
 }
 
 export default function StudentsTable() {
@@ -100,11 +102,26 @@ export default function StudentsTable() {
                             <tr>
                                 <th className="px-4 py-3 font-semibold">Student</th>
                                 <th className="px-4 py-3 font-semibold">Email</th>
+                                <th className="px-4 py-3 font-semibold">Access</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
                             {students.map((s) => {
                                 const initials = getInitials(s);
+                                const accessLabel = (() => {
+                                    if (s.subscriptionStatus === "TRIAL") {
+                                        if (s.trialExpiresAt) {
+                                            const d = new Date(s.trialExpiresAt);
+                                            if (!Number.isNaN(d.getTime())) {
+                                                return `Trial ends ${d.toLocaleDateString()}`;
+                                            }
+                                        }
+                                        return "Trial (end unknown)";
+                                    }
+                                    if (s.subscriptionStatus === "PAID") return "Paid";
+                                    if (s.subscriptionStatus === "FREE") return "Free";
+                                    return "Unknown";
+                                })();
                                 return (
                                     <tr key={s.id} className="hover:bg-gray-900/30 transition-colors">
                                         <td className="px-4 py-4">
@@ -128,6 +145,9 @@ export default function StudentsTable() {
                                         </td>
                                         <td className="px-4 py-4 text-gray-400">
                                             {s.email}
+                                        </td>
+                                        <td className="px-4 py-4 text-gray-400">
+                                            {accessLabel}
                                         </td>
                                     </tr>
                                 );
