@@ -2,7 +2,7 @@ import TeacherNotifications from "@/components/TeacherNotifications";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, LogOut, MessageSquare, Trophy, Code, Ticket, MessageCircle } from "lucide-react";
+import { LayoutDashboard, BookOpen, LogOut, MessageSquare, Trophy, Code, Ticket, MessageCircle, Users } from "lucide-react";
 import TeacherDoubtsBadge from "@/components/TeacherDoubtsBadge";
 export default async function TeacherLayout({
     children,
@@ -32,6 +32,13 @@ export default async function TeacherLayout({
                     >
                         <BookOpen size={20} />
                         <span>My Courses</span>
+                    </Link>
+                    <Link
+                        href="/teacher/students"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-[#1e1e1e] rounded-lg transition-colors"
+                    >
+                        <Users size={20} />
+                        <span>Students</span>
                     </Link>
                     <Link
                         href="/teacher/analytics"
