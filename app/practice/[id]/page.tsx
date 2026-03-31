@@ -399,6 +399,7 @@ export default function PracticePlayerPage() {
 
     const normalizeOutput = (str: string) => {
         return str
+            .replace(/[\[\]]/g, "")
             .replace(/,/g, " ")
             .replace(/\s+/g, " ")
             .trim();
@@ -417,7 +418,7 @@ export default function PracticePlayerPage() {
                 const res = await fetch("/api/compile", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ language, code, input: tc.input }),
+                    body: JSON.stringify({ language, code, input: tc.input.replace(/[\[\]]/g, "").replace(/,/g, " ") }),
                 });
                 const data = await res.json();
                 if (data.error) {

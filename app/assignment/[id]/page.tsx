@@ -508,6 +508,7 @@ function AssignmentContent() {
     // Normalize output for comparison (ignore trailing whitespace, normalize newlines, ignore commas)
     const normalizeOutput = (str: string) => {
         return str
+            .replace(/[\[\]]/g, "")
             .replace(/,/g, " ")       // Replace commas with spaces
             .replace(/\s+/g, " ")     // Collapse multiple whitespace to single space
             .trim();                  // Trim leading/trailing whitespace
@@ -526,7 +527,7 @@ function AssignmentContent() {
                 const res = await fetch("/api/compile", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ language, code, input: tc.input }),
+                    body: JSON.stringify({ language, code, input: tc.input.replace(/[\[\]]/g, "").replace(/,/g, " ") }),
                 });
                 const data = await res.json();
                 if (data.error) {
