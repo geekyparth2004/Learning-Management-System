@@ -489,60 +489,85 @@ export default function CoursePlayerPage() {
 
     const completeItem = async (itemId: string, duration?: number, increment = false, completed = true) => {
         try {
+            console.log("Completing item:", itemId, { duration, increment, completed });
             const body = JSON.stringify({ duration, increment, completed });
             const res = await fetch(`/api/modules/items/${itemId}/complete`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body
             });
+            
             if (res.ok) {
                 // Optimistic UI update: mark item as complete immediately
                 if (completed && course) {
                     setCourse(prevCourse => {
                         if (!prevCourse) return prevCourse;
+                        
+                        // Find which module contains this item
+                        const newModules = prevCourse.modules.map(m => {
+                            const hasItem = m.items.some(i => i.id === itemId);
+                            if (hasItem) {
+                                return {
+                                    ...m,
+                                    items: m.items.map(i =>
+                                        i.id === itemId ? { ...i, isCompleted: true } : i
+                                    )
+                                };
+                            }
+                            return m;
+                        });
+
                         return {
                             ...prevCourse,
-                            modules: prevCourse.modules.map(m =>
-                                m.id === activeModuleId
-                                    ? {
-                                        ...m,
-                                        items: m.items.map(i =>
-                                            i.id === itemId ? { ...i, isCompleted: true } : i
-                                        )
-                                    }
-                                    : m
-                            )
+                            modules: newModules
                         };
                     });
 
-                    // Fetch in background to update module progress
-                    fetchCourseData(true, "Item Completion");
-
                     // Auto-advance logic
-                    if (course && activeModuleId) {
-                        const currentModuleIndex = course.modules.findIndex(m => m.id === activeModuleId);
-                        if (currentModuleIndex !== -1) {
-                            const currentModule = course.modules[currentModuleIndex];
-                            const currentItemIndex = currentModule.items.findIndex(i => i.id === itemId);
+                    // We use the 'course' from the outer scope which is the latest available during this render
+                    if (course) {
+                        let foundCurrent = false;
+                        let nextItemToSelect: ModuleItem | null = null;
+                        let nextModuleToSelect: string | null = null;
 
-                            if (currentItemIndex !== -1 && currentItemIndex < currentModule.items.length - 1) {
-                                // Go to next item in same module
-                                const nextItem = currentModule.items[currentItemIndex + 1];
-                                setActiveItemId(nextItem.id);
-                            } else if (currentModuleIndex < course.modules.length - 1) {
-                                // Go to next module
-                                const nextModule = course.modules[currentModuleIndex + 1];
-                                setActiveModuleId(nextModule.id);
-                                if (nextModule.items.length > 0) {
-                                    setActiveItemId(nextModule.items[0].id);
+                        for (let mIdx = 0; mIdx < course.modules.length; mIdx++) {
+                            const m = course.modules[mIdx];
+                            for (let iIdx = 0; iIdx < m.items.length; iIdx++) {
+                                const item = m.items[iIdx];
+                                
+                                if (foundCurrent) {
+                                    nextItemToSelect = item;
+                                    nextModuleToSelect = m.id;
+                                    break;
+                                }
+
+                                if (item.id === itemId) {
+                                    foundCurrent = true;
                                 }
                             }
+                            if (nextItemToSelect) break;
+                        }
+
+                        if (nextItemToSelect && nextModuleToSelect) {
+                            console.log("Auto-advancing to:", nextItemToSelect.id);
+                            setActiveModuleId(nextModuleToSelect);
+                            setActiveItemId(nextItemToSelect.id);
+                            setIsWebDevFullScreen(false);
+                            setIsTestFullScreen(false);
                         }
                     }
+
+                    // Refresh course data in background to catch any side effects (like unlocking next module)
+                    fetchCourseData(true, "Item Completion");
                 }
+            } else {
+                const errorData = await res.json();
+                console.error("Failed to complete item:", errorData.error);
+                alert("Failed to mark as completed: " + (errorData.error || "Unknown error"));
             }
         } catch (error) {
-            console.error(error);
+            console.error("Error in completeItem:", error);
+            alert("An error occurred while marking as completed");
         }
     };
 
@@ -809,7 +834,10 @@ export default function CoursePlayerPage() {
                     <div className={`mx-auto h-full flex flex-col ${showPractice || isWebDevFullScreen || isTestFullScreen ? "max-w-full" : "max-w-4xl"}`}>
                         {!isWebDevFullScreen && !isTestFullScreen && (
                             <div className="mb-6 flex items-center justify-between">
-                                <h1 className="text-2xl font-bold">{activeItem.title}</h1>
+                                <h1 className="text-2xl font-bold flex items-center gap-2">
+                                    {activeItem.title}
+                                    {activeItem.isCompleted && <CheckCircle className="text-green-500" size={24} />}
+                                </h1>
                                 <div className="flex items-center gap-4">
                                     <AskDoubtButton
                                         moduleItemId={activeItem.id}
