@@ -11,11 +11,13 @@ interface StudentRow {
     image: string | null;
     subscriptionStatus: string | null;
     trialExpiresAt: string | null;
+    createdAt: string | null;
 }
 
 export default function StudentsTable() {
     const [students, setStudents] = useState<StudentRow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const [page, setPage] = useState(1);
     const limit = 10;
@@ -36,13 +38,26 @@ export default function StudentsTable() {
 
     const fetchStudents = async () => {
         setLoading(true);
+        setError(null);
         try {
             const res = await fetch(`/api/teacher/students?${params.toString()}`);
-            if (!res.ok) return;
+            if (!res.ok) {
+                const data = await res.json().catch(() => null);
+                setStudents([]);
+                setTotal(0);
+                setTotalPages(1);
+                setError(data?.error || "Unable to load student directory right now.");
+                return;
+            }
             const data = await res.json();
             setStudents(data.students || []);
             setTotal(data.total || 0);
             setTotalPages(data.totalPages || 1);
+        } catch {
+            setStudents([]);
+            setTotal(0);
+            setTotalPages(1);
+            setError("Unable to load student directory right now.");
         } finally {
             setLoading(false);
         }
@@ -82,7 +97,7 @@ export default function StudentsTable() {
                 </div>
 
                 <div className="text-sm text-gray-400">
-                    {loading ? "Loading..." : `${start} - ${end} of ${total} students`}
+                    {loading ? "Loading..." : error ? "Student directory unavailable" : `${start} - ${end} of ${total} students`}
                 </div>
             </div>
 
@@ -90,6 +105,12 @@ export default function StudentsTable() {
             {loading ? (
                 <div className="flex items-center justify-center py-10 text-gray-400">
                     Loading...
+                </div>
+            ) : error ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-red-900/50 bg-red-950/20 py-12 text-center">
+                    <Users size={44} className="mb-3 text-red-400" />
+                    <p className="text-sm font-medium text-red-200">Could not load students.</p>
+                    <p className="mt-1 text-sm text-red-300/80">{error}</p>
                 </div>
             ) : students.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-gray-800 bg-[#111111] py-12 text-center">
@@ -105,6 +126,7 @@ export default function StudentsTable() {
                                 <th className="px-4 py-3 font-semibold">Email</th>
                                 <th className="px-4 py-3 font-semibold">Phone</th>
                                 <th className="px-4 py-3 font-semibold">Access</th>
+                                <th className="px-4 py-3 font-semibold">Joined</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800">
@@ -122,7 +144,12 @@ export default function StudentsTable() {
                                     }
                                     if (s.subscriptionStatus === "PAID") return "Paid";
                                     if (s.subscriptionStatus === "FREE") return "Free";
-                                    return "Unknown";
+                                    return "Not available";
+                                })();
+                                const joinedLabel = (() => {
+                                    if (!s.createdAt) return "Not available";
+                                    const d = new Date(s.createdAt);
+                                    return Number.isNaN(d.getTime()) ? "Not available" : d.toLocaleDateString();
                                 })();
                                 return (
                                     <tr key={s.id} className="hover:bg-gray-900/30 transition-colors">
@@ -154,6 +181,9 @@ export default function StudentsTable() {
                                         <td className="px-4 py-4 text-gray-400">
                                             {accessLabel}
                                         </td>
+                                        <td className="px-4 py-4 text-gray-400">
+                                            {joinedLabel}
+                                        </td>
                                     </tr>
                                 );
                             })}
@@ -163,7 +193,7 @@ export default function StudentsTable() {
             )}
 
             {/* Pagination */}
-            {!loading && totalPages > 1 && (
+            {!loading && !error && totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-4">
                     <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
