@@ -20,10 +20,11 @@ export default function RegisterPage() {
         setError("");
 
         try {
+            const normalizedEmail = email.trim();
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password, phone }),
+                body: JSON.stringify({ name, email: normalizedEmail, password, phone }),
             });
 
             if (!res.ok) {
@@ -70,6 +71,11 @@ export default function RegisterPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
                             className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
                             placeholder="you@example.com"
                         />
@@ -99,6 +105,7 @@ export default function RegisterPage() {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="new-password"
                             className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
                             placeholder="••••••••"
                         />

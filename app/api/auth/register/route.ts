@@ -22,8 +22,9 @@ const FREE_EMAIL_PROVIDERS = new Set([
 export async function POST(req: Request) {
     try {
         const { name, email, password, phone: rawPhone } = await req.json();
+        const normalizedEmail = String(email ?? "").trim().toLowerCase();
 
-        if (!name || !email || !password || !rawPhone) {
+        if (!name || !normalizedEmail || !password || !rawPhone) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
         }
 
         const existingUser = await db.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
         });
 
         if (existingUser) {
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Detect organization email
-        const emailDomain = email.split("@")[1]?.toLowerCase();
+        const emailDomain = normalizedEmail.split("@")[1]?.toLowerCase();
         let organizationId: string | undefined = undefined;
 
         if (emailDomain && !FREE_EMAIL_PROVIDERS.has(emailDomain)) {
@@ -96,7 +97,7 @@ export async function POST(req: Request) {
         const user = await db.user.create({
             data: {
                 name,
-                email,
+                email: normalizedEmail,
                 phone,
                 password: hashedPassword,
                 role: "STUDENT",

@@ -19,8 +19,9 @@ export default function LoginPage() {
         setError("");
 
         try {
+            const normalizedEmail = email.trim();
             const result = await signIn("credentials", {
-                email,
+                email: normalizedEmail,
                 password,
                 redirect: false,
             });
@@ -57,6 +58,11 @@ export default function LoginPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
                             className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
                             placeholder="you@example.com"
                         />
@@ -69,6 +75,7 @@ export default function LoginPage() {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="current-password"
                             className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
                             placeholder="••••••••"
                         />
