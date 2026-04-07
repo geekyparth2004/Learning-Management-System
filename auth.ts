@@ -43,8 +43,13 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
 
                 if (parsedCredentials.success) {
                     const { email, password } = parsedCredentials.data;
-                    const user = await db.user.findUnique({
-                        where: { email },
+                    const user = await db.user.findFirst({
+                        where: {
+                            email: {
+                                equals: email,
+                                mode: "insensitive",
+                            },
+                        },
                         select: {
                             id: true,
                             email: true,
