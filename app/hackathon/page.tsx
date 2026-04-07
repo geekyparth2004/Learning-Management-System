@@ -6,6 +6,7 @@ import { ExternalLink, Clock, Calendar, ArrowRight } from "lucide-react";
 import FormattedDate from "@/components/FormattedDate";
 
 import ContestActionButtons from "@/components/contest/ContestActionButtons";
+import StudentShell from "@/components/layout/StudentShell";
 
 export default async function HackathonPage() {
     const session = await auth();
@@ -35,8 +36,9 @@ export default async function HackathonPage() {
     const pastContests = contests.filter(c => c.endTime <= now || isCompleted(c.id));
 
     return (
-        <div className="min-h-screen bg-[#0e0e0e] text-white p-8">
-            <div className="max-w-5xl mx-auto space-y-12">
+        <StudentShell>
+        <div className="min-h-[100dvh] bg-[#0e0e0e] text-white px-4 py-6 md:p-8">
+            <div className="max-w-5xl mx-auto space-y-8 md:space-y-12">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -97,6 +99,7 @@ export default async function HackathonPage() {
                 {/* ... rest of file */}
             </div>
         </div>
+        </StudentShell>
     );
 }
 

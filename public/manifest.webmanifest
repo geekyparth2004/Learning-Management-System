@@ -1,0 +1,18 @@
+{
+  "name": "KodeCraft",
+  "short_name": "KodeCraft",
+  "description": "Coding assignments with auto-grading",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0e0e",
+  "theme_color": "#0e0e0e",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
+

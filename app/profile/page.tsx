@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getUserBadges, PROBLEM_BADGE_DEFINITIONS, STREAK_BADGE_DEFINITIONS, COURSE_BADGE_DEFINITIONS, ProblemBadgeType, StreakBadgeType, CourseBadgeType } from "@/lib/badges";
 import Link from "next/link";
 import { ArrowLeft, Award, Calendar, Mail, Flame, BookOpen } from "lucide-react";
+import StudentShell from "@/components/layout/StudentShell";
 
 export const dynamic = "force-dynamic";
 
@@ -50,12 +51,13 @@ export default async function ProfilePage() {
     const earnedBadgeTypes = new Set(badges.map((b: { id: string }) => b?.id).filter(Boolean));
 
     return (
-        <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
+        <StudentShell>
+        <div className="min-h-[100dvh] bg-[#0e0e0e] px-4 py-6 text-white md:p-8">
             <div className="mx-auto max-w-4xl">
                 {/* Back Button */}
                 <Link
                     href="/"
-                    className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
+                    className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 md:mb-8 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Dashboard
@@ -84,16 +86,16 @@ export default async function ProfilePage() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                    <div className="bg-[#161616] rounded-xl p-6 border border-gray-800 text-center">
+                <div className="grid grid-cols-1 gap-4 mb-8 sm:grid-cols-3">
+                    <div className="bg-[#161616] rounded-xl p-5 md:p-6 border border-gray-800 text-center">
                         <div className="text-4xl font-bold text-blue-400">{totalSolved}</div>
                         <div className="text-gray-400 mt-1">Problems Solved</div>
                     </div>
-                    <div className="bg-[#161616] rounded-xl p-6 border border-gray-800 text-center">
+                    <div className="bg-[#161616] rounded-xl p-5 md:p-6 border border-gray-800 text-center">
                         <div className="text-4xl font-bold text-purple-400">{badges.length}</div>
                         <div className="text-gray-400 mt-1">Badges Earned</div>
                     </div>
-                    <div className="bg-[#161616] rounded-xl p-6 border border-gray-800 text-center">
+                    <div className="bg-[#161616] rounded-xl p-5 md:p-6 border border-gray-800 text-center">
                         <div className="text-4xl font-bold text-orange-400">{user.currentStreak}</div>
                         <div className="text-gray-400 mt-1">Day Streak</div>
                     </div>
@@ -317,5 +319,6 @@ export default async function ProfilePage() {
                 </div>
             </div>
         </div>
+        </StudentShell>
     );
 }

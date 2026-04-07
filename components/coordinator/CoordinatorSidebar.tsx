@@ -34,7 +34,7 @@ export default function CoordinatorSidebar({
     const pathname = usePathname();
 
     return (
-        <aside className="flex h-full w-56 flex-col bg-white border-r border-gray-200">
+        <aside className="flex h-full w-full md:w-56 flex-col bg-white border-r border-gray-200">
             {/* Brand */}
             <div className="flex items-center gap-2.5 px-5 py-5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">

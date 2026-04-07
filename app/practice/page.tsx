@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { Code, Terminal, CheckCircle2, ArrowRight } from "lucide-react";
+import StudentShell from "@/components/layout/StudentShell";
 
 export default async function PracticePage() {
     const session = await auth();
@@ -19,8 +20,9 @@ export default async function PracticePage() {
     });
 
     return (
-        <div className="min-h-screen bg-[#0e0e0e] text-white p-8">
-            <div className="max-w-5xl mx-auto space-y-12">
+        <StudentShell>
+        <div className="min-h-[100dvh] bg-[#0e0e0e] text-white px-4 py-6 md:p-8">
+            <div className="max-w-5xl mx-auto space-y-8 md:space-y-12">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -45,16 +47,16 @@ export default async function PracticePage() {
                                     <Link
                                         key={problem.id}
                                         href={`/practice/${problem.id}`}
-                                        className="group block rounded-xl border border-gray-800 bg-[#161616] p-6 transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
+                                        className="group block rounded-xl border border-gray-800 bg-[#161616] p-4 md:p-6 transition-all hover:border-blue-500 hover:bg-[#1a1a1a]"
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex min-w-0 items-center gap-4">
                                                 <div className={`rounded-full p-2 ${isSolved ? 'bg-green-900/20 text-green-500' : 'bg-gray-800 text-gray-400'}`}>
                                                     {isSolved ? <CheckCircle2 className="h-6 w-6" /> : <Code className="h-6 w-6" />}
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <h3 className="text-lg font-bold group-hover:text-blue-400 transition-colors">{problem.title}</h3>
+                                                        <h3 className="truncate text-lg font-bold group-hover:text-blue-400 transition-colors">{problem.title}</h3>
                                                     </div>
                                                     <div className="flex items-center gap-3 mt-1">
                                                         <span className={`px-2 py-0.5 rounded text-xs font-bold ${problem.difficulty === "Easy" ? "bg-green-900/30 text-green-400" :
@@ -68,8 +70,8 @@ export default async function PracticePage() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100">
-                                                <span className="text-sm font-bold">Solve Challenge</span>
+                                            <div className="hidden sm:flex items-center gap-2 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <span className="text-sm font-bold">Solve</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>
                                         </div>
@@ -81,5 +83,6 @@ export default async function PracticePage() {
                 </section>
             </div>
         </div>
+        </StudentShell>
     );
 }

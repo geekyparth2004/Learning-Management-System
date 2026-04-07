@@ -38,7 +38,7 @@ export default function PlacementSidebar({
     const pathname = usePathname();
 
     return (
-        <aside className="flex h-full w-64 flex-col border-r border-gray-800 bg-[#0a0a0a]">
+        <aside className="flex h-full w-full md:w-64 flex-col border-r border-gray-800 bg-[#0a0a0a]">
             {/* Brand */}
             <div className="px-6 py-6">
                 <span className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">

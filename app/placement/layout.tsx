@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import PlacementSidebar from "@/components/placement/PlacementSidebar";
+import ResponsiveShell from "@/components/layout/ResponsiveShell";
 
 export default async function PlacementLayout({
     children,
@@ -29,19 +30,26 @@ export default async function PlacementLayout({
     }
 
     return (
-        <div className="flex h-screen bg-[#0e0e0e] text-white overflow-hidden">
-            {/* Sidebar */}
-            <PlacementSidebar
-                orgName={user.organization.name}
-                userName={user.name || "Student"}
-                userDepartment={user.placementProfile?.department || undefined}
-                userBatch={user.placementProfile?.batch || undefined}
-            />
-
-            {/* Main Content */}
-            <div className="flex-1 overflow-y-auto">
-                {children}
-            </div>
-        </div>
+        <ResponsiveShell
+            wrapperClassName="bg-[#0e0e0e] text-white"
+            headerTitle={user.organization.name}
+            sidebar={
+                <PlacementSidebar
+                    orgName={user.organization.name}
+                    userName={user.name || "Student"}
+                    userDepartment={user.placementProfile?.department || undefined}
+                    userBatch={user.placementProfile?.batch || undefined}
+                />
+            }
+            bottomNav={[
+                { label: "Dashboard", href: "/placement", icon: "dashboard", match: "exact" },
+                { label: "Apps", href: "/placement/applications", icon: "file" },
+                { label: "Opps", href: "/placement/opportunities", icon: "building" },
+                { label: "Groups", href: "/placement/groups", icon: "users" },
+                { label: "Profile", href: "/placement/profile", icon: "user" },
+            ]}
+        >
+            {children}
+        </ResponsiveShell>
     );
 }

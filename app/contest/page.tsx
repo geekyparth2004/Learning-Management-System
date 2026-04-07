@@ -6,6 +6,7 @@ import { ExternalLink, Clock, Calendar, Trophy, ArrowRight } from "lucide-react"
 import FormattedDate from "@/components/FormattedDate";
 
 import ContestActionButtons from "@/components/contest/ContestActionButtons";
+import StudentShell from "@/components/layout/StudentShell";
 
 export default async function ContestPage() {
     const session = await auth();
@@ -26,8 +27,9 @@ export default async function ContestPage() {
     const pastContests = contests.filter(c => c.endTime <= now);
 
     return (
-        <div className="min-h-screen bg-[#0e0e0e] text-white p-8">
-            <div className="max-w-5xl mx-auto space-y-12">
+        <StudentShell>
+        <div className="min-h-[100dvh] bg-[#0e0e0e] text-white px-4 py-6 md:p-8">
+            <div className="max-w-5xl mx-auto space-y-8 md:space-y-12">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -107,6 +109,7 @@ export default async function ContestPage() {
                 </section>
             </div>
         </div>
+        </StudentShell>
     );
 }
 

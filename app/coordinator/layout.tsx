@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import CoordinatorSidebar from "@/components/coordinator/CoordinatorSidebar";
+import ResponsiveShell from "@/components/layout/ResponsiveShell";
 
 export default async function CoordinatorLayout({
     children,
@@ -27,14 +28,26 @@ export default async function CoordinatorLayout({
     }
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
-            <CoordinatorSidebar
-                orgName={user.organization.name}
-                userName={user.name || "Coordinator"}
-            />
-            <div className="flex-1 overflow-y-auto">
-                {children}
-            </div>
-        </div>
+        <ResponsiveShell
+            wrapperClassName="bg-gray-50 text-gray-900"
+            headerClassName="border-black/10 bg-white/70"
+            headerTitle={user.organization.name}
+            sidebar={
+                <CoordinatorSidebar
+                    orgName={user.organization.name}
+                    userName={user.name || "Coordinator"}
+                />
+            }
+            bottomNav={[
+                { label: "Dashboard", href: "/coordinator", icon: "dashboard", match: "exact" },
+                { label: "Opps", href: "/coordinator/opportunities", icon: "briefcase" },
+                { label: "Students", href: "/coordinator/students", icon: "users" },
+                { label: "Groups", href: "/coordinator/groups", icon: "messages" },
+                { label: "Reports", href: "/coordinator/reports", icon: "reports" },
+            ]}
+            contentClassName="bg-gray-50"
+        >
+            {children}
+        </ResponsiveShell>
     );
 }
