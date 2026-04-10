@@ -54,9 +54,9 @@ export async function POST(request: Request) {
             return new NextResponse("Invalid or expired referral code.", { status: 404 });
         }
 
-        // Grant 4-day trial
+        // Grant 1-day trial
         const trialExpiresAt = new Date();
-        trialExpiresAt.setDate(trialExpiresAt.getDate() + 4);
+        trialExpiresAt.setDate(trialExpiresAt.getDate() + 1);
 
         // Use a transaction to apply trial and IMMEDIATELY delete the referral code so it's a true single-use
         await db.$transaction([
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
             })
         ]);
 
-        return NextResponse.json({ success: true, message: "Trial activated for 4 days." });
+        return NextResponse.json({ success: true, message: "Trial activated for 1 day: 24hrs." });
     } catch (error) {
         console.error("[STUDENT_APPLY_REFERRAL_POST]", error);
         return new NextResponse("Internal Error", { status: 500 });
