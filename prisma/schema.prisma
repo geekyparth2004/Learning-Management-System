@@ -52,12 +52,12 @@ model User {
 
   accounts           Account[]
   discussionMessages DiscussionMessage[]
-  doubts             Doubt[]              @relation("StudentDoubts")
-  
+  doubts             Doubt[]             @relation("StudentDoubts")
+
   // Subscriptions
-  subscriptionStatus String?       @default("FREE") // "FREE" | "TRIAL" | "PAID"
+  subscriptionStatus String?   @default("FREE") // "FREE" | "TRIAL" | "PAID"
   trialExpiresAt     DateTime?
-  
+
   generatedReferrals ReferralCode[] @relation("TeacherReferralCode")
 
   // Organization (for placement cell)
@@ -65,64 +65,63 @@ model User {
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Placement
-  placementProfile      PlacementProfile?
-  placementApplications PlacementApplication[]
-  placementGroupMembers PlacementGroupMember[]
+  placementProfile       PlacementProfile?
+  placementApplications  PlacementApplication[]
+  placementGroupMembers  PlacementGroupMember[]
   placementGroupMessages PlacementGroupMessage[]
 
-
-  resumeRequests        ResumeRequest[]
+  resumeRequests ResumeRequest[]
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String   // Derived from domain initially
-  domain    String   @unique // e.g. "college.edu"
-  users     User[]
+  id                String             @id @default(cuid())
+  name              String // Derived from domain initially
+  domain            String             @unique // e.g. "college.edu"
+  users             User[]
   recruitmentDrives RecruitmentDrive[]
   placementGroups   PlacementGroup[]
-  createdAt DateTime @default(now())
+  createdAt         DateTime           @default(now())
 }
 
 model PlacementProfile {
-  id            String  @id @default(cuid())
-  userId        String  @unique
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cgpa          Float?
-  batch         String? // e.g. "2020 - 2024"
-  department    String? // e.g. "CSE/IT", "Computer Science"
-  degree        String? // e.g. "Bachelor of Technology"
-  resumeUrl     String?
-  resumeName    String? // Display name e.g. "rivers_cv_v3.pdf"
-  fatherName    String?
-  ugPercentage  Float?
-  pgPercentage  Float?
-  skills        String? // Comma-separated e.g. "React, Python, SQL"
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cgpa         Float?
+  batch        String? // e.g. "2020 - 2024"
+  department   String? // e.g. "CSE/IT", "Computer Science"
+  degree       String? // e.g. "Bachelor of Technology"
+  resumeUrl    String?
+  resumeName   String? // Display name e.g. "rivers_cv_v3.pdf"
+  fatherName   String?
+  ugPercentage Float?
+  pgPercentage Float?
+  skills       String? // Comma-separated e.g. "React, Python, SQL"
 
   @@index([userId])
 }
 
 model RecruitmentDrive {
-  id             String       @id @default(cuid())
+  id             String                 @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   company        String
   role           String
   location       String?
   driveDate      DateTime
-  status         String       @default("UPCOMING") // "UPCOMING" | "ONGOING" | "COMPLETED"
-  type           String       @default("ON_CAMPUS") // "ON_CAMPUS" | "OFF_CAMPUS"
-  eligibility    String?      // e.g. "8.5+ CGPA - CSE/IT Only"
+  status         String                 @default("UPCOMING") // "UPCOMING" | "ONGOING" | "COMPLETED"
+  type           String                 @default("ON_CAMPUS") // "ON_CAMPUS" | "OFF_CAMPUS"
+  eligibility    String? // e.g. "8.5+ CGPA - CSE/IT Only"
   description    String?
-  companyLogo    String?      // URL to logo
-  skillsRequired String?      // Comma-separated e.g. "React, Python, SQL"
+  companyLogo    String? // URL to logo
+  skillsRequired String? // Comma-separated e.g. "React, Python, SQL"
   minCgpa        Float?
-  batchYear      String?      // e.g. "2024"
-  isDraft        Boolean      @default(false)
+  batchYear      String? // e.g. "2024"
+  isDraft        Boolean                @default(false)
   applications   PlacementApplication[]
   group          PlacementGroup?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
 
   @@index([organizationId])
   @@index([status])
@@ -135,7 +134,7 @@ model PlacementApplication {
   driveId     String
   drive       RecruitmentDrive @relation(fields: [driveId], references: [id], onDelete: Cascade)
   status      String           @default("APPLIED") // "APPLIED"|"SHORTLISTED"|"INTERVIEW"|"PLACED"|"REJECTED"|"WITHDRAWN"
-  stage       String?          // e.g. "Technical Interview: Oct 20"
+  stage       String? // e.g. "Technical Interview: Oct 20"
   stageNumber Int              @default(1)
   totalStages Int              @default(4)
   appliedAt   DateTime         @default(now())
@@ -147,23 +146,22 @@ model PlacementApplication {
 }
 
 model PlacementGroup {
-  id             String       @id @default(cuid())
+  id             String                  @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  driveId        String?      @unique
-  drive          RecruitmentDrive? @relation(fields: [driveId], references: [id], onDelete: SetNull)
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  driveId        String?                 @unique
+  drive          RecruitmentDrive?       @relation(fields: [driveId], references: [id], onDelete: SetNull)
   name           String
   description    String?
-  icon           String?      // Emoji or color identifier
-  color          String?      // Accent color e.g. "blue", "green"
+  icon           String? // Emoji or color identifier
+  color          String? // Accent color e.g. "blue", "green"
   members        PlacementGroupMember[]
   messages       PlacementGroupMessage[]
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime                @default(now())
 
   @@index([organizationId])
   @@index([driveId])
 }
-
 
 model PlacementGroupMember {
   id       String         @id @default(cuid())
@@ -179,12 +177,12 @@ model PlacementGroupMember {
 }
 
 model ReferralCode {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  
+  id   String @id @default(cuid())
+  code String @unique
+
   teacherId String
-  teacher   User     @relation("TeacherReferralCode", fields: [teacherId], references: [id], onDelete: Cascade)
-  
+  teacher   User   @relation("TeacherReferralCode", fields: [teacherId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 }
 
@@ -310,8 +308,8 @@ model Problem {
   videoSolution        String?
 
   // MCQ Fields
-  mcqOptions       String?      // Stored as JSON string array, e.g., '["Option A", "Option B"]'
-  mcqCorrectAnswer String?      // The correct option exactly matching one string from mcqOptions
+  mcqOptions       String? // Stored as JSON string array, e.g., '["Option A", "Option B"]'
+  mcqCorrectAnswer String? // The correct option exactly matching one string from mcqOptions
 
   moduleItemId String?
   moduleItem   ModuleItem? @relation(fields: [moduleItemId], references: [id], onDelete: Cascade)
@@ -355,6 +353,10 @@ model Submission {
 
   @@index([userId])
   @@index([problemId])
+  @@index([userId, status])                // Dashboard: groupBy/findMany where userId+status="PASSED"
+  @@index([userId, status, createdAt])      // Dashboard: findMany where userId+status+createdAt>=X, ORDER BY createdAt
+  @@index([userId, problemId, status])      // Practice submit: count where userId+problemId+status="PASSED"
+  @@index([status, createdAt])              // Leaderboard: groupBy where status="PASSED" + date filter
 }
 
 model Enrollment {
@@ -367,6 +369,8 @@ model Enrollment {
   enrolledAt DateTime @default(now())
 
   @@unique([userId, courseId])
+  @@index([userId])                         // FK lookup: find enrollments by user
+  @@index([courseId])                        // FK lookup: find enrollments by course
 }
 
 model ModuleProgress {
@@ -380,6 +384,9 @@ model ModuleProgress {
   completedAt DateTime?
 
   @@unique([userId, moduleId])
+  @@index([userId])                         // FK lookup: find module progress by user
+  @@index([moduleId])                       // FK lookup: find module progress by module
+  @@index([userId, status])                 // Filtering progress by status for a user
 }
 
 model ModuleItemProgress {
@@ -402,6 +409,10 @@ model ModuleItemProgress {
   duration Int @default(0) // actual time spent in seconds
 
   @@unique([userId, moduleItemId])
+  @@index([userId])                         // Dashboard: findMany where userId (all progress for user)
+  @@index([userId, isCompleted])            // Dashboard API: findMany where userId+isCompleted=true
+  @@index([reviewStatus, completedAt])      // Teacher reviews: findMany where reviewStatus="PENDING" ORDER BY completedAt
+  @@index([moduleItemId])                   // FK lookup for moduleItem queries
 }
 
 model AssignmentProgress {
@@ -425,6 +436,9 @@ model Notification {
   link      String? // URL to view submission
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])              // Notification feed: findMany where userId ORDER BY createdAt DESC
+  @@index([userId, isRead])                 // Unread count: count where userId+isRead=false
 }
 
 model Contest {
@@ -449,6 +463,9 @@ model Contest {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([category, endTime])              // Dashboard: findMany where category+endTime>now ORDER BY startTime
+  @@index([endTime])                        // General: upcoming/past contests filter
 }
 
 model ContestProblem {
@@ -498,6 +515,10 @@ model ContestRegistration {
   @@unique([userId, contestId])
   @@index([userId])
   @@index([contestId])
+  @@index([userId, startedAt])              // Dashboard: count where userId+startedAt!=null
+  @@index([userId, joinedAt])               // Dashboard: findMany where userId ORDER BY joinedAt DESC
+  @@index([userId, startedAt, completedAt]) // Dashboard: findMany where userId+startedAt!=null+completedAt!=null
+  @@index([contestId, score])               // Leaderboard: findMany where contestId ORDER BY score DESC
 }
 
 model ContestSubmission {
@@ -517,6 +538,7 @@ model ContestSubmission {
 
   @@index([userId])
   @@index([problemId])
+  @@index([userId, problemId, passed])      // Contest submit: findFirst where userId+problemId+passed=true
 }
 
 model Job {
@@ -576,34 +598,34 @@ model Doubt {
 }
 
 model ResumeRequest {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  name        String
-  email       String
-  contact     String
-  resumeUrl   String
-  
-  status      String   @default("PENDING") // "PENDING" | "COMPLETED"
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  email     String
+  contact   String
+  resumeUrl String
+
+  status String @default("PENDING") // "PENDING" | "COMPLETED"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
 model PlacementGroupMessage {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   groupId   String
   group     PlacementGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   content   String
   fileUrl   String?
   fileName  String?
   fileSize  String?
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
 
   @@index([groupId])
   @@index([userId])
