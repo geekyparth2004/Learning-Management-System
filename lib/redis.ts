@@ -2,10 +2,15 @@ import { Redis } from "@upstash/redis";
 
 // Initialize Redis client (lazy - only connects when needed)
 let redis: Redis | null = null;
+const memoryCache = new Map<string, { value: unknown; expiresAt: number }>();
+let missingRedisWarningShown = false;
 
 function getRedis(): Redis | null {
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-        console.warn("[REDIS] Missing credentials - caching disabled");
+        if (!missingRedisWarningShown) {
+            console.warn("[REDIS] Missing credentials - using in-memory cache fallback");
+            missingRedisWarningShown = true;
+        }
         return null;
     }
 
@@ -32,7 +37,7 @@ export const CACHE_TTL = {
 export async function cacheGet<T>(key: string): Promise<T | null> {
     try {
         const client = getRedis();
-        if (!client) return null;
+        if (!client) return memoryCacheGet<T>(key);
 
         const cached = await client.get<T>(key);
         return cached;
@@ -48,7 +53,13 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 export async function cacheSet<T>(key: string, value: T, ttlSeconds: number = CACHE_TTL.MEDIUM): Promise<boolean> {
     try {
         const client = getRedis();
-        if (!client) return false;
+        if (!client) {
+            memoryCache.set(key, {
+                value,
+                expiresAt: Date.now() + ttlSeconds * 1000,
+            });
+            return true;
+        }
 
         await client.set(key, value, { ex: ttlSeconds });
         return true;
@@ -64,7 +75,8 @@ export async function cacheSet<T>(key: string, value: T, ttlSeconds: number = CA
 export async function cacheDelete(key: string): Promise<boolean> {
     try {
         const client = getRedis();
-        if (!client) return false;
+        memoryCache.delete(key);
+        if (!client) return true;
 
         await client.del(key);
         return true;
@@ -80,7 +92,15 @@ export async function cacheDelete(key: string): Promise<boolean> {
 export async function cacheDeletePattern(pattern: string): Promise<boolean> {
     try {
         const client = getRedis();
-        if (!client) return false;
+        if (!client) {
+            const regex = new RegExp(`^${pattern.replace(/\*/g, ".*")}$`);
+            for (const key of memoryCache.keys()) {
+                if (regex.test(key)) {
+                    memoryCache.delete(key);
+                }
+            }
+            return true;
+        }
 
         // Use SCAN to find keys matching pattern
         let cursor = 0;
@@ -131,5 +151,18 @@ export const CACHE_KEYS = {
     problems: () => "problems:all",
     problem: (id: string) => `problem:${id}`,
     userStreak: (userId: string) => `user:${userId}:streak`,
+    studentDashboard: (userId: string) => `user:${userId}:dashboard`,
     leaderboard: () => "leaderboard",
 } as const;
+
+function memoryCacheGet<T>(key: string): T | null {
+    const cached = memoryCache.get(key);
+    if (!cached) return null;
+
+    if (cached.expiresAt <= Date.now()) {
+        memoryCache.delete(key);
+        return null;
+    }
+
+    return cached.value as T;
+}

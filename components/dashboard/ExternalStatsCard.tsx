@@ -39,6 +39,7 @@ interface ExternalStatsCardProps {
         leetcodeUsername?: string | null;
         codeforcesUsername?: string | null;
         gfgUsername?: string | null;
+        externalRatings?: unknown;
     } | null;
 }
 
@@ -63,7 +64,7 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
         }
     };
 
-    // Auto-refresh logic for Leaderboard/Codolio stats
+    // Auto-refresh leaderboard/Codolio stats after initial render.
     useEffect(() => {
         const checkAndRefreshStats = async () => {
             if (!user) return;
@@ -71,9 +72,9 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
             const ratings = (user as any).externalRatings as any;
             const lastUpdated = ratings?.lastUpdated ? new Date(ratings.lastUpdated) : null;
             const now = new Date();
-            const oneHour = 60 * 60 * 1000;
+            const refreshInterval = 30 * 60 * 1000;
 
-            const shouldRefresh = !lastUpdated || (now.getTime() - lastUpdated.getTime() > oneHour);
+            const shouldRefresh = !lastUpdated || (now.getTime() - lastUpdated.getTime() > refreshInterval);
 
             if (shouldRefresh) {
                 console.log("Auto-refreshing external stats...");
@@ -89,7 +90,8 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
             }
         };
 
-        checkAndRefreshStats();
+        const timeoutId = window.setTimeout(checkAndRefreshStats, 5000);
+        return () => window.clearTimeout(timeoutId);
     }, [user, router]);
 
     useEffect(() => {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { CACHE_KEYS, cacheDelete } from "@/lib/redis";
 
 export async function POST(
     req: Request,
@@ -35,6 +36,7 @@ export async function POST(
                 where: { id: registration.id },
                 data: { startedAt: new Date() }
             });
+            await cacheDelete(CACHE_KEYS.studentDashboard(userId));
         }
 
         return NextResponse.json({ success: true });

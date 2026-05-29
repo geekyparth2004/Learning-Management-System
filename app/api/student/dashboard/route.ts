@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { syncUserCodolioStats } from "@/lib/codolio";
 
 export const dynamic = 'force-dynamic';
 
@@ -127,23 +126,6 @@ export async function GET(req: Request) {
                 externalRatings: true
             }
         });
-
-        // Auto-refresh Codolio stats if stale (>5 mins)
-        if (user) {
-            const stats = user.externalRatings as any;
-            const lastUpdated = stats?.lastUpdated ? new Date(stats.lastUpdated) : new Date(0);
-            const now = new Date();
-            const diffMinutes = (now.getTime() - lastUpdated.getTime()) / 60000;
-
-            if (diffMinutes > 5 || !stats) {
-                console.log(`[Dashboard] Stats stale (${Math.round(diffMinutes)}m), syncing Codolio...`);
-                const newStats = await syncUserCodolioStats(userId);
-                if (newStats) {
-                    // Update local user object so the response reflects new data immediately
-                    user = { ...user, externalRatings: newStats as any };
-                }
-            }
-        }
 
         let externalDiff = 0;
         if (user && user.externalRatings && user.codolioBaseline !== null) {
