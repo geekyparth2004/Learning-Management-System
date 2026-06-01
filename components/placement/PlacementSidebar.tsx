@@ -9,9 +9,7 @@ import {
     Building2,
     Users,
     User,
-    HelpCircle,
     LogOut,
-    Zap,
 } from "lucide-react";
 
 interface PlacementSidebarProps {
@@ -80,23 +78,8 @@ export default function PlacementSidebar({
                 })}
             </nav>
 
-            {/* Quick Apply Button */}
-            <div className="px-4 pb-4">
-                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-500/20 transition-all hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98]">
-                    <Zap className="h-4 w-4" />
-                    Quick Apply
-                </button>
-            </div>
-
             {/* Bottom Links */}
             <div className="border-t border-gray-800 px-3 py-4 space-y-1">
-                <Link
-                    href="/placement/help"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-800/50 hover:text-gray-300 transition-colors"
-                >
-                    <HelpCircle className="h-4 w-4" />
-                    Help Center
-                </Link>
                 <form action="/api/auth/signout" method="POST">
                     <Link
                         href="/"

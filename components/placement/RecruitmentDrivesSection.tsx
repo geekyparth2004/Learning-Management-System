@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Calendar, CheckCircle2, MapPin, Plus } from "lucide-react";
 
 interface Drive {
@@ -101,10 +101,7 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
 }
 
 export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSectionProps) {
-    const [activeTab, setActiveTab] = useState("UPCOMING");
-    const tabs = ["UPCOMING", "ONGOING", "COMPLETED"];
-
-    const filteredDrives = drives.filter((d) => d.status === activeTab);
+    const filteredDrives = drives.filter((d) => d.status === "ONGOING");
 
     const handleRegister = async (driveId: string) => {
         try {
@@ -131,23 +128,6 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
                         Stay updated with the latest institutional placement activities.
                     </p>
                 </div>
-
-                {/* Tabs */}
-                <div className="flex rounded-xl border border-gray-800 bg-[#0a0a0a] p-1">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`rounded-lg px-4 py-1.5 text-xs font-medium capitalize transition-all ${
-                                activeTab === tab
-                                    ? "bg-teal-500/15 text-teal-400 shadow-sm"
-                                    : "text-gray-500 hover:text-gray-300"
-                            }`}
-                        >
-                            {tab.charAt(0) + tab.slice(1).toLowerCase()}
-                        </button>
-                    ))}
-                </div>
             </div>
 
             {/* Drives Grid */}
@@ -171,7 +151,7 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-700 bg-[#0a0a0a] py-12 text-center">
                     <MapPin className="mb-3 h-8 w-8 text-gray-600" />
                     <p className="text-sm text-gray-500">
-                        No {activeTab.toLowerCase()} drives right now.
+                        No ongoing drives right now.
                     </p>
                 </div>
             )}
