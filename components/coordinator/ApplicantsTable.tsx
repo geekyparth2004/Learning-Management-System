@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Download, ChevronLeft, ChevronRight, MoreVertical, Loader2, Upload } from "lucide-react";
+import { useCallback } from "react";
 
 interface Applicant {
     id: string;
@@ -81,6 +82,44 @@ export default function ApplicantsTable({ driveId, driveName, driveStatus, total
         }
     };
 
+    const exportCSV = useCallback(async () => {
+        try {
+            const params = new URLSearchParams({
+                page: "1",
+                limit: "1000",
+                ...(statusFilter !== "ALL" && { status: statusFilter }),
+            });
+            const res = await fetch(`/api/coordinator/drives/${driveId}/applicants?${params}`);
+            const data = await res.json();
+            const rows: Applicant[] = data.applicants || [];
+
+            const headers = ["Name", "Email", "CGPA", "Department", "Batch", "Skills", "Status", "Applied Date"];
+            const lines = rows.map((app) => [
+                `"${app.user.name || ""}",`,
+                `"${app.user.email || ""}",`,
+                `"${app.user.placementProfile?.cgpa?.toFixed(2) || ""}",`,
+                `"${app.user.placementProfile?.department || ""}",`,
+                `"${app.user.placementProfile?.batch || ""}",`,
+                `"${(app.user.placementProfile?.skills || "").replace(/"/g, "'")}",`,
+                `"${app.status}",`,
+                `"${new Date(app.appliedAt).toLocaleDateString()}"`,
+            ].join(""));
+
+            const csv = [headers.join(","), ...lines].join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${driveName.replace(/\s+/g, "_")}_applicants_${new Date().toISOString().split("T")[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch {
+            // silent
+        }
+    }, [driveId, driveName, statusFilter]);
+
     const statusTabs = ["ALL", "APPLIED", "SHORTLISTED", "REJECTED", "PLACED"];
 
     const statusStyles: Record<string, string> = {
@@ -111,7 +150,10 @@ export default function ApplicantsTable({ driveId, driveName, driveStatus, total
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                    <button
+                        onClick={exportCSV}
+                        className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    >
                         <Download className="h-4 w-4" />
                         Export CSV
                     </button>

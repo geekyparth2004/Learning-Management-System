@@ -82,28 +82,51 @@ export default function ReportsPage() {
     };
 
     // CSV download helper
+    const [csvLoading, setCsvLoading] = useState(false);
     const downloadCSV = () => {
         if (!data) return;
+        setCsvLoading(true);
 
-        let csv = "";
-        if (activeTab === "overview" || activeTab === "departmental") {
-            csv = "Department,Total Students,Placed,Selection Rate (%)\n";
+        let csv = "\uFEFF"; // UTF-8 BOM for Excel compatibility
+
+        if (activeTab === "overview") {
+            // Overview: export a full summary with all sections
+            csv += "=== OVERVIEW STATS ===\n";
+            csv += "Metric,Value\n";
+            csv += `Total Students,${overview?.totalStudents || 0}\n`;
+            csv += `Placed Students,${overview?.placedStudents || 0}\n`;
+            csv += `Total Applications,${overview?.totalApplications || 0}\n`;
+            csv += `Selection Rate (%),${overview?.selectionRate || 0}\n`;
+            csv += `Recruiting Companies,${overview?.recruiters || 0}\n`;
+            csv += `Active Drives,${overview?.activeDrives || 0}\n`;
+            csv += "\n=== DEPARTMENT SUMMARY ===\n";
+            csv += "Department,Total Students,Placed,Selection Rate (%)\n";
+            data.departments.forEach((d) => {
+                csv += `"${d.name}",${d.total},${d.placed},${d.rate}\n`;
+            });
+            csv += "\n=== COMPANY SUMMARY ===\n";
+            csv += "Company,Total Applications,Selections,Shortlisted,Rejected,Status\n";
+            data.companies.forEach((c) => {
+                csv += `"${c.name}",${c.totalApplications},${c.selections},${c.shortlisted},${c.rejected},${c.status}\n`;
+            });
+        } else if (activeTab === "departmental") {
+            csv += "Department,Total Students,Placed,Selection Rate (%)\n";
             data.departments.forEach((d) => {
                 csv += `"${d.name}",${d.total},${d.placed},${d.rate}\n`;
             });
         } else if (activeTab === "company") {
-            csv = "Company,Total Applications,Selections,Shortlisted,Rejected,Status\n";
+            csv += "Company,Total Applications,Selections,Shortlisted,Rejected,Status\n";
             data.companies.forEach((c) => {
                 csv += `"${c.name}",${c.totalApplications},${c.selections},${c.shortlisted},${c.rejected},${c.status}\n`;
             });
         } else if (activeTab === "history") {
-            csv = "Student,Email,Department,Batch,Company,Role,Status,Applied Date\n";
+            csv += "Student,Email,Department,Batch,Company,Role,Status,Applied Date\n";
             data.studentHistory.forEach((h) => {
                 csv += `"${h.studentName}","${h.studentEmail}","${h.department}","${h.batch}","${h.company}","${h.role}","${h.status}","${new Date(h.appliedAt).toLocaleDateString()}"\n`;
             });
         }
 
-        const blob = new Blob([csv], { type: "text/csv" });
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -112,6 +135,7 @@ export default function ReportsPage() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        setCsvLoading(false);
     };
 
     // PDF export (generates a printable page)
@@ -177,10 +201,15 @@ export default function ReportsPage() {
                     <div className="flex items-center gap-3 print:hidden">
                         <button
                             onClick={downloadCSV}
-                            className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                            disabled={csvLoading || !data}
+                            className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            <Download className="h-4 w-4" />
-                            Download CSV
+                            {csvLoading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="h-4 w-4" />
+                            )}
+                            {csvLoading ? "Exporting..." : "Download CSV"}
                         </button>
                         <button
                             onClick={exportPDF}

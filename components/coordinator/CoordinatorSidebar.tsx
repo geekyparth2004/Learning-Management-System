@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
     LayoutDashboard,
     Briefcase,
@@ -70,14 +71,23 @@ export default function CoordinatorSidebar({
 
             {/* User Info */}
             <div className="border-t border-gray-200 px-4 py-4">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700">
-                        {userName?.charAt(0)?.toUpperCase() || "C"}
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700">
+                            {userName?.charAt(0)?.toUpperCase() || "C"}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-gray-900">{userName}</p>
+                            <p className="truncate text-xs text-gray-500">{userTitle || "Coordinator"}</p>
+                        </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-gray-900">{userName}</p>
-                        <p className="truncate text-xs text-gray-500">{userTitle || "Coordinator"}</p>
-                    </div>
+                    <button
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        className="flex-shrink-0 rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                        title="Logout"
+                    >
+                        <LogOut className="h-4 w-4" />
+                    </button>
                 </div>
             </div>
         </aside>
