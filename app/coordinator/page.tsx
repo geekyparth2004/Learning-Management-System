@@ -10,6 +10,8 @@ interface Stats {
     studentEngagement: number;
     pendingApprovals: number;
     shortlistedStudents: number;
+    totalStudents?: number;
+    placedStudents?: number;
 }
 
 interface Drive {
@@ -20,9 +22,18 @@ interface Drive {
     group?: { id: string; name: string };
 }
 
+interface Activity {
+    id: string;
+    studentName: string;
+    action: string;
+    status: string;
+    time: string;
+}
+
 export default function CoordinatorDashboard() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [groups, setGroups] = useState<Drive[]>([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
 
     useEffect(() => {
         fetch("/api/coordinator/stats")
@@ -32,6 +43,11 @@ export default function CoordinatorDashboard() {
         fetch("/api/coordinator/drives")
             .then((res) => res.json())
             .then((data) => setGroups(data.drives?.slice(0, 4) || []));
+
+        fetch("/api/coordinator/reports")
+            .then((res) => res.json())
+            .then((data) => setActivities(data.recentActivities || []))
+            .catch(() => {});
     }, []);
 
     const statCards = stats
@@ -140,18 +156,48 @@ export default function CoordinatorDashboard() {
                 <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6">
                     <div className="mb-4 flex items-center justify-between">
                         <h3 className="text-base font-bold text-gray-900">Recent Student Activities</h3>
-                        <div className="flex items-center gap-2">
-                            <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50">
-                                Filter
-                            </button>
-                            <button className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50">
-                                Export CSV
-                            </button>
+                        <Link href="/coordinator/reports" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                            View All Reports
+                        </Link>
+                    </div>
+                    {activities.length === 0 ? (
+                        <div className="text-center py-8 text-sm text-gray-400">
+                            Recent application activities will appear here when students start applying.
                         </div>
-                    </div>
-                    <div className="text-center py-8 text-sm text-gray-400">
-                        Recent application activities will appear here when students start applying.
-                    </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {activities.map((activity) => {
+                                const statusColors: Record<string, string> = {
+                                    APPLIED: "bg-blue-50 text-blue-600",
+                                    SHORTLISTED: "bg-green-50 text-green-600",
+                                    INTERVIEW: "bg-orange-50 text-orange-600",
+                                    PLACED: "bg-emerald-50 text-emerald-600",
+                                    REJECTED: "bg-red-50 text-red-600",
+                                };
+                                return (
+                                    <div key={activity.id} className="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50/50 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-600">
+                                                {activity.studentName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">{activity.studentName}</p>
+                                                <p className="text-xs text-gray-500">{activity.action}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColors[activity.status] || "bg-gray-100 text-gray-500"}`}>
+                                                {activity.status}
+                                            </span>
+                                            <span className="text-[10px] text-gray-400">
+                                                {new Date(activity.time).toLocaleDateString("en-US", { month: "short", day: "2-digit" })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </main>
         </div>

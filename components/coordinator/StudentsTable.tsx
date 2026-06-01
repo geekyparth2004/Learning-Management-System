@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Download, ChevronLeft, ChevronRight, Search, SlidersHorizontal, ArrowRight, BarChart3, TrendingUp, CheckCircle } from "lucide-react";
+import StudentProfileModal from "@/components/coordinator/StudentProfileModal";
 
 interface Student {
     id: string;
@@ -32,6 +33,7 @@ export default function StudentsTable() {
     const [skillsFilter, setSkillsFilter] = useState("");
     const [cgpaMin, setCgpaMin] = useState("");
     const [cgpaMax, setCgpaMax] = useState("");
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
     const fetchStudents = async () => {
         setLoading(true);
@@ -239,7 +241,10 @@ export default function StudentsTable() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <button className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700">
+                                            <button
+                                                onClick={() => setSelectedStudentId(student.id)}
+                                                className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                                            >
                                                 View Profile
                                                 <ArrowRight className="h-3.5 w-3.5" />
                                             </button>
@@ -296,7 +301,7 @@ export default function StudentsTable() {
                         <p className="text-sm font-semibold text-gray-900">Class Average</p>
                     </div>
                     <p className="text-2xl font-bold text-blue-600">{avgCgpa}</p>
-                    <p className="mt-1 text-xs text-green-600">+0.12 from last semester</p>
+                    <p className="mt-1 text-xs text-gray-500">Across {students.filter(s => s.placementProfile?.cgpa).length} students</p>
                 </div>
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
                     <div className="flex items-center gap-3 mb-3">
@@ -305,7 +310,7 @@ export default function StudentsTable() {
                         </div>
                         <p className="text-sm font-semibold text-gray-900">Top Major</p>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">{topMajor ? topMajor[0].substring(0, 8) : "CS"}</p>
+                    <p className="text-2xl font-bold text-gray-900">{topMajor ? topMajor[0] : "Unknown"}</p>
                     <p className="mt-1 text-xs text-gray-500">{topMajor ? `${topMajor[1]} students enrolled` : "—"}</p>
                 </div>
                 <div className="rounded-xl border border-gray-200 bg-white p-5">
@@ -315,10 +320,16 @@ export default function StudentsTable() {
                         </div>
                         <p className="text-sm font-semibold text-gray-900">Submission Rate</p>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">94%</p>
-                    <p className="mt-1 text-xs text-gray-500">Current term average</p>
+                    <p className="text-2xl font-bold text-gray-900">{total}</p>
+                    <p className="mt-1 text-xs text-gray-500">Total students in directory</p>
                 </div>
             </div>
+
+            {/* Student Profile Modal */}
+            <StudentProfileModal
+                studentId={selectedStudentId}
+                onClose={() => setSelectedStudentId(null)}
+            />
         </div>
     );
 }
