@@ -21,7 +21,10 @@ export default async function OpportunitiesPage() {
 
     const [drives, userApps] = await Promise.all([
         db.recruitmentDrive.findMany({
-            where: { organizationId: user.organizationId },
+            where: { 
+                organizationId: user.organizationId,
+                isDraft: false,
+            },
             orderBy: { driveDate: "desc" },
             include: { _count: { select: { applications: true } } },
         }),

@@ -36,6 +36,7 @@ export default async function PlacementPage() {
                 organization: {
                     users: { some: { id: userId } },
                 },
+                isDraft: false,
             },
             orderBy: { driveDate: "desc" },
             include: {

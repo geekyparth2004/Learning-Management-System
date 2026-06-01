@@ -101,7 +101,7 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
 }
 
 export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSectionProps) {
-    const filteredDrives = drives.filter((d) => d.status === "ONGOING");
+    const filteredDrives = drives.filter((d) => d.status !== "COMPLETED");
 
     const handleRegister = async (driveId: string) => {
         try {
@@ -151,7 +151,7 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-700 bg-[#0a0a0a] py-12 text-center">
                     <MapPin className="mb-3 h-8 w-8 text-gray-600" />
                     <p className="text-sm text-gray-500">
-                        No ongoing drives right now.
+                        No active drives right now.
                     </p>
                 </div>
             )}

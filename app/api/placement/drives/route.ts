@@ -25,6 +25,7 @@ export async function GET(req: Request) {
         const drives = await db.recruitmentDrive.findMany({
             where: {
                 organizationId: user.organizationId,
+                isDraft: false,
                 ...(status && { status }),
             },
             orderBy: { driveDate: "desc" },
