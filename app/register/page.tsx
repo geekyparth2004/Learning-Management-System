@@ -10,6 +10,9 @@ export default function RegisterPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [cgpa, setCgpa] = useState("");
+    const [batch, setBatch] = useState("");
+    const [department, setDepartment] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -24,7 +27,7 @@ export default function RegisterPage() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email: normalizedEmail, password, phone }),
+                body: JSON.stringify({ name, email: normalizedEmail, password, phone, cgpa, batch, department }),
             });
 
             if (!res.ok) {
@@ -96,6 +99,46 @@ export default function RegisterPage() {
                         <p className="text-xs text-gray-500">
                             Enter 10 digits (we’ll save as +91) or +91 followed by 10 digits.
                         </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Department</label>
+                            <input
+                                type="text"
+                                required
+                                value={department}
+                                onChange={(e) => setDepartment(e.target.value)}
+                                className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
+                                placeholder="e.g. CSE"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-300">Batch Year</label>
+                            <input
+                                type="text"
+                                required
+                                value={batch}
+                                onChange={(e) => setBatch(e.target.value)}
+                                className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
+                                placeholder="e.g. 2024"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">CGPA</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="10"
+                            required
+                            value={cgpa}
+                            onChange={(e) => setCgpa(e.target.value)}
+                            className="w-full rounded border border-gray-700 bg-[#1e1e1e] px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
+                            placeholder="e.g. 8.5"
+                        />
                     </div>
 
                     <div className="space-y-2">

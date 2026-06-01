@@ -21,7 +21,7 @@ const FREE_EMAIL_PROVIDERS = new Set([
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password, phone: rawPhone } = await req.json();
+        const { name, email, password, phone: rawPhone, cgpa, batch, department } = await req.json();
         const normalizedEmail = String(email ?? "").trim().toLowerCase();
 
         if (!name || !normalizedEmail || !password || !rawPhone) {
@@ -102,6 +102,13 @@ export async function POST(req: Request) {
                 password: hashedPassword,
                 role: "STUDENT",
                 ...(organizationId && { organizationId }),
+                placementProfile: {
+                    create: {
+                        cgpa: cgpa ? parseFloat(cgpa) : null,
+                        batch: batch || null,
+                        department: department || null,
+                    }
+                }
             },
         });
 
@@ -121,4 +128,3 @@ export async function POST(req: Request) {
         );
     }
 }
-

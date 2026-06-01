@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Download, ChevronLeft, ChevronRight, MoreVertical, Loader2, Upload } from "lucide-react";
-import { useCallback } from "react";
+import * as XLSX from "xlsx";
 
 interface Applicant {
     id: string;
@@ -37,6 +37,8 @@ export default function ApplicantsTable({ driveId, driveName, driveStatus, total
     const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
     const [updateEmail, setUpdateEmail] = useState("");
     const [updateStatus, setUpdateStatus] = useState("SHORTLISTED");
+    const [bulkFile, setBulkFile] = useState<File | null>(null);
+    const [bulkTargetStatus, setBulkTargetStatus] = useState("SHORTLISTED");
     const [updating, setUpdating] = useState(false);
     const [showUpdatePanel, setShowUpdatePanel] = useState(false);
 
@@ -65,18 +67,67 @@ export default function ApplicantsTable({ driveId, driveName, driveStatus, total
     }, [page, statusFilter]);
 
     const handleStatusUpdate = async () => {
-        if (!updateEmail) return;
+        if (!updateEmail && !bulkFile) return;
         setUpdating(true);
         try {
-            await fetch(`/api/coordinator/drives/${driveId}/applicants/status`, {
+            let updates: { email: string; status: string }[] = [];
+
+            if (bulkFile) {
+                const data = await bulkFile.arrayBuffer();
+                const workbook = XLSX.read(data, { type: "array" });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+
+                const extractedEmails: string[] = [];
+                for (const row of json as any[]) {
+                    let foundEmail = "";
+                    for (const key of Object.keys(row)) {
+                        if (key.toLowerCase().includes("email") && typeof row[key] === "string" && row[key].includes("@")) {
+                            foundEmail = row[key];
+                            break;
+                        }
+                    }
+                    if (!foundEmail) {
+                        for (const val of Object.values(row)) {
+                            if (typeof val === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                                foundEmail = val;
+                                break;
+                            }
+                        }
+                    }
+                    if (foundEmail) {
+                        extractedEmails.push(foundEmail.trim());
+                    }
+                }
+
+                if (extractedEmails.length === 0) {
+                    alert("No valid email addresses found in the uploaded file.");
+                    setUpdating(false);
+                    return;
+                }
+
+                updates = extractedEmails.map((email) => ({ email, status: bulkTargetStatus }));
+            } else if (updateEmail) {
+                updates = [{ email: updateEmail, status: updateStatus }];
+            }
+
+            const res = await fetch(`/api/coordinator/drives/${driveId}/applicants/status`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: updateEmail, status: updateStatus }),
+                body: JSON.stringify({ updates }),
             });
+            
+            const result = await res.json();
+            if (result.results) {
+                alert(`Successfully updated ${result.updated} applicants. Failed ${result.failed}.`);
+            }
+
             setUpdateEmail("");
+            setBulkFile(null);
             fetchApplicants();
         } catch {
-            // silent
+            alert("An error occurred while updating status.");
         } finally {
             setUpdating(false);
         }
@@ -209,16 +260,29 @@ export default function ApplicantsTable({ driveId, driveName, driveStatus, total
                                     <label className="text-xs text-gray-500">Upload Excel File</label>
                                     <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 hover:bg-gray-100">
                                         <Upload className="h-4 w-4" />
-                                        Choose file...
-                                        <input type="file" className="hidden" accept=".xlsx,.csv" />
+                                        <span className="truncate max-w-[150px]">
+                                            {bulkFile ? bulkFile.name : "Choose file..."}
+                                        </span>
+                                        <input 
+                                            type="file" 
+                                            className="hidden" 
+                                            accept=".xlsx,.xls,.csv" 
+                                            onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+                                        />
                                     </label>
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs text-gray-500">Target Status</label>
-                                    <select className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-blue-500 focus:bg-white focus:outline-none">
-                                        <option>Pending</option>
-                                        <option>Shortlisted</option>
-                                        <option>Rejected</option>
+                                    <select 
+                                        value={bulkTargetStatus}
+                                        onChange={(e) => setBulkTargetStatus(e.target.value)}
+                                        className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:border-blue-500 focus:bg-white focus:outline-none"
+                                    >
+                                        <option value="PENDING">Pending</option>
+                                        <option value="SHORTLISTED">Shortlisted</option>
+                                        <option value="INTERVIEW">Interview</option>
+                                        <option value="PLACED">Placed</option>
+                                        <option value="REJECTED">Rejected</option>
                                     </select>
                                 </div>
                             </div>
@@ -227,7 +291,7 @@ export default function ApplicantsTable({ driveId, driveName, driveStatus, total
                     <div className="mt-4 flex justify-end">
                         <button
                             onClick={handleStatusUpdate}
-                            disabled={updating || !updateEmail}
+                            disabled={updating || (!updateEmail && !bulkFile)}
                             className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
                         >
                             {updating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
