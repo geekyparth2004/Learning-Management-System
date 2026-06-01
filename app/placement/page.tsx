@@ -2,7 +2,7 @@ import React from "react";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import { Bell, Settings, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import WelcomeCard from "@/components/placement/WelcomeCard";
 import RecruitmentDrivesSection from "@/components/placement/RecruitmentDrivesSection";
 import ActiveTracking from "@/components/placement/ActiveTracking";
@@ -133,21 +133,7 @@ export default async function PlacementPage() {
                     />
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                    <button className="relative rounded-lg border border-gray-800 bg-[#111] p-2.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white">
-                        <Bell className="h-4 w-4" />
-                        <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-teal-500 text-[8px] font-bold text-white">
-                            3
-                        </span>
-                    </button>
-                    <button className="rounded-lg border border-gray-800 bg-[#111] p-2.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white">
-                        <Settings className="h-4 w-4" />
-                    </button>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-sm font-bold text-white">
-                        {user.name?.charAt(0)?.toUpperCase() || "S"}
-                    </div>
-                </div>
+
             </header>
 
             {/* Main Content */}
