@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         const {
             company, role, location, driveDate, status, type,
             eligibility, description, skillsRequired, minCgpa,
-            batchYear, isDraft,
+            batchYear, batchYearTo, registrationLink, isDraft,
         } = body;
 
         if (!company || !role || !driveDate) {
@@ -84,22 +84,11 @@ export async function POST(req: Request) {
                 skillsRequired,
                 minCgpa: minCgpa ? parseFloat(minCgpa) : null,
                 batchYear,
+                batchYearTo,
+                registrationLink,
                 isDraft: isDraft || false,
             },
         });
-
-        // Auto-create coordination group for this drive
-        if (!isDraft) {
-            await db.placementGroup.create({
-                data: {
-                    organizationId: user.organizationId,
-                    driveId: drive.id,
-                    name: `${company} - ${role}`,
-                    description: `Coordination group for ${company} ${role} drive`,
-                    color: ["blue", "green", "purple", "orange", "teal"][Math.floor(Math.random() * 5)],
-                },
-            });
-        }
 
         return NextResponse.json({ drive });
     } catch (error) {

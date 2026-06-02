@@ -7,7 +7,6 @@ import WelcomeCard from "@/components/placement/WelcomeCard";
 import RecruitmentDrivesSection from "@/components/placement/RecruitmentDrivesSection";
 import ActiveTracking from "@/components/placement/ActiveTracking";
 import ApplicationHistoryTable from "@/components/placement/ApplicationHistoryTable";
-import ActiveGroupsList from "@/components/placement/ActiveGroupsList";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +17,7 @@ export default async function PlacementPage() {
     const userId = session.user.id;
 
     // Fetch all data in parallel
-    const [user, profile, drives, applications, groups] = await Promise.all([
+    const [user, profile, drives, applications] = await Promise.all([
         db.user.findUnique({
             where: { id: userId },
             select: {
@@ -58,21 +57,6 @@ export default async function PlacementPage() {
                 },
             },
         }),
-        db.placementGroup.findMany({
-            where: {
-                organization: {
-                    users: { some: { id: userId } },
-                },
-            },
-            include: {
-                _count: { select: { members: true } },
-                members: {
-                    where: { userId },
-                    select: { id: true },
-                },
-            },
-            orderBy: { createdAt: "desc" },
-        }),
     ]);
 
     if (!user?.organizationId || !user.organization) {
@@ -109,16 +93,7 @@ export default async function PlacementPage() {
         },
     }));
 
-    // Process groups data
-    const groupsData = groups.map((group) => ({
-        id: group.id,
-        name: group.name,
-        description: group.description || undefined,
-        icon: group.icon || undefined,
-        color: group.color || undefined,
-        memberCount: group._count.members,
-        isMember: group.members.length > 0,
-    }));
+
 
     return (
         <div className="min-h-screen">
@@ -129,7 +104,7 @@ export default async function PlacementPage() {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                     <input
                         type="text"
-                        placeholder="Search for companies, roles, or groups..."
+                        placeholder="Search for companies, roles..."
                         className="w-full rounded-xl border border-gray-800 bg-[#111] py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-600 focus:border-teal-500/50 focus:outline-none transition-colors"
                     />
                 </div>
@@ -165,7 +140,7 @@ export default async function PlacementPage() {
 
                     {/* Right 1/3 — Sidebar Content */}
                     <div className="space-y-6">
-                        <ActiveGroupsList groups={groupsData} />
+
 
                         {/* Placement Stats Summary */}
                         <div className="rounded-2xl border border-gray-800 bg-[#111] p-5">

@@ -32,7 +32,7 @@ interface Activity {
 
 export default function CoordinatorDashboard() {
     const [stats, setStats] = useState<Stats | null>(null);
-    const [groups, setGroups] = useState<Drive[]>([]);
+
     const [activities, setActivities] = useState<Activity[]>([]);
 
     useEffect(() => {
@@ -40,9 +40,7 @@ export default function CoordinatorDashboard() {
             .then((res) => res.json())
             .then((data) => setStats(data.stats));
 
-        fetch("/api/coordinator/drives")
-            .then((res) => res.json())
-            .then((data) => setGroups(data.drives?.slice(0, 4) || []));
+
 
         fetch("/api/coordinator/reports")
             .then((res) => res.json())
@@ -105,51 +103,9 @@ export default function CoordinatorDashboard() {
                     ))}
                 </div>
 
-                {/* Main Content: Post Form + Groups */}
-                <div className="grid grid-cols-3 gap-6">
-                    <div className="col-span-2">
-                        <PostOpportunityForm />
-                    </div>
-
-                    {/* Coordination Groups */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-5">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-base font-bold text-gray-900">Coordination Groups</h3>
-                        </div>
-                        <div className="space-y-3">
-                            {groups.length > 0 ? groups.map((drive) => {
-                                const colors = ["bg-green-500", "bg-blue-500", "bg-orange-500", "bg-red-500", "bg-purple-500"];
-                                const color = colors[drive.company.charCodeAt(0) % colors.length];
-                                return (
-                                    <div key={drive.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-gray-50 cursor-pointer transition-colors">
-                                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${color} text-xs font-bold text-white`}>
-                                            {drive.company.charAt(0)}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-gray-900">
-                                                {drive.company} - {drive.role.substring(0, 15)}...
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                                Teachers, Students, Admin
-                                            </p>
-                                            <p className="mt-0.5 text-xs text-blue-500 italic">
-                                                {drive._count.applications} applicants
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            }) : (
-                                <p className="py-6 text-center text-sm text-gray-400">
-                                    No groups yet. Post an opportunity to create one.
-                                </p>
-                            )}
-                            {groups.length > 0 && (
-                                <Link href="/coordinator/groups" className="block text-center text-sm font-medium text-blue-600 hover:text-blue-700 pt-2">
-                                    View All Groups
-                                </Link>
-                            )}
-                        </div>
-                    </div>
+                {/* Post Opportunity Form */}
+                <div className="max-w-3xl">
+                    <PostOpportunityForm />
                 </div>
 
                 {/* Recent Student Activities */}

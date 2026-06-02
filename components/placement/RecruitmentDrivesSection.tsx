@@ -14,13 +14,16 @@ interface Drive {
     companyLogo?: string;
     hasApplied: boolean;
     applicantCount: number;
+    batchYear?: string;
+    batchYearTo?: string;
+    registrationLink?: string;
 }
 
 interface RecruitmentDrivesSectionProps {
     drives: Drive[];
 }
 
-function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: string) => void }) {
+function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: string, link?: string) => void }) {
     const statusColors: Record<string, string> = {
         UPCOMING: "border-teal-500/40 bg-teal-500/10 text-teal-300",
         ONGOING: "border-yellow-500/40 bg-yellow-500/10 text-yellow-300",
@@ -74,6 +77,14 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
                         <span>{drive.eligibility}</span>
                     </div>
                 )}
+                {(drive.batchYear || drive.batchYearTo) && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-teal-500" />
+                        <span>
+                            Batch: {drive.batchYear && drive.batchYearTo && drive.batchYear !== drive.batchYearTo ? `${drive.batchYear} - ${drive.batchYearTo}` : drive.batchYear || drive.batchYearTo}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Action */}
@@ -85,10 +96,10 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
                     </div>
                 ) : drive.status !== "COMPLETED" ? (
                     <button
-                        onClick={() => onRegister(drive.id)}
+                        onClick={() => onRegister(drive.id, drive.registrationLink)}
                         className="w-full rounded-xl border border-teal-500/30 bg-teal-500/5 py-2.5 text-sm font-medium text-teal-400 transition-all hover:bg-teal-500/15 hover:border-teal-500/50"
                     >
-                        Register Now
+                        {drive.registrationLink ? "Apply Externally" : "Register Now"}
                     </button>
                 ) : (
                     <div className="text-center text-sm text-gray-600 py-2.5">
@@ -103,7 +114,7 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
 export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSectionProps) {
     const filteredDrives = drives.filter((d) => d.status !== "COMPLETED");
 
-    const handleRegister = async (driveId: string) => {
+    const handleRegister = async (driveId: string, registrationLink?: string) => {
         try {
             const res = await fetch("/api/placement/applications", {
                 method: "POST",
@@ -111,7 +122,12 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
                 body: JSON.stringify({ driveId }),
             });
             if (res.ok) {
-                window.location.reload();
+                if (registrationLink) {
+                    window.open(registrationLink, "_blank");
+                    setTimeout(() => window.location.reload(), 500);
+                } else {
+                    window.location.reload();
+                }
             }
         } catch (error) {
             console.error("Failed to register:", error);

@@ -52,7 +52,6 @@ export async function POST(req: Request) {
 
         const drive = await db.recruitmentDrive.findUnique({
             where: { id: driveId },
-            include: { group: true },
         });
 
         if (!drive || drive.organizationId !== user?.organizationId) {
@@ -75,23 +74,6 @@ export async function POST(req: Request) {
                 driveId,
             },
         });
-
-        // Auto-join the drive's group (if it exists)
-        if (drive.group) {
-            await db.placementGroupMember.upsert({
-                where: {
-                    userId_groupId: {
-                        userId: session.user.id,
-                        groupId: drive.group.id,
-                    },
-                },
-                update: {},
-                create: {
-                    userId: session.user.id,
-                    groupId: drive.group.id,
-                },
-            });
-        }
 
         return NextResponse.json({ application });
     } catch (error) {

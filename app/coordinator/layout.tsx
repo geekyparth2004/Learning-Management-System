@@ -42,7 +42,6 @@ export default async function CoordinatorLayout({
                 { label: "Dashboard", href: "/coordinator", icon: "dashboard", match: "exact" },
                 { label: "Opps", href: "/coordinator/opportunities", icon: "briefcase" },
                 { label: "Students", href: "/coordinator/students", icon: "users" },
-                { label: "Groups", href: "/coordinator/groups", icon: "messages" },
                 { label: "Reports", href: "/coordinator/reports", icon: "reports" },
             ]}
             contentClassName="bg-gray-50"

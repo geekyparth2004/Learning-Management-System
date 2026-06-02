@@ -45,7 +45,6 @@ export default async function PlacementLayout({
                 { label: "Dashboard", href: "/placement", icon: "dashboard", match: "exact" },
                 { label: "Apps", href: "/placement/applications", icon: "file" },
                 { label: "Opps", href: "/placement/opportunities", icon: "building" },
-                { label: "Groups", href: "/placement/groups", icon: "users" },
                 { label: "Profile", href: "/placement/profile", icon: "user" },
             ]}
         >

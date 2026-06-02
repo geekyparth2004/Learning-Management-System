@@ -14,10 +14,13 @@ export default async function OpportunitiesPage() {
 
     const user = await db.user.findUnique({
         where: { id: session.user.id },
-        select: { organizationId: true },
+        select: { organizationId: true, placementProfile: { select: { batch: true } } },
     });
 
     if (!user?.organizationId) redirect("/jobs");
+
+    const batchMatch = user.placementProfile?.batch?.match(/\d{4}/g);
+    const userGradYear = batchMatch ? Math.max(...batchMatch.map(Number)) : null;
 
     const [drives, userApps] = await Promise.all([
         db.recruitmentDrive.findMany({
@@ -35,18 +38,30 @@ export default async function OpportunitiesPage() {
     ]);
 
     const appliedIds = new Set(userApps.map((a) => a.driveId));
-    const drivesData = drives.map((d) => ({
-        id: d.id,
-        company: d.company,
-        role: d.role,
-        location: d.location || undefined,
-        driveDate: d.driveDate.toISOString(),
-        status: d.status,
-        eligibility: d.eligibility || undefined,
-        companyLogo: d.companyLogo || undefined,
-        hasApplied: appliedIds.has(d.id),
-        applicantCount: d._count.applications,
-    }));
+    const drivesData = drives
+        .filter((d) => {
+            if (!userGradYear) return true; // Show if user grad year unknown
+            const from = d.batchYear ? parseInt(d.batchYear) : null;
+            const to = d.batchYearTo ? parseInt(d.batchYearTo) : from; // Default to 'from' if 'to' is missing
+            if (from && to) return userGradYear >= from && userGradYear <= to;
+            if (from) return userGradYear === from;
+            return true; // Show if drive has no batch requirements
+        })
+        .map((d) => ({
+            id: d.id,
+            company: d.company,
+            role: d.role,
+            location: d.location || undefined,
+            driveDate: d.driveDate.toISOString(),
+            status: d.status,
+            eligibility: d.eligibility || undefined,
+            companyLogo: d.companyLogo || undefined,
+            hasApplied: appliedIds.has(d.id),
+            applicantCount: d._count.applications,
+            batchYear: d.batchYear || undefined,
+            batchYearTo: d.batchYearTo || undefined,
+            registrationLink: d.registrationLink || undefined,
+        }));
 
     return (
         <div className="p-8">

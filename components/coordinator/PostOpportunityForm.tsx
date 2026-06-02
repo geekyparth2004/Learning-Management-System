@@ -10,6 +10,8 @@ export default function PostOpportunityForm() {
         type: "ON_CAMPUS",
         minCgpa: "",
         batchYear: "2024",
+        batchYearTo: "2024",
+        registrationLink: "",
         skillsRequired: "",
         location: "",
         description: "",
@@ -35,7 +37,7 @@ export default function PostOpportunityForm() {
                 setSuccess(isDraft ? "Saved as draft!" : "Opportunity posted!");
                 setForm({
                     role: "", company: "", type: "ON_CAMPUS", minCgpa: "",
-                    batchYear: "2024", skillsRequired: "", location: "", description: "", driveDate: "",
+                    batchYear: "2024", batchYearTo: "2024", registrationLink: "", skillsRequired: "", location: "", description: "", driveDate: "",
                 });
                 if (!isDraft) {
                     setTimeout(() => window.location.reload(), 1000);
@@ -105,17 +107,42 @@ export default function PostOpportunityForm() {
                     </div>
                     <div>
                         <label className="mb-1 block text-xs font-medium text-gray-600">Batch Year</label>
-                        <select
-                            value={form.batchYear}
-                            onChange={(e) => setForm({ ...form, batchYear: e.target.value })}
-                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
-                        >
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                        </select>
+                        <div className="flex gap-2">
+                            <select
+                                value={form.batchYear}
+                                onChange={(e) => setForm({ ...form, batchYear: e.target.value })}
+                                className="w-1/2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                            >
+                                <option value="2024">From 2024</option>
+                                <option value="2025">From 2025</option>
+                                <option value="2026">From 2026</option>
+                                <option value="2027">From 2027</option>
+                                <option value="2028">From 2028</option>
+                            </select>
+                            <select
+                                value={form.batchYearTo}
+                                onChange={(e) => setForm({ ...form, batchYearTo: e.target.value })}
+                                className="w-1/2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none"
+                            >
+                                <option value="2024">To 2024</option>
+                                <option value="2025">To 2025</option>
+                                <option value="2026">To 2026</option>
+                                <option value="2027">To 2027</option>
+                                <option value="2028">To 2028</option>
+                            </select>
+                        </div>
                     </div>
+                </div>
+
+                <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Registration Link (Optional)</label>
+                    <input
+                        type="url"
+                        value={form.registrationLink}
+                        onChange={(e) => setForm({ ...form, registrationLink: e.target.value })}
+                        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                        placeholder="https://example.com/apply"
+                    />
                 </div>
 
                 <div>

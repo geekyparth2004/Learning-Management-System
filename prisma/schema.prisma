@@ -102,26 +102,28 @@ model PlacementProfile {
 }
 
 model RecruitmentDrive {
-  id             String                 @id @default(cuid())
-  organizationId String
-  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  company        String
-  role           String
-  location       String?
-  driveDate      DateTime
-  status         String                 @default("UPCOMING") // "UPCOMING" | "ONGOING" | "COMPLETED"
-  type           String                 @default("ON_CAMPUS") // "ON_CAMPUS" | "OFF_CAMPUS"
-  eligibility    String? // e.g. "8.5+ CGPA - CSE/IT Only"
-  description    String?
-  companyLogo    String? // URL to logo
-  skillsRequired String? // Comma-separated e.g. "React, Python, SQL"
-  minCgpa        Float?
-  batchYear      String? // e.g. "2024"
-  isDraft        Boolean                @default(false)
-  applications   PlacementApplication[]
-  group          PlacementGroup?
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
+  id               String                 @id @default(cuid())
+  organizationId   String
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  company          String
+  role             String
+  location         String?
+  driveDate        DateTime
+  status           String                 @default("UPCOMING") // "UPCOMING" | "ONGOING" | "COMPLETED"
+  type             String                 @default("ON_CAMPUS") // "ON_CAMPUS" | "OFF_CAMPUS"
+  eligibility      String? // e.g. "8.5+ CGPA - CSE/IT Only"
+  description      String?
+  companyLogo      String? // URL to logo
+  skillsRequired   String? // Comma-separated e.g. "React, Python, SQL"
+  minCgpa          Float?
+  batchYear        String? // e.g. "2024" (From)
+  batchYearTo      String? // e.g. "2026" (To)
+  registrationLink String? // External link to redirect for registration
+  isDraft          Boolean                @default(false)
+  applications     PlacementApplication[]
+  group            PlacementGroup?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
 
   @@index([organizationId])
   @@index([status])

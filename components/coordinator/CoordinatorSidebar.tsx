@@ -23,7 +23,6 @@ const navItems = [
     { label: "Dashboard", href: "/coordinator", icon: LayoutDashboard },
     { label: "Opportunities", href: "/coordinator/opportunities", icon: Briefcase },
     { label: "Students", href: "/coordinator/students", icon: Users },
-    { label: "Groups", href: "/coordinator/groups", icon: MessageSquare },
     { label: "Reports", href: "/coordinator/reports", icon: BarChart3 },
 ];
 

@@ -23,7 +23,6 @@ const navItems = [
     { label: "Dashboard", href: "/placement", icon: LayoutDashboard },
     { label: "My Applications", href: "/placement/applications", icon: FileText },
     { label: "Opportunities", href: "/placement/opportunities", icon: Building2 },
-    { label: "Groups", href: "/placement/groups", icon: Users },
     { label: "Profile", href: "/placement/profile", icon: User },
 ];
 
