@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -30,11 +29,6 @@ interface ChatMessage {
 
 export async function POST(request: Request) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
         if (!process.env.OPENAI_API_KEY) {
             return NextResponse.json(
                 { error: "OpenAI API key not configured." },
@@ -86,7 +80,7 @@ export async function POST(request: Request) {
         }
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4.1-nano",
             messages: openaiMessages,
             max_tokens: 2048,
             temperature: 0.7,
@@ -95,11 +89,23 @@ export async function POST(request: Request) {
         const reply = completion.choices[0]?.message?.content || "Sorry, I couldn't process that. Please try again.";
 
         return NextResponse.json({ reply });
-    } catch (error) {
+
+    } catch (error: any) {
         console.error("Doubt Chat AI error:", error);
+
+        let errorMessage = "Failed to process your request. Please try again.";
+        if (error?.code === "insufficient_quota") {
+            errorMessage = "API quota exceeded. Please try again later.";
+        } else if (error?.status === 429) {
+            errorMessage = "Too many requests. Please try again in a moment.";
+        } else if (error?.message) {
+            errorMessage = error.message;
+        }
+
         return NextResponse.json(
-            { error: "Failed to process your request. Please try again." },
-            { status: 500 }
+            { error: errorMessage },
+            { status: error?.status || 500 }
         );
     }
 }
+
