@@ -90,9 +90,19 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
             {/* Action */}
             <div className="mt-auto">
                 {drive.hasApplied ? (
-                    <div className="flex items-center justify-center gap-2 rounded-xl border border-teal-500/30 bg-teal-500/5 py-2.5 text-sm font-medium text-teal-400">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Registered
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2 rounded-xl border border-teal-500/30 bg-teal-500/5 py-2.5 text-sm font-medium text-teal-400">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Registered
+                        </div>
+                        {drive.registrationLink && (
+                            <button
+                                onClick={() => onRegister(drive.id, drive.registrationLink)}
+                                className="w-full rounded-xl border border-teal-500/30 bg-teal-500/5 py-2.5 text-sm font-medium text-teal-400 transition-all hover:bg-teal-500/15 hover:border-teal-500/50"
+                            >
+                                Apply Externally
+                            </button>
+                        )}
                     </div>
                 ) : drive.status !== "COMPLETED" ? (
                     <button

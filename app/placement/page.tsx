@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Search } from "lucide-react";
 import WelcomeCard from "@/components/placement/WelcomeCard";
-import RecruitmentDrivesSection from "@/components/placement/RecruitmentDrivesSection";
 import ActiveTracking from "@/components/placement/ActiveTracking";
 import ApplicationHistoryTable from "@/components/placement/ApplicationHistoryTable";
 
@@ -63,21 +62,6 @@ export default async function PlacementPage() {
         redirect("/jobs");
     }
 
-    // Process drives data
-    const appliedDriveIds = new Set(applications.map((a) => a.driveId));
-    const drivesData = drives.map((drive) => ({
-        id: drive.id,
-        company: drive.company,
-        role: drive.role,
-        location: drive.location || undefined,
-        driveDate: drive.driveDate.toISOString(),
-        status: drive.status,
-        eligibility: drive.eligibility || undefined,
-        companyLogo: drive.companyLogo || undefined,
-        hasApplied: appliedDriveIds.has(drive.id),
-        applicantCount: drive._count.applications,
-    }));
-
     // Process applications data
     const applicationsData = applications.map((app) => ({
         id: app.id,
@@ -127,9 +111,6 @@ export default async function PlacementPage() {
                             applicationCount={applications.length}
                             resumeName={profile?.resumeName || undefined}
                         />
-
-                        {/* Recruitment Drives */}
-                        <RecruitmentDrivesSection drives={drivesData} />
 
                         {/* Bottom Row: Active Tracking + History */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
