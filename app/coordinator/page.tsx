@@ -5,6 +5,11 @@ import { Bell, Search, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import PostOpportunityForm from "@/components/coordinator/PostOpportunityForm";
 import Link from "next/link";
 
+interface Trend {
+    change: string;
+    positive: boolean;
+}
+
 interface Stats {
     activeOpportunities: number;
     studentEngagement: number;
@@ -12,6 +17,12 @@ interface Stats {
     shortlistedStudents: number;
     totalStudents?: number;
     placedStudents?: number;
+    trends?: {
+        activeOpportunities: Trend;
+        studentEngagement: Trend;
+        pendingApprovals: Trend;
+        shortlistedStudents: Trend;
+    };
 }
 
 interface Drive {
@@ -50,10 +61,26 @@ export default function CoordinatorDashboard() {
 
     const statCards = stats
         ? [
-              { label: "Active Opportunities", value: stats.activeOpportunities, change: "+5%", positive: true },
-              { label: "Student Engagement", value: `${stats.studentEngagement}%`, change: "+12%", positive: true },
-              { label: "Pending Approvals", value: stats.pendingApprovals, change: "-2%", positive: false },
-              { label: "Shortlisted Students", value: stats.shortlistedStudents, change: "+18%", positive: true },
+              {
+                  label: "Active Opportunities",
+                  value: stats.activeOpportunities,
+                  trend: stats.trends?.activeOpportunities,
+              },
+              {
+                  label: "Student Engagement",
+                  value: `${stats.studentEngagement}%`,
+                  trend: stats.trends?.studentEngagement,
+              },
+              {
+                  label: "Pending Approvals",
+                  value: stats.pendingApprovals,
+                  trend: stats.trends?.pendingApprovals,
+              },
+              {
+                  label: "Shortlisted Students",
+                  value: stats.shortlistedStudents,
+                  trend: stats.trends?.shortlistedStudents,
+              },
           ]
         : [];
 
@@ -92,13 +119,21 @@ export default function CoordinatorDashboard() {
                             <p className="text-xs font-medium text-gray-500">{card.label}</p>
                             <div className="mt-2 flex items-end justify-between">
                                 <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                                <span className={`flex items-center gap-0.5 text-xs font-semibold ${
-                                    card.positive ? "text-green-600" : "text-red-500"
-                                }`}>
-                                    {card.positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                                    {card.change}
-                                </span>
+                                {card.trend && (
+                                    <span
+                                        className={`flex items-center gap-0.5 text-xs font-semibold ${
+                                            card.trend.positive ? "text-green-600" : "text-red-500"
+                                        }`}
+                                        title="vs prior 30 days"
+                                    >
+                                        {card.trend.positive
+                                            ? <TrendingUp className="h-3 w-3" />
+                                            : <TrendingDown className="h-3 w-3" />}
+                                        {card.trend.change}
+                                    </span>
+                                )}
                             </div>
+                            <p className="mt-1 text-[10px] text-gray-400">vs prior 30 days</p>
                         </div>
                     ))}
                 </div>
