@@ -12,6 +12,7 @@ import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { StatsSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import ServicesGrid from "@/components/ServicesGrid";
 import StudentShell from "@/components/layout/StudentShell";
+import AskAIChat from "@/components/AskAIChat";
 
 // Force dynamic only if auth() requires it, but usually standard Next.js 15 handles this.
 // Keeping it to ensure fresh data.
@@ -350,6 +351,9 @@ export default async function Home() {
           {/* Badge Check on Login - Awards pending badges and shows celebration */}
           <BadgeCheckOnLogin />
         </div>
+
+        {/* Floating AI Doubt Assistant */}
+        <AskAIChat />
       </div>
     </StudentShell>
   );

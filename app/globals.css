@@ -77,3 +77,61 @@ body {
 .animate-badge-godlike {
   animation: badge-pulse 1.5s ease-in-out infinite, badge-rainbow 4s linear infinite;
 }
+
+/* Ask AI Doubt Button Animations */
+@keyframes ai-btn-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.35);
+  }
+}
+
+@keyframes ai-btn-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes ai-chat-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ai-chat-slide-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+@keyframes ai-typing-dot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.animate-ai-btn {
+  animation: ai-btn-glow 2.5s ease-in-out infinite, ai-btn-bounce 3s ease-in-out infinite;
+}
+
+.animate-ai-chat-in {
+  animation: ai-chat-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-ai-chat-out {
+  animation: ai-chat-slide-out 0.2s ease-in forwards;
+}
+
+.ai-typing-dot:nth-child(1) { animation: ai-typing-dot 1.2s infinite 0s; }
+.ai-typing-dot:nth-child(2) { animation: ai-typing-dot 1.2s infinite 0.2s; }
+.ai-typing-dot:nth-child(3) { animation: ai-typing-dot 1.2s infinite 0.4s; }
