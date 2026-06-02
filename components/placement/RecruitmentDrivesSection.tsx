@@ -115,6 +115,11 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
     const filteredDrives = drives.filter((d) => d.status !== "COMPLETED");
 
     const handleRegister = async (driveId: string, registrationLink?: string) => {
+        if (registrationLink) {
+            window.open(registrationLink, "_blank");
+            return;
+        }
+
         try {
             const res = await fetch("/api/placement/applications", {
                 method: "POST",
@@ -122,12 +127,7 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
                 body: JSON.stringify({ driveId }),
             });
             if (res.ok) {
-                if (registrationLink) {
-                    window.open(registrationLink, "_blank");
-                    setTimeout(() => window.location.reload(), 500);
-                } else {
-                    window.location.reload();
-                }
+                window.location.reload();
             }
         } catch (error) {
             console.error("Failed to register:", error);
