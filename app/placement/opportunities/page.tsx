@@ -61,6 +61,10 @@ export default async function OpportunitiesPage() {
             batchYear: d.batchYear || undefined,
             batchYearTo: d.batchYearTo || undefined,
             registrationLink: d.registrationLink || undefined,
+            salaryMin: d.salaryMin ?? undefined,
+            salaryMax: d.salaryMax ?? undefined,
+            salaryType: d.salaryType || undefined,
+            description: d.description || undefined,
         }));
 
     return (

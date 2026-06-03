@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Calendar, CheckCircle2, MapPin, Plus } from "lucide-react";
+import React, { useState } from "react";
+import { BadgeIndianRupee, Calendar, CheckCircle2, ChevronDown, ChevronUp, MapPin, Plus } from "lucide-react";
 
 interface Drive {
     id: string;
@@ -17,6 +17,10 @@ interface Drive {
     batchYear?: string;
     batchYearTo?: string;
     registrationLink?: string;
+    salaryMin?: number;
+    salaryMax?: number;
+    salaryType?: string;
+    description?: string;
 }
 
 interface RecruitmentDrivesSectionProps {
@@ -24,6 +28,8 @@ interface RecruitmentDrivesSectionProps {
 }
 
 function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: string, link?: string) => void }) {
+    const [jdOpen, setJdOpen] = useState(false);
+
     const statusColors: Record<string, string> = {
         UPCOMING: "border-teal-500/40 bg-teal-500/10 text-teal-300",
         ONGOING: "border-yellow-500/40 bg-yellow-500/10 text-yellow-300",
@@ -35,6 +41,21 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
         ONGOING: "border-yellow-500/30 hover:border-yellow-500/60",
         COMPLETED: "border-gray-700 hover:border-gray-600",
     };
+
+    const formatSalary = (val: number, type?: string) => {
+        const suffix = type === "YEARLY" ? "/yr" : "/mo";
+        if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L${suffix}`;
+        if (val >= 1000) return `₹${(val / 1000).toFixed(0)}K${suffix}`;
+        return `₹${val}${suffix}`;
+    };
+
+    const salaryLabel = (() => {
+        if (!drive.salaryMin && !drive.salaryMax) return null;
+        if (drive.salaryMin && drive.salaryMax)
+            return `${formatSalary(drive.salaryMin, drive.salaryType)} – ${formatSalary(drive.salaryMax, drive.salaryType)}`;
+        if (drive.salaryMin) return formatSalary(drive.salaryMin, drive.salaryType);
+        return formatSalary(drive.salaryMax!, drive.salaryType);
+    })();
 
     return (
         <div
@@ -52,12 +73,20 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
                 </span>
             </div>
 
-            {/* Info */}
-            <h3 className="mb-1 text-base font-bold text-white">{drive.role}</h3>
-            <p className="mb-3 text-sm text-gray-400">
+            {/* Job Title & Company */}
+            <h3 className="mb-0.5 text-base font-bold text-white">{drive.role}</h3>
+            <p className="mb-3 text-sm font-medium text-gray-300">
                 {drive.company}
-                {drive.location ? ` • ${drive.location}` : ""}
+                {drive.location ? <span className="text-gray-500"> • {drive.location}</span> : null}
             </p>
+
+            {/* Salary badge */}
+            {salaryLabel && (
+                <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 self-start">
+                    <BadgeIndianRupee className="h-3.5 w-3.5" />
+                    {salaryLabel}
+                </div>
+            )}
 
             {/* Details */}
             <div className="mb-4 space-y-2">
@@ -86,6 +115,24 @@ function DriveCard({ drive, onRegister }: { drive: Drive; onRegister: (id: strin
                     </div>
                 )}
             </div>
+
+            {/* JD / Responsibilities accordion */}
+            {drive.description && (
+                <div className="mb-4 rounded-xl border border-gray-800 bg-[#0d0d0d] overflow-hidden">
+                    <button
+                        onClick={() => setJdOpen((o) => !o)}
+                        className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors"
+                    >
+                        <span>Job Description / Responsibilities</span>
+                        {jdOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                    {jdOpen && (
+                        <div className="border-t border-gray-800 px-3 py-2.5">
+                            <p className="whitespace-pre-wrap text-xs leading-relaxed text-gray-400">{drive.description}</p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Action */}
             <div className="mt-auto">
