@@ -119,6 +119,9 @@ model RecruitmentDrive {
   batchYear        String? // e.g. "2024" (From)
   batchYearTo      String? // e.g. "2026" (To)
   registrationLink String? // External link to redirect for registration
+  salaryMin        Float?  // Minimum salary
+  salaryMax        Float?  // Maximum salary
+  salaryType       String? // "MONTHLY" | "YEARLY"
   isDraft          Boolean                @default(false)
   applications     PlacementApplication[]
   group            PlacementGroup?

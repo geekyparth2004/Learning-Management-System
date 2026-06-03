@@ -63,6 +63,7 @@ export async function POST(req: Request) {
             company, role, location, driveDate, status, type,
             eligibility, description, skillsRequired, minCgpa,
             batchYear, batchYearTo, registrationLink, isDraft,
+            salaryMin, salaryMax, salaryType,
         } = body;
 
         if (!company || !role || !driveDate) {
@@ -87,6 +88,9 @@ export async function POST(req: Request) {
                 batchYearTo,
                 registrationLink,
                 isDraft: isDraft || false,
+                salaryMin: salaryMin ? parseFloat(salaryMin) : null,
+                salaryMax: salaryMax ? parseFloat(salaryMax) : null,
+                salaryType: salaryType || null,
             },
         });
 

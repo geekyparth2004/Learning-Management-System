@@ -16,6 +16,9 @@ export default function PostOpportunityForm() {
         location: "",
         description: "",
         driveDate: "",
+        salaryMin: "",
+        salaryMax: "",
+        salaryType: "MONTHLY",
     });
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState("");
@@ -38,6 +41,7 @@ export default function PostOpportunityForm() {
                 setForm({
                     role: "", company: "", type: "ON_CAMPUS", minCgpa: "",
                     batchYear: "2024", batchYearTo: "2024", registrationLink: "", skillsRequired: "", location: "", description: "", driveDate: "",
+                    salaryMin: "", salaryMax: "", salaryType: "MONTHLY",
                 });
                 if (!isDraft) {
                     setTimeout(() => window.location.reload(), 1000);
@@ -146,14 +150,77 @@ export default function PostOpportunityForm() {
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-600">Skills Required (Comma separated)</label>
-                    <input
-                        type="text"
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Skills / Tech Stack (Optional)</label>
+                    <textarea
+                        rows={3}
                         value={form.skillsRequired}
                         onChange={(e) => setForm({ ...form, skillsRequired: e.target.value })}
-                        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
-                        placeholder="React, Python, SQL"
+                        className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                        placeholder="e.g. React, Python, SQL, Node.js — list all relevant technologies"
                     />
+                </div>
+
+                <div>
+                    <label className="mb-1 block text-xs font-medium text-gray-600">Job Description / Responsibilities (Optional)</label>
+                    <textarea
+                        rows={5}
+                        value={form.description}
+                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                        placeholder={`• Develop and maintain scalable backend services\n• Collaborate with cross-functional teams\n• Write clean, testable code...`}
+                    />
+                </div>
+
+                <div>
+                    <div className="mb-1 flex items-center justify-between">
+                        <label className="text-xs font-medium text-gray-600">Salary (Optional)</label>
+                        <div className="flex rounded-md border border-gray-200 overflow-hidden text-xs">
+                            <button
+                                type="button"
+                                onClick={() => setForm({ ...form, salaryType: "MONTHLY" })}
+                                className={`px-3 py-1 font-medium transition-colors ${
+                                    form.salaryType === "MONTHLY"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                }`}
+                            >
+                                Monthly
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setForm({ ...form, salaryType: "YEARLY" })}
+                                className={`px-3 py-1 font-medium transition-colors ${
+                                    form.salaryType === "YEARLY"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                                }`}
+                            >
+                                Yearly
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">₹</span>
+                            <input
+                                type="number"
+                                value={form.salaryMin}
+                                onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-7 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                                placeholder={`Min (${form.salaryType === "MONTHLY" ? "/mo" : "/yr"})`}
+                            />
+                        </div>
+                        <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">₹</span>
+                            <input
+                                type="number"
+                                value={form.salaryMax}
+                                onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
+                                className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-7 pr-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                                placeholder={`Max (${form.salaryType === "MONTHLY" ? "/mo" : "/yr"})`}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <div>
