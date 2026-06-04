@@ -173,7 +173,10 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
 
     const handleRegister = async (driveId: string, registrationLink?: string) => {
         if (registrationLink) {
-            window.open(registrationLink, "_blank");
+            // If the link is an email address, open it with mailto:
+            const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registrationLink.trim());
+            const href = isEmail ? `mailto:${registrationLink.trim()}` : registrationLink;
+            window.open(href, "_blank");
             return;
         }
 
