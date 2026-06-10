@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function POST(request: Request) {
     try {
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
                 trialExpiresAt: null
             }
         });
+
+        // Invalidate subscription cache
+        await cacheDelete(CACHE_KEYS.userSubscription(user.id));
 
         return NextResponse.json({ success: true, message: "Payment successful. Account upgraded." });
     } catch (error) {

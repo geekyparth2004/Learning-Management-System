@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function POST(req: Request) {
     try {
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
                 trialExpiresAt: null // wipe trial info if they successfully bought lifetime access
             }
         });
+
+        // Invalidate subscription cache
+        await cacheDelete(CACHE_KEYS.userSubscription(session.user.id));
 
         return NextResponse.json({ success: true, message: "Payment verified and upgraded." });
     } catch (error) {

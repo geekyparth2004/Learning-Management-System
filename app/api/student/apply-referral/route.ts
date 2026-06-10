@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function POST(request: Request) {
     try {
@@ -40,6 +41,8 @@ export async function POST(request: Request) {
                     trialExpiresAt: null
                 }
             });
+            // Invalidate subscription cache
+            await cacheDelete(CACHE_KEYS.userSubscription(user.id));
             return NextResponse.json({ success: true, message: "Full access activated." });
         }
 
@@ -72,6 +75,9 @@ export async function POST(request: Request) {
                 where: { id: referralCodeRecord.id }
             })
         ]);
+
+        // Invalidate subscription cache
+        await cacheDelete(CACHE_KEYS.userSubscription(user.id));
 
         return NextResponse.json({ success: true, message: "Trial activated for 1 day: 24hrs." });
     } catch (error) {

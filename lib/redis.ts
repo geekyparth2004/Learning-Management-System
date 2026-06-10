@@ -152,6 +152,7 @@ export const CACHE_KEYS = {
     problem: (id: string) => `problem:${id}`,
     userStreak: (userId: string) => `user:${userId}:streak`,
     studentDashboard: (userId: string) => `user:${userId}:dashboard`,
+    userSubscription: (userId: string) => `user:${userId}:subscription`,
     leaderboard: (type = "*", period = "*") => `leaderboard:${type}:${period}`,
 } as const;
 
