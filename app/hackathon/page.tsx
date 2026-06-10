@@ -75,11 +75,32 @@ export default async function HackathonPage() {
                 )}
 
                 {/* Upcoming Hackathons */}
-                {/* ... existing upcoming ... */}
+                {upcomingContests.length > 0 && (
+                    <section>
+                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-blue-400">
+                            <Calendar className="h-5 w-5" />
+                            Upcoming Events
+                        </h2>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {upcomingContests.map(contest => (
+                                <ContestCard
+                                    key={contest.id}
+                                    contest={contest}
+                                    status="UPCOMING"
+                                    registration={registrationMap.get(contest.id)}
+                                    isCompleted={isCompleted(contest.id)}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* Past Hackathons */}
                 <section>
-                    {/* ... header ... */}
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-400">
+                        <Clock className="h-5 w-5" />
+                        Past Events
+                    </h2>
                     {pastContests.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {pastContests.map(contest => (
@@ -96,7 +117,6 @@ export default async function HackathonPage() {
                         <p className="text-gray-500 italic">No past events found.</p>
                     )}
                 </section>
-                {/* ... rest of file */}
             </div>
         </div>
         </StudentShell>
