@@ -30,6 +30,7 @@ export async function GET(req: Request) {
             hackathonsParticipated,
             solvedProblems,
             user,
+            allAssignmentSubmissions,
         ] = await Promise.all([
             db.moduleItemProgress.findMany({
                 where: {
@@ -80,25 +81,11 @@ export async function GET(req: Request) {
                     externalRatings: true
                 }
             }),
-        ]);
-
-        const assignmentIdsNeedingDuration = [
-            ...new Set(completedItems
-                .filter(progress =>
-                    (progress.moduleItem.duration || 0) === 0 &&
-                    progress.moduleItem.type === "ASSIGNMENT" &&
-                    progress.moduleItem.assignmentId
-                )
-                .map(progress => progress.moduleItem.assignmentId!)
-            )
-        ];
-
-        const assignmentDurations = assignmentIdsNeedingDuration.length
-            ? await db.submission.findMany({
+            db.submission.findMany({
                 where: {
                     userId,
                     problem: {
-                        assignmentId: { in: assignmentIdsNeedingDuration }
+                        assignmentId: { not: null }
                     }
                 },
                 select: {
@@ -108,11 +95,11 @@ export async function GET(req: Request) {
                     }
                 },
                 orderBy: { duration: "desc" }
-            })
-            : [];
+            }),
+        ]);
 
         const durationByAssignmentId = new Map<string, number>();
-        for (const submission of assignmentDurations) {
+        for (const submission of allAssignmentSubmissions) {
             const assignmentId = submission.problem.assignmentId;
             if (assignmentId && !durationByAssignmentId.has(assignmentId)) {
                 durationByAssignmentId.set(assignmentId, submission.duration);

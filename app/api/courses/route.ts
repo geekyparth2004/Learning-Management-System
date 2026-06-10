@@ -41,7 +41,11 @@ export async function GET(req: Request) {
         // Try cache first
         const cached = await cacheGet(cacheKey);
         if (cached) {
-            return NextResponse.json(cached);
+            return NextResponse.json(cached, {
+                headers: {
+                    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120"
+                }
+            });
         }
 
         const courses = await db.course.findMany({
@@ -59,7 +63,11 @@ export async function GET(req: Request) {
         // Cache for 5 minutes
         await cacheSet(cacheKey, courses, CACHE_TTL.MEDIUM);
 
-        return NextResponse.json(courses);
+        return NextResponse.json(courses, {
+            headers: {
+                "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120"
+            }
+        });
     } catch (error) {
         console.error("Error fetching courses:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

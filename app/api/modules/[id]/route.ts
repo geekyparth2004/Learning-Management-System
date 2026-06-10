@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { deleteFromR2 } from "@/lib/s3";
 import { cleanupItemResources } from "@/lib/resource-cleanup";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 
 export async function DELETE(
@@ -38,14 +39,16 @@ export async function DELETE(
         });
 
         if (moduleToDelete) {
+            const courseId = moduleToDelete.courseId;
             for (const item of moduleToDelete.items) {
                 await cleanupItemResources(item);
             }
+            await db.module.delete({
+                where: { id },
+            });
+            // Invalidate course cache
+            await cacheDelete(CACHE_KEYS.course(courseId));
         }
-
-        await db.module.delete({
-            where: { id },
-        });
 
         return NextResponse.json({ message: "Module deleted" });
     } catch (error) {

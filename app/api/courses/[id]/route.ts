@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { deleteFromR2 } from "@/lib/s3";
 import { cleanupItemResources } from "@/lib/resource-cleanup";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function DELETE(
     req: Request,
@@ -59,6 +60,10 @@ export async function DELETE(
         await db.course.delete({
             where: { id },
         });
+
+        // Invalidate course structure cache and global courses list cache
+        await cacheDelete(CACHE_KEYS.course(id));
+        await cacheDelete(CACHE_KEYS.courses());
 
         return NextResponse.json({ message: "Course deleted successfully" });
     } catch (error) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function PUT(
     req: Request,
@@ -28,6 +29,9 @@ export async function PUT(
         );
 
         await db.$transaction(transaction);
+
+        // Invalidate course cache
+        await cacheDelete(CACHE_KEYS.course(courseId));
 
         return NextResponse.json({ success: true });
     } catch (error) {

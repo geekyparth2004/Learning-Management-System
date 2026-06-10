@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { signR2Url } from "@/lib/s3";
+import { cacheGetOrSet, CACHE_TTL, CACHE_KEYS } from "@/lib/redis";
 
 export async function GET(
     req: Request,
@@ -12,28 +13,30 @@ export async function GET(
         const { id } = await params;
         const userId = session?.user?.id;
 
-        // Parallelize all queries for maximum performance
-        const [course, enrollment, moduleProgress, itemProgress] = await Promise.all([
-            // Fetch course with lightweight structure (no deep nesting)
-            db.course.findUnique({
-                where: { id },
-                include: {
-                    modules: {
-                        orderBy: { order: "asc" },
-                        include: {
-                            items: {
-                                orderBy: { order: "asc" },
-                                include: {
-                                    // Removed: testProblems with testCases (loaded on-demand)
-                                    assignment: {
-                                        select: {
-                                            id: true,
-                                            // Only include problem count and basic info, not full problem data
-                                            problems: {
-                                                select: {
-                                                    leetcodeUrl: true,
-                                                    slug: true,
-                                                    videoSolution: true
+        // Fetch course structure with lightweight layout (cached)
+        const course = await cacheGetOrSet(
+            CACHE_KEYS.course(id),
+            async () => {
+                return db.course.findUnique({
+                    where: { id },
+                    include: {
+                        modules: {
+                            orderBy: { order: "asc" },
+                            include: {
+                                items: {
+                                    orderBy: { order: "asc" },
+                                    include: {
+                                        // Removed: testProblems with testCases (loaded on-demand)
+                                        assignment: {
+                                            select: {
+                                                id: true,
+                                                // Only include problem count and basic info, not full problem data
+                                                problems: {
+                                                    select: {
+                                                        leetcodeUrl: true,
+                                                        slug: true,
+                                                        videoSolution: true
+                                                    }
                                                 }
                                             }
                                         }
@@ -42,8 +45,17 @@ export async function GET(
                             }
                         }
                     }
-                }
-            }),
+                });
+            },
+            CACHE_TTL.MEDIUM
+        );
+
+        if (!course) {
+            return NextResponse.json({ error: "Course not found" }, { status: 404 });
+        }
+
+        // Fetch user progress and enrollment details in parallel
+        const [enrollment, moduleProgress, itemProgress] = await Promise.all([
             // Fetch enrollment if user is logged in
             userId ? db.enrollment.findUnique({
                 where: {
@@ -62,10 +74,6 @@ export async function GET(
                 where: { userId, moduleItem: { module: { courseId: id } } },
             }) : Promise.resolve([])
         ]);
-
-        if (!course) {
-            return NextResponse.json({ error: "Course not found" }, { status: 404 });
-        }
 
         const isEnrolled = !!enrollment;
 

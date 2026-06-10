@@ -4,18 +4,25 @@ import { BookOpen, User } from "lucide-react";
 import { db } from "@/lib/db";
 import ServicesGrid from "@/components/ServicesGrid";
 import StudentShell from "@/components/layout/StudentShell";
+import { cacheGetOrSet, CACHE_KEYS, CACHE_TTL } from "@/lib/redis";
 
-// Revalidate every hour
-export const revalidate = 0;
+// Revalidate page cache every minute
+export const revalidate = 60;
 
 export default async function CoursesPage() {
-    const courses = await db.course.findMany({
-        include: {
-            teacher: { select: { name: true } },
-            _count: { select: { modules: true, enrollments: true } }
+    const courses = await cacheGetOrSet(
+        CACHE_KEYS.courses(),
+        async () => {
+            return db.course.findMany({
+                include: {
+                    teacher: { select: { name: true } },
+                    _count: { select: { modules: true, enrollments: true } }
+                },
+                orderBy: { createdAt: "desc" }
+            });
         },
-        orderBy: { createdAt: "desc" }
-    });
+        CACHE_TTL.MEDIUM
+    ) || [];
 
     return (
         <StudentShell>

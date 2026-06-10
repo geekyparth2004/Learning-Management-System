@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { deleteFromR2 } from "@/lib/s3";
 import { cleanupItemResources } from "@/lib/resource-cleanup";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 
 export async function DELETE(
@@ -48,6 +49,8 @@ export async function DELETE(
             return NextResponse.json({ error: "Forbidden: You do not own this course" }, { status: 403 });
         }
 
+        const courseId = item.module.courseId;
+
         // Perform Resource Cleanup (Videos, Images, etc.)
         await cleanupItemResources(item);
 
@@ -55,6 +58,9 @@ export async function DELETE(
         await db.moduleItem.delete({
             where: { id },
         });
+
+        // Invalidate course cache
+        await cacheDelete(CACHE_KEYS.course(courseId));
 
         return NextResponse.json({ message: "Item deleted" });
     } catch (error) {

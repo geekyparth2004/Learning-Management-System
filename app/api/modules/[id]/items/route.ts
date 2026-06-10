@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function POST(
     req: Request,
@@ -138,9 +139,18 @@ export async function POST(
             }
         }
 
+        const moduleObj = await db.module.findUnique({
+            where: { id },
+            select: { courseId: true }
+        });
+
         const item = await db.moduleItem.create({
             data: itemData,
         });
+
+        if (moduleObj) {
+            await cacheDelete(CACHE_KEYS.course(moduleObj.courseId));
+        }
 
         return NextResponse.json(item);
     } catch (error) {

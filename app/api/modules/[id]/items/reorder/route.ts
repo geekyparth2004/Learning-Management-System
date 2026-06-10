@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { cacheDelete, CACHE_KEYS } from "@/lib/redis";
 
 export async function PUT(
     req: Request,
@@ -19,6 +20,12 @@ export async function PUT(
             return NextResponse.json({ error: "Invalid data" }, { status: 400 });
         }
 
+        // Fetch module's course ID to invalidate the correct cache
+        const moduleObj = await db.module.findUnique({
+            where: { id: moduleId },
+            select: { courseId: true }
+        });
+
         // Update order in transaction
         const transaction = list.map((item: { id: string; order: number }) =>
             db.moduleItem.update({
@@ -28,6 +35,10 @@ export async function PUT(
         );
 
         await db.$transaction(transaction);
+
+        if (moduleObj) {
+            await cacheDelete(CACHE_KEYS.course(moduleObj.courseId));
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {
