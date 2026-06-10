@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/auth";
+import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from "@/lib/redis";
 
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get("type") || "internal";
         const period = searchParams.get("period") || "lifetime";
+        const cacheKey = CACHE_KEYS.leaderboard(type, period);
+        const cached = await cacheGet(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached, {
+                headers: {
+                    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+                    "X-Cache": "HIT",
+                },
+            });
+        }
 
         if (type === "internal") {
             // Internal Problem Solving Leaderboard
@@ -134,7 +144,14 @@ export async function GET(req: Request) {
                 };
             }).sort((a, b) => b.score - a.score).slice(0, 50);
 
-            return NextResponse.json(leaderboard);
+            await cacheSet(cacheKey, leaderboard, CACHE_TTL.SHORT);
+
+            return NextResponse.json(leaderboard, {
+                headers: {
+                    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+                    "X-Cache": "MISS",
+                },
+            });
 
         } else {
             // External Leaderboard (Codolio Data)
@@ -179,7 +196,14 @@ export async function GET(req: Request) {
                 .sort((a, b) => b.score - a.score)
                 .slice(0, 50);
 
-            return NextResponse.json(leaderboard);
+            await cacheSet(cacheKey, leaderboard, CACHE_TTL.SHORT);
+
+            return NextResponse.json(leaderboard, {
+                headers: {
+                    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+                    "X-Cache": "MISS",
+                },
+            });
         }
 
     } catch (error) {

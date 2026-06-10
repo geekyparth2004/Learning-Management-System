@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { fetchCodolioStats } from "@/lib/codolio";
-import { CACHE_KEYS, cacheDelete } from "@/lib/redis";
+import { CACHE_KEYS, cacheDelete, cacheDeletePattern } from "@/lib/redis";
 
 export async function POST(req: Request) {
     try {
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
             data: updateData
         });
         await cacheDelete(CACHE_KEYS.studentDashboard(user.id));
+        await cacheDeletePattern(CACHE_KEYS.leaderboard());
 
         return NextResponse.json({ success: true, stats });
 

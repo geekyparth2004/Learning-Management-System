@@ -152,7 +152,7 @@ export const CACHE_KEYS = {
     problem: (id: string) => `problem:${id}`,
     userStreak: (userId: string) => `user:${userId}:streak`,
     studentDashboard: (userId: string) => `user:${userId}:dashboard`,
-    leaderboard: () => "leaderboard",
+    leaderboard: (type = "*", period = "*") => `leaderboard:${type}:${period}`,
 } as const;
 
 function memoryCacheGet<T>(key: string): T | null {

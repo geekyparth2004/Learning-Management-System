@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from "@/lib/redis";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,24 +13,111 @@ export async function GET(req: Request) {
         }
         const userId = session.user.id;
         const now = new Date();
-        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const cacheKey = CACHE_KEYS.studentDashboard(userId);
+        const cached = await cacheGet(cacheKey);
+        if (cached) {
+            return NextResponse.json(cached, {
+                headers: {
+                    "Cache-Control": "private, max-age=30",
+                    "X-Cache": "HIT",
+                },
+            });
+        }
 
-        // 1. Hours Learned: Sum of duration of completed ModuleItems
-        const completedItems = await db.moduleItemProgress.findMany({
-            where: {
-                userId,
-                isCompleted: true
-            },
-            include: {
-                moduleItem: {
-                    select: {
-                        duration: true,
-                        type: true,
-                        assignmentId: true
+        const [
+            completedItems,
+            contestsEntered,
+            hackathonsParticipated,
+            solvedProblems,
+            user,
+        ] = await Promise.all([
+            db.moduleItemProgress.findMany({
+                where: {
+                    userId,
+                    isCompleted: true
+                },
+                include: {
+                    moduleItem: {
+                        select: {
+                            duration: true,
+                            type: true,
+                            assignmentId: true
+                        }
                     }
                 }
+            }),
+            db.contestRegistration.count({
+                where: { userId }
+            }),
+            db.contestRegistration.count({
+                where: {
+                    userId,
+                    contest: {
+                        type: "HACKATHON"
+                    }
+                }
+            }),
+            db.submission.findMany({
+                where: {
+                    userId,
+                    status: "PASSED"
+                },
+                select: {
+                    createdAt: true,
+                    problemId: true,
+                    problem: {
+                        select: {
+                            type: true,
+                            leetcodeUrl: true
+                        }
+                    }
+                }
+            }),
+            db.user.findUnique({
+                where: { id: userId },
+                select: {
+                    codolioBaseline: true,
+                    externalRatings: true
+                }
+            }),
+        ]);
+
+        const assignmentIdsNeedingDuration = [
+            ...new Set(completedItems
+                .filter(progress =>
+                    (progress.moduleItem.duration || 0) === 0 &&
+                    progress.moduleItem.type === "ASSIGNMENT" &&
+                    progress.moduleItem.assignmentId
+                )
+                .map(progress => progress.moduleItem.assignmentId!)
+            )
+        ];
+
+        const assignmentDurations = assignmentIdsNeedingDuration.length
+            ? await db.submission.findMany({
+                where: {
+                    userId,
+                    problem: {
+                        assignmentId: { in: assignmentIdsNeedingDuration }
+                    }
+                },
+                select: {
+                    duration: true,
+                    problem: {
+                        select: { assignmentId: true }
+                    }
+                },
+                orderBy: { duration: "desc" }
+            })
+            : [];
+
+        const durationByAssignmentId = new Map<string, number>();
+        for (const submission of assignmentDurations) {
+            const assignmentId = submission.problem.assignmentId;
+            if (assignmentId && !durationByAssignmentId.has(assignmentId)) {
+                durationByAssignmentId.set(assignmentId, submission.duration);
             }
-        });
+        }
 
         // Calculate hours (duration is in seconds hopefully, or minutes. Let's assume minutes based on typical LMS, but I commented seconds in schema. Let's treat as minutes for fail safety or seconds? Schema said "seconds/minutes". I'll assume MINUTES for now as it makes more sense for "12 hrs" type outputs without massive numbers. Actually standard is usually seconds. Let's stick to seconds.)
         // User request "12 hrs". If I store 12*3600 = 43200.
@@ -44,66 +132,14 @@ export async function GET(req: Request) {
         for (const progress of completedItems) {
             let itemDuration = progress.moduleItem.duration || 0;
 
-            // If item duration is 0 (Teacher didn't set it), check if there's a submission with duration
             if (itemDuration === 0 && progress.moduleItem.type === "ASSIGNMENT" && progress.moduleItem.assignmentId) {
-                // Fetch submission duration for this assignment
-                // We need to fetch it separately or include it in the query above.
-                // For efficiency, let's include it in the initial query or fetch separately.
-                // Given the loop, let's look for a matching submission in our `solvedProblems` list if it helps, 
-                // but solvedProblems is only for internal problems. 
-                // Let's do a lightweight check for the assignment submission.
-
-                const submission = await db.submission.findFirst({
-                    where: {
-                        userId,
-                        problem: { assignmentId: progress.moduleItem.assignmentId }
-                    },
-                    select: { duration: true },
-                    orderBy: { duration: 'desc' } // Take max duration? or sum? Usually max single sit.
-                });
-
-                if (submission) {
-                    itemDuration = submission.duration;
-                }
+                itemDuration = durationByAssignmentId.get(progress.moduleItem.assignmentId) || 0;
             }
 
             totalSeconds += itemDuration;
         }
 
         const hoursLearned = Math.round((totalSeconds / 3600) * 10) / 10; // 1 decimal place
-
-        // 2. Contests Entered
-        const contestsEntered = await db.contestRegistration.count({
-            where: { userId }
-        });
-
-        // 3. Hackathons Participated
-        const hackathonsParticipated = await db.contestRegistration.count({
-            where: {
-                userId,
-                contest: {
-                    type: "HACKATHON" // Assuming 'type' field exists or similar discrimination
-                }
-            }
-        });
-
-        // 4. Problems Solved (Internal)
-        const solvedProblems = await db.submission.findMany({
-            where: {
-                userId,
-                status: "PASSED"
-            },
-            select: {
-                createdAt: true,
-                problemId: true,
-                problem: {
-                    select: {
-                        type: true,
-                        leetcodeUrl: true
-                    }
-                }
-            }
-        });
 
         // Filter out external problems to avoid double counting with Codolio/External stats
         const relevantSolved = solvedProblems.filter(s =>
@@ -117,15 +153,6 @@ export async function GET(req: Request) {
         // The user mentioned "includes all problem internally and leetcode one". 
         // We don't have leetcode live data. We probably need a field on User for `leetcodeSolvedCount` or scrape it. 
         // For now I'll just use internal.
-
-        // 5. Fetch User for External Stats (to match Leaderboard logic)
-        let user = await db.user.findUnique({
-            where: { id: userId },
-            select: {
-                codolioBaseline: true,
-                externalRatings: true
-            }
-        });
 
         let externalDiff = 0;
         if (user && user.externalRatings && user.codolioBaseline !== null) {
@@ -172,13 +199,22 @@ export async function GET(req: Request) {
             problemsData.push({ day: label, value: solvedToday });
         }
 
-        return NextResponse.json({
+        const data = {
             hoursLearned,
             contestsEntered,
             hackathonsParticipated,
             problemsSolved: uniqueSolved + externalDiff,
             activityGraph: activityData,
             problemsGraph: problemsData
+        };
+
+        await cacheSet(cacheKey, data, CACHE_TTL.SHORT);
+
+        return NextResponse.json(data, {
+            headers: {
+                "Cache-Control": "private, max-age=30",
+                "X-Cache": "MISS",
+            },
         });
 
     } catch (error) {

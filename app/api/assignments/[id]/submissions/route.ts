@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { CACHE_KEYS, cacheDelete } from "@/lib/redis";
+import { CACHE_KEYS, cacheDelete, cacheDeletePattern } from "@/lib/redis";
 
 export async function GET(
     request: Request,
@@ -348,6 +348,7 @@ export async function POST(
             })();
         }
         await cacheDelete(CACHE_KEYS.studentDashboard(session.user.id));
+        await cacheDeletePattern(CACHE_KEYS.leaderboard());
 
         return NextResponse.json({
             success: true,
