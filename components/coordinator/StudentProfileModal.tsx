@@ -60,8 +60,6 @@ interface StudentDetail {
     };
     externalPlatforms: {
         leetcode?: string;
-        codeforces?: string;
-        gfg?: string;
         codolio?: string;
         externalRatings?: Record<string, unknown>;
     };
@@ -320,18 +318,12 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                                     </div>
 
                                     {/* External Platforms */}
-                                    {(student.externalPlatforms.leetcode || student.externalPlatforms.codeforces || student.externalPlatforms.gfg || student.externalPlatforms.codolio) && (
+                                    {(student.externalPlatforms.leetcode || student.externalPlatforms.codolio) && (
                                         <div className="rounded-xl border border-gray-200 p-4">
                                             <h3 className="mb-3 text-sm font-bold text-gray-900">External Platforms</h3>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {student.externalPlatforms.leetcode && (
                                                     <PlatformTag name="LeetCode" username={student.externalPlatforms.leetcode} color="bg-yellow-50 text-yellow-700" />
-                                                )}
-                                                {student.externalPlatforms.codeforces && (
-                                                    <PlatformTag name="Codeforces" username={student.externalPlatforms.codeforces} color="bg-blue-50 text-blue-700" />
-                                                )}
-                                                {student.externalPlatforms.gfg && (
-                                                    <PlatformTag name="GFG" username={student.externalPlatforms.gfg} color="bg-green-50 text-green-700" />
                                                 )}
                                                 {student.externalPlatforms.codolio && (
                                                     <PlatformTag name="Codolio" username={student.externalPlatforms.codolio} color="bg-purple-50 text-purple-700" />

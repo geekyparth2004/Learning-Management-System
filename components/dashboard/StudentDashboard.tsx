@@ -26,8 +26,6 @@ type ActivityItem = {
 
 type DashboardUser = {
     leetcodeUsername?: string | null;
-    codeforcesUsername?: string | null;
-    gfgUsername?: string | null;
     codolioBaseline?: number | null;
     codolioUsername?: string | null;
     externalRatings?: unknown;
@@ -131,8 +129,6 @@ async function buildStudentDashboardData(userId: string): Promise<StudentDashboa
             where: { id: userId },
             select: {
                 leetcodeUsername: true,
-                codeforcesUsername: true,
-                gfgUsername: true,
                 codolioBaseline: true,
                 codolioUsername: true,
                 externalRatings: true,

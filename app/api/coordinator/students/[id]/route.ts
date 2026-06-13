@@ -35,8 +35,6 @@ export async function GET(
                 role: true,
                 organizationId: true,
                 leetcodeUsername: true,
-                codeforcesUsername: true,
-                gfgUsername: true,
                 codolioUsername: true,
                 externalRatings: true,
                 codolioBaseline: true,
@@ -267,8 +265,6 @@ export async function GET(
                 },
                 externalPlatforms: {
                     leetcode: student.leetcodeUsername,
-                    codeforces: student.codeforcesUsername,
-                    gfg: student.gfgUsername,
                     codolio: student.codolioUsername,
                     externalRatings: student.externalRatings,
                 },
