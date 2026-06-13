@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Trophy, RefreshCw, Loader2, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 type LeaderboardEntry = {
     id: string;
@@ -16,6 +17,7 @@ type LeaderboardEntry = {
 
 export function LeaderboardModal() {
     const { data: session } = useSession();
+    const router = useRouter();
     const [open, setOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"internal" | "external">("internal");
     const [period, setPeriod] = useState<"weekly" | "monthly" | "lifetime">("lifetime");
@@ -24,6 +26,21 @@ export function LeaderboardModal() {
     const [loading, setLoading] = useState(false);
 
     const [refreshing, setRefreshing] = useState(false);
+    const [currentUserPlatforms, setCurrentUserPlatforms] = useState<{ leetcodeUsername?: string | null; codolioUsername?: string | null } | null>(null);
+    const [codolioInput, setCodolioInput] = useState("");
+    const [linking, setLinking] = useState(false);
+
+    const fetchUserPlatforms = async () => {
+        try {
+            const res = await fetch("/api/user/platforms");
+            if (res.ok) {
+                const json = await res.json();
+                setCurrentUserPlatforms(json);
+            }
+        } catch (error) {
+            console.error("Failed to fetch user platforms", error);
+        }
+    };
 
     const fetchLeaderboard = async () => {
         setLoading(true);
@@ -46,6 +63,47 @@ export function LeaderboardModal() {
         }
     }, [open, activeTab, period]);
 
+    useEffect(() => {
+        if (open) {
+            fetchUserPlatforms();
+        }
+    }, [open]);
+
+    const handleLinkCodolio = async () => {
+        if (!codolioInput.trim()) return;
+        setLinking(true);
+        try {
+            const res = await fetch("/api/user/platforms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    codolioUsername: codolioInput.trim()
+                })
+            });
+
+            if (res.ok) {
+                // Fetch stats update by calling leaderboard refresh
+                await fetch("/api/leaderboard/refresh", { method: "POST" });
+                
+                // Fetch the updated platforms
+                await fetchUserPlatforms();
+                
+                // Re-fetch leaderboard data
+                await fetchLeaderboard();
+                
+                router.refresh();
+                setCodolioInput("");
+            } else {
+                alert("Failed to link Codolio account.");
+            }
+        } catch (error) {
+            console.error("Error linking Codolio account:", error);
+            alert("Error linking Codolio account.");
+        } finally {
+            setLinking(false);
+        }
+    };
+
     const handleRefresh = async () => {
         if (!session) return;
         setRefreshing(true);
@@ -57,7 +115,7 @@ export function LeaderboardModal() {
             } else {
                 const json = await res.json();
                 if (json.error === "Codolio username not linked") {
-                    alert("Please link your Codolio username in Profile settings first.");
+                    alert("Please link your Codolio username.");
                 } else {
                     alert(json.error || "Failed to update stats");
                 }
@@ -150,7 +208,42 @@ export function LeaderboardModal() {
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 min-h-[300px]">
-                    {loading ? (
+                    {activeTab === "external" && currentUserPlatforms && !currentUserPlatforms.codolioUsername ? (
+                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center max-w-md mx-auto space-y-6">
+                            <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                                <Trophy className="w-8 h-8 animate-pulse" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Join the Contest Leaderboard</h3>
+                                <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+                                    Connect your Codolio account to track your contest performance and compete with other students on the leaderboard.
+                                </p>
+                            </div>
+                            <div className="w-full space-y-3">
+                                <input
+                                    type="text"
+                                    placeholder="Enter your Codolio Username"
+                                    value={codolioInput}
+                                    onChange={(e) => setCodolioInput(e.target.value)}
+                                    className="w-full rounded-lg bg-zinc-900/50 border border-zinc-800 p-3 text-sm text-white placeholder-zinc-600 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                                />
+                                <button
+                                    onClick={handleLinkCodolio}
+                                    disabled={linking || !codolioInput.trim()}
+                                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-sm font-medium text-white transition-all disabled:opacity-50"
+                                >
+                                    {linking ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Connecting Account...
+                                        </>
+                                    ) : (
+                                        "Link Codolio Account"
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    ) : loading ? (
                         <div className="flex items-center justify-center h-full">
                             <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
                         </div>
@@ -223,7 +316,7 @@ export function LeaderboardModal() {
                 </div>
 
                 {/* Footer (Sync Button) */}
-                {activeTab === "external" && (
+                {activeTab === "external" && !(currentUserPlatforms && !currentUserPlatforms.codolioUsername) && (
                     <div className="p-4 border-t border-zinc-800 bg-zinc-900/30 flex items-center justify-between text-sm shrink-0">
                         <span className="text-zinc-500 hidden sm:inline">
                             Connect your Codolio account to appear here.

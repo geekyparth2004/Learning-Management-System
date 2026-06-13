@@ -22,23 +22,11 @@ interface ExternalStats {
             topPercentage: number;
         } | null;
     } | null;
-    codeforces: {
-        rating: number;
-        maxRating: number;
-        rank: string;
-        maxRank: string;
-    } | null;
-    gfg: {
-        totalSolved: number;
-        codingScore: number;
-    } | null;
 }
 
 interface ExternalStatsCardProps {
     user: {
         leetcodeUsername?: string | null;
-        codeforcesUsername?: string | null;
-        gfgUsername?: string | null;
         externalRatings?: unknown;
     } | null;
 }
@@ -95,14 +83,14 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
     }, [user, router]);
 
     useEffect(() => {
-        if (user && (user.leetcodeUsername || user.codeforcesUsername || user.gfgUsername)) {
+        if (user && user.leetcodeUsername) {
             fetchData();
         } else {
             setLoading(false);
         }
     }, [user]);
 
-    const hasProfiles = user && (user.leetcodeUsername || user.codeforcesUsername || user.gfgUsername);
+    const hasProfiles = user && user.leetcodeUsername;
 
     return (
         <>
@@ -209,63 +197,6 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
                             </div>
                         )}
 
-                        {/* Codeforces */}
-                        {user?.codeforcesUsername && (
-                            <div className="rounded-lg border border-[#2e2e2e] bg-[#141414] p-4 transition hover:border-blue-500/30">
-                                <div className="mb-3 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <img src="https://cdn.iconscout.com/icon/free/png-256/free-code-forces-3628695-3029920.png" alt="CF" className="h-5 w-5 rounded object-contain bg-white p-[1px]" />
-                                        <span className="font-medium text-gray-200">Codeforces</span>
-                                    </div>
-                                    <a href={`https://codeforces.com/profile/${user.codeforcesUsername}`} target="_blank" className="text-gray-500 hover:text-white">
-                                        <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                </div>
-                                {stats?.codeforces ? (
-                                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-blue-400 font-bold">{stats.codeforces.rating}</div>
-                                            <div className="text-gray-500">Rating</div>
-                                        </div>
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-white font-bold capitalize">{stats.codeforces.rank}</div>
-                                            <div className="text-gray-500">Rank</div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-xs text-red-400">Failed to load stats</div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* GeeksforGeeks */}
-                        {user?.gfgUsername && (
-                            <div className="rounded-lg border border-[#2e2e2e] bg-[#141414] p-4 transition hover:border-green-500/30">
-                                <div className="mb-3 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/43/GeeksforGeeks.svg" alt="GFG" className="h-5 w-5" />
-                                        <span className="font-medium text-gray-200">GeeksforGeeks</span>
-                                    </div>
-                                    <a href={`https://auth.geeksforgeeks.org/user/${user.gfgUsername}`} target="_blank" className="text-gray-500 hover:text-white">
-                                        <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                </div>
-                                {stats?.gfg ? (
-                                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-green-400 font-bold">{stats.gfg.totalSolved}</div>
-                                            <div className="text-gray-500">Problems</div>
-                                        </div>
-                                        <div className="rounded bg-[#1e1e1e] p-2">
-                                            <div className="text-white font-bold">{stats.gfg.codingScore}</div>
-                                            <div className="text-gray-500">Score</div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-xs text-red-400">Failed to load stats</div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 )}
             </div >
@@ -274,9 +205,7 @@ export default function ExternalStatsCard({ user }: ExternalStatsCardProps) {
                 isOpen={isEditOpen}
                 onClose={() => setIsEditOpen(false)}
                 initialData={{
-                    leetcode: user?.leetcodeUsername,
-                    codeforces: user?.codeforcesUsername,
-                    gfg: user?.gfgUsername
+                    leetcode: user?.leetcodeUsername
                 }}
                 onUpdate={fetchData}
             />

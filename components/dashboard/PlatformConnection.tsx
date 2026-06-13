@@ -10,16 +10,12 @@ interface PlatformConnectionProps {
     onClose: () => void;
     initialData: {
         leetcode?: string | null;
-        codeforces?: string | null;
-        gfg?: string | null;
     };
     onUpdate: () => void;
 }
 
 export default function PlatformConnection({ isOpen, onClose, initialData, onUpdate }: PlatformConnectionProps) {
     const [leetcode, setLeetcode] = useState(initialData.leetcode || "");
-    const [codeforces, setCodeforces] = useState(initialData.codeforces || "");
-    const [gfg, setGfg] = useState(initialData.gfg || "");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -32,9 +28,7 @@ export default function PlatformConnection({ isOpen, onClose, initialData, onUpd
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    leetcodeUsername: leetcode,
-                    codeforcesUsername: codeforces,
-                    gfgUsername: gfg
+                    leetcodeUsername: leetcode
                 })
             });
 
@@ -79,27 +73,7 @@ export default function PlatformConnection({ isOpen, onClose, initialData, onUpd
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="block text-xs font-medium uppercase text-gray-500">Codeforces Handle</label>
-                        <input
-                            type="text"
-                            value={codeforces}
-                            onChange={(e) => setCodeforces(e.target.value)}
-                            placeholder="e.g. tourist"
-                            className="w-full rounded bg-[#1e1e1e] p-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                    </div>
 
-                    <div className="space-y-2">
-                        <label className="block text-xs font-medium uppercase text-gray-500">GeeksforGeeks Username</label>
-                        <input
-                            type="text"
-                            value={gfg}
-                            onChange={(e) => setGfg(e.target.value)}
-                            placeholder="e.g. johndoe"
-                            className="w-full rounded bg-[#1e1e1e] p-2 text-sm text-white placeholder-gray-600 outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                    </div>
                 </div>
 
                 <div className="border-t border-[#2e2e2e] p-4">
