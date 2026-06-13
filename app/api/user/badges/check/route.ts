@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { BADGE_DEFINITIONS, BadgeType } from "@/lib/badges";
+import { BADGE_DEFINITIONS, BadgeType } from "@/lib/badge-definitions";
 
 /**
  * Check and award all pending badges for a user on login.

@@ -1,7 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getUserBadges, PROBLEM_BADGE_DEFINITIONS, STREAK_BADGE_DEFINITIONS, COURSE_BADGE_DEFINITIONS, ProblemBadgeType, StreakBadgeType, CourseBadgeType } from "@/lib/badges";
+import { getUserBadges } from "@/lib/badges";
+import { PROBLEM_BADGE_DEFINITIONS, STREAK_BADGE_DEFINITIONS, COURSE_BADGE_DEFINITIONS, ProblemBadgeType, StreakBadgeType, CourseBadgeType } from "@/lib/badge-definitions";
 import Link from "next/link";
 import { ArrowLeft, Award, Calendar, Mail, Flame, BookOpen } from "lucide-react";
 import StudentShell from "@/components/layout/StudentShell";

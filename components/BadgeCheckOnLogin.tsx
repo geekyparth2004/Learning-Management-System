@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import BadgeCelebration from "./BadgeCelebration";
-import { BadgeType } from "@/lib/badges";
+import { BadgeType } from "@/lib/badge-definitions";
 
 /**
  * Component that checks for pending badges on login/page load.

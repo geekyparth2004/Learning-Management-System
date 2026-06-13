@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BADGE_DEFINITIONS, BadgeType } from "@/lib/badges";
+import { BADGE_DEFINITIONS, BadgeType } from "@/lib/badge-definitions";
 
 interface BadgeCelebrationProps {
     badgeType: BadgeType;

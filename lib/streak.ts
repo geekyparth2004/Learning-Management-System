@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { checkAndAwardStreakBadges, StreakBadgeType } from "@/lib/badges";
+import { checkAndAwardStreakBadges } from "@/lib/badges";
+import { StreakBadgeType } from "@/lib/badge-definitions";
 import { cacheGet, cacheSet, cacheDelete, CACHE_TTL, CACHE_KEYS } from "@/lib/redis";
 
 // IST offset: UTC+5:30 = 5.5 hours = 330 minutes
