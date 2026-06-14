@@ -177,7 +177,7 @@ export default function RecruitmentDrivesSection({ drives }: RecruitmentDrivesSe
             const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registrationLink.trim());
             const href = isEmail ? `mailto:${registrationLink.trim()}` : registrationLink;
             window.open(href, "_blank");
-            return;
+            // Do not return early, so we still track the application internally
         }
 
         try {
