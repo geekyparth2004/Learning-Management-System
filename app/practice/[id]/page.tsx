@@ -412,27 +412,28 @@ export default function PracticePlayerPage() {
         setTestCaseResults([]);
         setErrorLine(null);
         setActiveTab("results");
-        const results: TestCaseResult[] = [];
-        for (const tc of problem.testCases) {
-            try {
-                const res = await fetch("/api/compile", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ language, code, input: tc.input.replace(/[\[\]]/g, "").replace(/,/g, " ") }),
-                });
-                const data = await res.json();
-                if (data.error) {
-                    results.push({ id: tc.id, passed: false, actualOutput: data.error, expectedOutput: tc.expectedOutput });
-                } else {
-                    const actual = normalizeOutput(data.output || "");
-                    const expected = normalizeOutput(tc.expectedOutput);
-                    const passed = actual === expected;
-                    results.push({ id: tc.id, passed, actualOutput: data.output || "", expectedOutput: tc.expectedOutput });
+        const results: TestCaseResult[] = await Promise.all(
+            problem.testCases.map(async (tc) => {
+                try {
+                    const res = await fetch("/api/compile", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ language, code, input: tc.input.replace(/[\[\]]/g, "").replace(/,/g, " ") }),
+                    });
+                    const data = await res.json();
+                    if (data.error) {
+                        return { id: tc.id, passed: false, actualOutput: data.error, expectedOutput: tc.expectedOutput };
+                    } else {
+                        const actual = normalizeOutput(data.output || "");
+                        const expected = normalizeOutput(tc.expectedOutput);
+                        const passed = actual === expected;
+                        return { id: tc.id, passed, actualOutput: data.output || "", expectedOutput: tc.expectedOutput };
+                    }
+                } catch (e) {
+                    return { id: tc.id, passed: false, actualOutput: "Error running test case", expectedOutput: tc.expectedOutput };
                 }
-            } catch (e) {
-                results.push({ id: tc.id, passed: false, actualOutput: "Error running test case", expectedOutput: tc.expectedOutput });
-            }
-        }
+            })
+        );
         setTestCaseResults(results);
         setStatus(results.every(r => r.passed) ? "success" : "error");
 
