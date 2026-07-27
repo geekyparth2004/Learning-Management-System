@@ -163,23 +163,23 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
         setSecurityStep(1);
     }
 
-    async function handleFullscreenAccept() {
-        try {
-            await document.documentElement.requestFullscreen();
-            setSecurityStep(2);
-        } catch {
-            setSecurityStep(2);
-        }
-    }
-
     async function handleCameraAccept() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
             cameraStreamRef.current = stream;
             setCameraError("");
-            setSecurityStep(3);
+            setSecurityStep(2);
         } catch {
             setCameraError("Camera access denied. You can still proceed but monitoring will be limited.");
+            setSecurityStep(2);
+        }
+    }
+
+    async function handleFullscreenAccept() {
+        try {
+            await document.documentElement.requestFullscreen();
+            setSecurityStep(3);
+        } catch {
             setSecurityStep(3);
         }
     }
@@ -195,6 +195,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                 console.error("Registration failed", e);
             }
         }
+        setSecurityStep(0);
         setHasStarted(true);
     }
 
@@ -243,34 +244,8 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         ))}
                     </div>
 
-                    {/* Step 1: Fullscreen */}
+                    {/* Step 1: Camera */}
                     {securityStep === 1 && (
-                        <div className="rounded-xl border border-gray-800 bg-[#161616] p-8 space-y-6 text-center">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/20">
-                                <Maximize className="h-8 w-8 text-blue-400" />
-                            </div>
-                            <div className="space-y-2">
-                                <h2 className="text-xl font-bold text-white">Enable Fullscreen Mode</h2>
-                                <p className="text-gray-400 text-sm">
-                                    This assessment requires fullscreen mode. You will not be allowed to exit fullscreen during the assessment. Attempting to exit will result in a warning.
-                                </p>
-                            </div>
-                            <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 p-3">
-                                <p className="text-yellow-400 text-xs flex items-center gap-2">
-                                    <AlertTriangle className="h-4 w-4 shrink-0" />
-                                    3 warnings will result in automatic submission of your assessment
-                                </p>
-                            </div>
-                            <button onClick={handleFullscreenAccept}
-                                className="w-full rounded-lg bg-blue-600 py-3 font-bold text-white hover:bg-blue-500 transition-colors"
-                            >
-                                Enter Fullscreen
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Step 2: Camera */}
-                    {securityStep === 2 && (
                         <div className="rounded-xl border border-gray-800 bg-[#161616] p-8 space-y-6 text-center">
                             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
                                 <Camera className="h-8 w-8 text-green-400" />
@@ -291,6 +266,32 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                 className="w-full rounded-lg bg-green-600 py-3 font-bold text-white hover:bg-green-500 transition-colors"
                             >
                                 Allow Camera Access
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Step 2: Fullscreen */}
+                    {securityStep === 2 && (
+                        <div className="rounded-xl border border-gray-800 bg-[#161616] p-8 space-y-6 text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/20">
+                                <Maximize className="h-8 w-8 text-blue-400" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-xl font-bold text-white">Enable Fullscreen Mode</h2>
+                                <p className="text-gray-400 text-sm">
+                                    This assessment requires fullscreen mode. You will not be allowed to exit fullscreen during the assessment. Attempting to exit will result in a warning.
+                                </p>
+                            </div>
+                            <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 p-3">
+                                <p className="text-yellow-400 text-xs flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                                    3 warnings will result in automatic submission of your assessment
+                                </p>
+                            </div>
+                            <button onClick={handleFullscreenAccept}
+                                className="w-full rounded-lg bg-blue-600 py-3 font-bold text-white hover:bg-blue-500 transition-colors"
+                            >
+                                Enter Fullscreen
                             </button>
                         </div>
                     )}
