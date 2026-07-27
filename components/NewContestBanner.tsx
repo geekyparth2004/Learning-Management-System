@@ -64,6 +64,8 @@ export default function NewContestBanner() {
         handleDismiss();
         if (latest.category === "HACKATHON") {
             router.push("/hackathon");
+        } else if ((latest as any).category === "ASSESSMENT") {
+            router.push(`/assessment/${latest.id}`);
         } else {
             router.push(`/contest/${latest.id}`);
         }

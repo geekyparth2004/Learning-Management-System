@@ -64,8 +64,10 @@ export default function NotificationBell() {
         setIsOpen(false);
         if (n.category === "HACKATHON") {
             router.push("/hackathon");
+        } else if ((n as any).category === "ASSESSMENT") {
+            router.push(`/assessment/${n.id}`);
         } else {
-            router.push(`/contest/${n.id}`); // Or just /contest if id link is tricky
+            router.push(`/contest/${n.id}`);
         }
     };
 

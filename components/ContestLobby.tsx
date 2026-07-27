@@ -72,8 +72,16 @@ export default function ContestLobby({ contest, isRegistered, leaderboard, hasSt
                     </div>
                 </div>
 
-                <h1 className="mb-4 text-4xl font-bold">{contest.title}</h1>
-                <p className="mb-8 text-lg text-gray-400">{contest.description}</p>
+                {(() => {
+                    let desc = contest.description || "";
+                    if (desc.startsWith("{")) {
+                        try {
+                            const parsed = JSON.parse(desc);
+                            desc = parsed.description || "AI-powered Assessment";
+                        } catch { }
+                    }
+                    return <p className="mb-8 text-lg text-gray-400">{desc}</p>;
+                })()}
 
                 <div className="mb-10 grid grid-cols-2 gap-4 rounded-xl border border-gray-800 bg-[#111111] p-6">
                     <div className="flex flex-col items-center gap-2">

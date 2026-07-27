@@ -27,6 +27,11 @@ export default async function ContestPlayPage({ params }: { params: Promise<{ id
         notFound();
     }
 
+    // Handle Assessments
+    if (contest.category === "ASSESSMENT") {
+        redirect(`/assessment/${id}`);
+    }
+
     // Handle External Contests
     if (contest.type === "EXTERNAL") {
         return (

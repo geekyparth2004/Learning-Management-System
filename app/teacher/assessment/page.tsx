@@ -76,7 +76,16 @@ export default async function TeacherAssessmentPage() {
                                         )}
                                     </div>
                                     <p className="mt-1 text-sm text-gray-400 line-clamp-1">
-                                        {contest.description || "No description"}
+                                        {(() => {
+                                            let d = contest.description || "";
+                                            if (d.startsWith("{")) {
+                                                try {
+                                                    const p = JSON.parse(d);
+                                                    return p.description || "AI-powered Assessment";
+                                                } catch {}
+                                            }
+                                            return d || "No description";
+                                        })()}
                                     </p>
 
                                     <div className="mt-4 flex items-center gap-6 text-sm text-gray-500">

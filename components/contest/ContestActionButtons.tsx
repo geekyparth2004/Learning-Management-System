@@ -13,6 +13,7 @@ interface ContestActionButtonsProps {
     startTime: string | Date;
     endTime: string | Date;
     isCompleted?: boolean;
+    category?: string;
 }
 
 export default function ContestActionButtons({
@@ -22,7 +23,8 @@ export default function ContestActionButtons({
     contestLink,
     startTime,
     endTime,
-    isCompleted = false
+    isCompleted = false,
+    category,
 }: ContestActionButtonsProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
@@ -189,15 +191,17 @@ export default function ContestActionButtons({
         }
 
         // Live
+        const playUrl = category === "ASSESSMENT" ? `/assessment/${contestId}` : `/contest/${contestId}`;
+
         return (
             <button
-                onClick={() => handleStart(`/contest/${contestId}`)}
+                onClick={() => handleStart(playUrl)}
                 disabled={isLoading}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 animate-pulse"
             >
                 {isLoading ? "Starting..." : (
                     <>
-                        <Play size={14} /> Start Contest
+                        <Play size={14} /> {category === "ASSESSMENT" ? "Start Assessment" : "Start Contest"}
                     </>
                 )}
             </button>
