@@ -14,6 +14,7 @@ import {
   Ticket,
   Trophy,
   Users,
+  FileText,
 } from "lucide-react";
 import TeacherDoubtsBadge from "@/components/TeacherDoubtsBadge";
 
@@ -31,6 +32,7 @@ const navItems = [
   { label: "Doubts", href: "/teacher/doubts", icon: MessageCircle, badge: true },
   { label: "Contests", href: "/teacher/contest", icon: Trophy },
   { label: "Hackathons", href: "/teacher/hackathon", icon: Code },
+  { label: "Assessments", href: "/teacher/assessment", icon: FileText },
 ];
 
 function isActive(pathname: string, href: string) {

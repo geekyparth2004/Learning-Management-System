@@ -236,6 +236,19 @@ export default async function Home() {
               </Link>
 
               <Link
+                href="/teacher/assessment"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-pink-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-pink-900/20 p-4 text-pink-400 transition-colors group-hover:bg-pink-500 group-hover:text-white">
+                  <BookOpen className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Manage Assessments</h3>
+                  <p className="text-sm text-gray-400">Create and monitor student assessments.</p>
+                </div>
+              </Link>
+
+              <Link
                 href="/teacher/practice"
                 className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-green-500 hover:bg-[#1a1a1a]"
               >
@@ -297,6 +310,12 @@ export default async function Home() {
                   className="text-sm font-medium text-gray-400 hover:text-purple-400 transition-colors"
                 >
                   Hackathons
+                </Link>
+                <Link
+                  href="/assessment"
+                  className="text-sm font-medium text-gray-400 hover:text-pink-400 transition-colors"
+                >
+                  Assessments
                 </Link>
                 {isOrgStudent ? (
                   <Link
