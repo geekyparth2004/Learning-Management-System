@@ -2,10 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { ExternalLink, Clock, Calendar, CheckCircle2, XCircle } from "lucide-react";
+import { CheckSquare, Code, Mic, CheckCircle2, XCircle, Clock, ArrowRight } from "lucide-react";
 import FormattedDate from "@/components/FormattedDate";
-
-import ContestActionButtons from "@/components/contest/ContestActionButtons";
 import StudentShell from "@/components/layout/StudentShell";
 
 export default async function AssessmentPage() {
@@ -25,13 +23,8 @@ export default async function AssessmentPage() {
     
     // Categorize Assessments
     const attendedAssessments = assessments.filter(c => registrationMap.has(c.id));
-    
     const notAttendedAssessments = assessments.filter(c => !registrationMap.has(c.id));
-    
-    // New: end time is in the future
     const newAssessments = notAttendedAssessments.filter(c => c.endTime > now);
-    
-    // Unattended: end time has passed
     const unattendedAssessments = notAttendedAssessments.filter(c => c.endTime <= now);
 
     return (
@@ -61,11 +54,7 @@ export default async function AssessmentPage() {
                     {newAssessments.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {newAssessments.map(assessment => (
-                                <AssessmentCard
-                                    key={assessment.id}
-                                    assessment={assessment}
-                                    status="NEW"
-                                />
+                                <AssessmentCard key={assessment.id} assessment={assessment} status="NEW" />
                             ))}
                         </div>
                     ) : (
@@ -82,12 +71,8 @@ export default async function AssessmentPage() {
                     {attendedAssessments.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {attendedAssessments.map(assessment => (
-                                <AssessmentCard
-                                    key={assessment.id}
-                                    assessment={assessment}
-                                    status="ATTENDED"
-                                    registration={registrationMap.get(assessment.id)}
-                                />
+                                <AssessmentCard key={assessment.id} assessment={assessment} status="ATTENDED"
+                                    registration={registrationMap.get(assessment.id)} />
                             ))}
                         </div>
                     ) : (
@@ -104,11 +89,7 @@ export default async function AssessmentPage() {
                     {unattendedAssessments.length > 0 ? (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {unattendedAssessments.map(assessment => (
-                                <AssessmentCard
-                                    key={assessment.id}
-                                    assessment={assessment}
-                                    status="UNATTENDED"
-                                />
+                                <AssessmentCard key={assessment.id} assessment={assessment} status="UNATTENDED" />
                             ))}
                         </div>
                     ) : (
@@ -121,48 +102,93 @@ export default async function AssessmentPage() {
     );
 }
 
-function AssessmentCard({ assessment, status, registration }: { assessment: any, status: "NEW" | "ATTENDED" | "UNATTENDED", registration?: any }) {
-    const isExternal = assessment.type === "EXTERNAL";
+function parseRounds(description: string | null): { type: string }[] {
+    if (!description) return [];
+    try {
+        const parsed = JSON.parse(description);
+        return parsed.rounds || [];
+    } catch {
+        return [];
+    }
+}
+
+const ROUND_BADGES: Record<string, { label: string; icon: any; color: string; bg: string }> = {
+    mcq: { label: "MCQ", icon: CheckSquare, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/30" },
+    coding: { label: "Coding", icon: Code, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
+    voice: { label: "Voice", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
+};
+
+function AssessmentCard({ assessment, status, registration }: { assessment: any; status: "NEW" | "ATTENDED" | "UNATTENDED"; registration?: any }) {
+    const rounds = parseRounds(assessment.description);
+    const now = new Date();
+    const isLive = assessment.startTime <= now && assessment.endTime > now;
 
     let borderColor = "border-gray-800 bg-[#161616] hover:border-gray-600";
-    if (status === "NEW") {
+    if (status === "NEW" && isLive) {
         borderColor = "border-pink-500 bg-pink-900/10 hover:border-pink-400";
+    } else if (status === "NEW") {
+        borderColor = "border-purple-500/50 bg-purple-900/5 hover:border-purple-400";
     } else if (status === "ATTENDED") {
-        borderColor = "border-green-500 bg-green-900/10";
+        borderColor = "border-green-500/50 bg-green-900/5";
     } else if (status === "UNATTENDED") {
-        borderColor = "border-gray-800 bg-[#111111] opacity-75";
+        borderColor = "border-gray-800 bg-[#111111] opacity-70";
+    }
+
+    // Parse human-readable description from config
+    let displayDescription = "";
+    try {
+        const parsed = JSON.parse(assessment.description || "{}");
+        displayDescription = parsed.description || "";
+    } catch {
+        displayDescription = assessment.description || "";
     }
 
     return (
         <div className={`flex flex-col rounded-xl border p-6 transition-all ${borderColor}`}>
-            <div className="mb-4">
-                <div className="flex items-start justify-between">
+            <div className="mb-3">
+                <div className="flex items-start justify-between mb-1">
                     <h3 className="font-bold text-lg line-clamp-1" title={assessment.title}>{assessment.title}</h3>
-                    {isExternal && <ExternalLink className="h-4 w-4 text-gray-500" />}
+                    {isLive && status === "NEW" && (
+                        <span className="shrink-0 ml-2 rounded-full bg-pink-500/20 px-2 py-0.5 text-[10px] font-bold text-pink-400 border border-pink-500/30 animate-pulse">
+                            LIVE
+                        </span>
+                    )}
                 </div>
-                <p className="text-sm text-gray-400 mt-1 line-clamp-2 min-h-[2.5rem]">
-                    {assessment.description || "No description provided."}
+                <p className="text-sm text-gray-400 line-clamp-2 min-h-[2.5rem]">
+                    {displayDescription || "AI-powered assessment"}
                 </p>
             </div>
 
-            <div className="mt-auto space-y-4">
+            {/* Round badges */}
+            {rounds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                    {rounds.map((round, idx) => {
+                        const meta = ROUND_BADGES[round.type];
+                        if (!meta) return null;
+                        const Icon = meta.icon;
+                        return (
+                            <span key={idx} className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${meta.bg} ${meta.color}`}>
+                                <Icon className="h-3 w-3" /> {meta.label}
+                            </span>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="mt-auto space-y-3">
                 <div className="space-y-1 text-xs text-gray-500">
                     <div className="flex justify-between">
                         <span>Starts:</span>
-                        <span className="text-gray-300">
-                            <FormattedDate date={assessment.startTime.toISOString()} />
-                        </span>
+                        <span className="text-gray-300"><FormattedDate date={assessment.startTime.toISOString()} /></span>
                     </div>
                     <div className="flex justify-between">
                         <span>Ends:</span>
-                        <span className="text-gray-300">
-                            <FormattedDate date={assessment.endTime.toISOString()} />
-                        </span>
+                        <span className="text-gray-300"><FormattedDate date={assessment.endTime.toISOString()} /></span>
                     </div>
-                    {isExternal && assessment.platformName && (
+                    {assessment.duration && (
                         <div className="flex justify-between">
-                            <span>Platform:</span>
-                            <span className="text-blue-400">{assessment.platformName}</span>
+                            <span>Duration:</span>
+                            <span className="text-gray-300">{assessment.duration} min</span>
                         </div>
                     )}
                     {status === "ATTENDED" && registration && (
@@ -173,15 +199,17 @@ function AssessmentCard({ assessment, status, registration }: { assessment: any,
                     )}
                 </div>
 
-                {status !== "UNATTENDED" && (
-                    <ContestActionButtons
-                        contestId={assessment.id}
-                        type={assessment.type as "INTERNAL" | "EXTERNAL"}
-                        contestLink={assessment.contestLink}
-                        isRegistered={!!registration}
-                        startTime={assessment.startTime.toISOString()}
-                        endTime={assessment.endTime.toISOString()}
-                    />
+                {status === "NEW" && isLive && (
+                    <Link href={`/assessment/${assessment.id}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 py-2.5 text-sm font-bold text-white hover:from-pink-500 hover:to-purple-500 transition-all"
+                    >
+                        Start Assessment <ArrowRight className="h-4 w-4" />
+                    </Link>
+                )}
+                {status === "NEW" && !isLive && (
+                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-800 py-2.5 text-sm font-medium text-gray-400 border border-gray-700">
+                        <Clock className="h-4 w-4" /> Starts Soon
+                    </div>
                 )}
             </div>
         </div>
