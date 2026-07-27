@@ -1,13 +1,24 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, Volume2, Loader2, Clock, CheckCircle } from "lucide-react";
+import { Mic, Volume2, Loader2, Clock, Sparkles } from "lucide-react";
+
+export interface VoiceRoundResult {
+    score: number;
+    maxScore: number;
+    questions: {
+        question: string;
+        transcript: string;
+        marks: number;
+        feedback: string;
+    }[];
+}
 
 interface VoicePlayerProps {
     topic: string;
     questionCount: number;
     level: number;
-    onComplete: () => void;
+    onComplete: (result: VoiceRoundResult) => void;
 }
 
 const LEVEL_LABELS: Record<number, string> = {
@@ -20,16 +31,19 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
     const [qCount, setQCount] = useState(0);
-    const [messages, setMessages] = useState<{ role: string; content: string; audioUrl?: string }[]>([]);
+    const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
     const [duration, setDuration] = useState(0);
 
     // Audio recording
     const [isRecording, setIsRecording] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
+    const [isEvaluating, setIsEvaluating] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const synthesisRef = useRef<SpeechSynthesis | null>(null);
+    // Refs so async handlers always see the latest question/evaluations
+    const currentQuestionRef = useRef<string>("");
+    const evaluationsRef = useRef<VoiceRoundResult["questions"]>([]);
 
     const difficulty = LEVEL_LABELS[level] || "Intermediate";
 
@@ -54,6 +68,7 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
     }, []);
 
     useEffect(() => {
+        currentQuestionRef.current = currentQuestion;
         if (currentQuestion && hasStarted) {
             speakText(currentQuestion);
         }
@@ -130,45 +145,58 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
     }
 
     async function handleRecordingComplete(blob: Blob) {
-        setIsUploading(true);
+        setIsEvaluating(true);
+        const question = currentQuestionRef.current;
+
+        // AI evaluation: transcribe + grade out of 5 marks. The recording itself is never stored.
+        let evaluation = { question, transcript: "", marks: 0, feedback: "Answer could not be evaluated." };
         try {
-            // Upload audio
-            const presignRes = await fetch("/api/upload/presigned-url", {
+            const formData = new FormData();
+            formData.append("audio", new File([blob], "answer.webm", { type: "audio/webm" }));
+            formData.append("question", question);
+            formData.append("topic", topic);
+            formData.append("difficulty", difficulty);
+
+            const res = await fetch("/api/assessment/voice-evaluate", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    filename: `voice-assess-${Date.now()}.webm`,
-                    contentType: "audio/webm",
-                    contentLength: blob.size,
-                }),
+                body: formData,
             });
-            if (!presignRes.ok) throw new Error("Failed to get upload URL");
-            const { uploadUrl, publicUrl } = await presignRes.json();
-
-            await fetch(uploadUrl, { method: "PUT", headers: { "Content-Type": "audio/webm" }, body: blob });
-
-            await submitAnswer(publicUrl);
+            const data = await res.json();
+            if (!data.error) {
+                evaluation = {
+                    question,
+                    transcript: data.transcript || "",
+                    marks: typeof data.marks === "number" ? data.marks : 0,
+                    feedback: data.feedback || "",
+                };
+            }
         } catch (err) {
-            console.error("Upload failed", err);
-            alert("Failed to upload audio. Please try again.");
-            setIsUploading(false);
+            console.error("Voice evaluation failed", err);
         }
+
+        evaluationsRef.current = [...evaluationsRef.current, evaluation];
+        await advanceToNextQuestion(evaluation.transcript);
     }
 
-    async function submitAnswer(audioUrl: string) {
-        const placeholderText = "[Audio Response Provided]";
-        const userMsg = { role: "user", content: placeholderText, audioUrl };
+    async function advanceToNextQuestion(transcript: string) {
+        const answerText = transcript || "[No answer detected]";
+        const userMsg = { role: "user", content: answerText };
         const updatedMessages = [...messages, userMsg];
         setMessages(updatedMessages);
         setIsLoading(true);
 
         try {
+            if (qCount >= questionCount) {
+                finishRound();
+                return;
+            }
+
             const res = await fetch("/api/interview", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: updatedMessages,
-                    userResponse: placeholderText,
+                    userResponse: answerText,
                     questionCount: qCount,
                     type: "custom",
                     subject: topic,
@@ -177,22 +205,29 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
             });
             const data = await res.json();
 
-            if (qCount >= questionCount) {
-                onComplete();
-                return;
-            }
-
             if (data.nextQuestion) {
                 setCurrentQuestion(data.nextQuestion);
                 setMessages(prev => [...prev, { role: "assistant", content: data.nextQuestion }]);
                 setQCount(prev => prev + 1);
+            } else {
+                finishRound();
             }
         } catch (err) {
-            console.error("Submit failed", err);
+            console.error("Failed to get next question", err);
         } finally {
             setIsLoading(false);
-            setIsUploading(false);
+            setIsEvaluating(false);
         }
+    }
+
+    function finishRound() {
+        const evaluations = evaluationsRef.current;
+        const score = evaluations.reduce((sum, e) => sum + e.marks, 0);
+        onComplete({
+            score,
+            maxScore: questionCount * 5,
+            questions: evaluations,
+        });
     }
 
     function toggleRecording() {
@@ -216,7 +251,8 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                 </div>
                 <h2 className="mb-2 text-2xl font-bold">Voice Interview Round</h2>
                 <p className="text-gray-400 mb-2">Topic: <span className="text-green-400 font-bold">{topic}</span></p>
-                <p className="text-gray-400 mb-6">{questionCount} questions • {difficulty} difficulty</p>
+                <p className="text-gray-400 mb-2">{questionCount} questions • {difficulty} difficulty</p>
+                <p className="text-xs text-gray-500 mb-6">Each answer is evaluated by AI for up to 5 marks. Recordings are not stored.</p>
                 <button onClick={startInterview}
                     className="rounded-xl bg-green-600 px-8 py-3 font-bold text-white hover:bg-green-500 transition-colors"
                 >
@@ -257,6 +293,15 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                     <div className="flex items-center justify-center gap-3 text-gray-400">
                         <Loader2 className="h-5 w-5 animate-spin" /> Loading question...
                     </div>
+                ) : isEvaluating ? (
+                    <div className="flex flex-col items-center justify-center gap-4 py-16">
+                        <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-purple-500/20">
+                            <Sparkles className="h-10 w-10 animate-pulse text-purple-400" />
+                            <div className="absolute inset-0 animate-ping rounded-full bg-purple-500/20" />
+                        </div>
+                        <p className="text-purple-400 font-medium">AI is evaluating your answer...</p>
+                        <p className="text-xs text-gray-500">Marks will be revealed after the assessment ends</p>
+                    </div>
                 ) : (
                     <>
                         <div className="mb-8 text-center">
@@ -274,7 +319,7 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center gap-6 w-full">
-                                    <button onClick={toggleRecording} disabled={isLoading || isUploading}
+                                    <button onClick={toggleRecording} disabled={isLoading || isEvaluating}
                                         className={`group relative flex h-24 w-24 items-center justify-center rounded-full transition-all ${
                                             isRecording
                                                 ? "bg-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] scale-110"
@@ -290,7 +335,6 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
 
                                     <p className="text-lg text-gray-400">
                                         {isRecording ? "Listening... (click to stop)" :
-                                         isUploading ? "Uploading audio..." :
                                          isLoading ? "Processing..." :
                                          "Click mic to answer"}
                                     </p>

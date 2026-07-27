@@ -1,0 +1,283 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles } from "lucide-react";
+
+interface LeaderboardEntry {
+    rank: number;
+    userId: string;
+    name: string;
+    score: number;
+    completed: boolean;
+}
+
+interface AssessmentResultsProps {
+    title: string;
+    endTime: string;
+    currentUserId: string;
+    leaderboard: LeaderboardEntry[];
+    myScore: number | null;
+    myResults: any;
+}
+
+const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: string }> = {
+    mcq: { label: "MCQ Round", icon: CheckSquare, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/30" },
+    coding: { label: "Coding Round", icon: Code, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
+    voice: { label: "Voice Round", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
+};
+
+const optionLabels = ["A", "B", "C", "D"];
+
+export default function AssessmentResults({ title, endTime, currentUserId, leaderboard, myScore, myResults }: AssessmentResultsProps) {
+    const [activeTab, setActiveTab] = useState<"leaderboard" | "analysis">("leaderboard");
+
+    const myRank = leaderboard.find(e => e.userId === currentUserId)?.rank ?? null;
+    const rounds: any[] = myResults?.rounds || [];
+
+    const medalColor = (rank: number) =>
+        rank === 1 ? "text-yellow-400" : rank === 2 ? "text-gray-300" : rank === 3 ? "text-amber-600" : "text-gray-500";
+
+    return (
+        <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+            <Link href="/assessment" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+                <ArrowLeft className="h-4 w-4" /> Back to Assessments
+            </Link>
+
+            {/* Header */}
+            <div className="text-center space-y-3">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                    {title}
+                </h1>
+                <p className="text-sm text-gray-500">Ended {new Date(endTime).toLocaleString()}</p>
+                {myScore !== null && (
+                    <div className="inline-flex items-center gap-4 rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-3">
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-white">{myScore}</p>
+                            <p className="text-[10px] uppercase tracking-wider text-gray-500">Your Score</p>
+                        </div>
+                        {myRank !== null && (
+                            <>
+                                <div className="h-8 w-px bg-gray-800" />
+                                <div className="text-center">
+                                    <p className="text-2xl font-bold text-white">#{myRank}</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-gray-500">Your Rank</p>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex items-center justify-center gap-2">
+                <button onClick={() => setActiveTab("leaderboard")}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                        activeTab === "leaderboard" ? "bg-purple-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                    }`}
+                >
+                    <Trophy className="h-4 w-4" /> Leaderboard
+                </button>
+                <button onClick={() => setActiveTab("analysis")}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                        activeTab === "analysis" ? "bg-purple-600 text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                    }`}
+                >
+                    <BarChart3 className="h-4 w-4" /> Question Analysis
+                </button>
+            </div>
+
+            {/* ── Leaderboard ── */}
+            {activeTab === "leaderboard" && (
+                <div className="rounded-xl border border-gray-800 bg-[#161616] overflow-hidden">
+                    {leaderboard.length === 0 ? (
+                        <p className="p-8 text-center text-gray-500 italic">No one participated in this assessment.</p>
+                    ) : (
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-[#1a1a1a] text-xs uppercase text-gray-400 border-b border-gray-800">
+                                <tr>
+                                    <th className="px-4 py-3 w-16">Rank</th>
+                                    <th className="px-4 py-3">Student</th>
+                                    <th className="px-4 py-3">Status</th>
+                                    <th className="px-4 py-3 text-right">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800">
+                                {leaderboard.map((entry) => {
+                                    const isMe = entry.userId === currentUserId;
+                                    return (
+                                        <tr key={entry.userId} className={isMe ? "bg-purple-500/10" : "hover:bg-gray-800/50"}>
+                                            <td className="px-4 py-3">
+                                                <span className={`flex items-center gap-1 font-bold ${medalColor(entry.rank)}`}>
+                                                    {entry.rank <= 3 ? <Medal className="h-4 w-4" /> : null}
+                                                    #{entry.rank}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 font-medium text-white">
+                                                {entry.name}
+                                                {isMe && <span className="ml-2 rounded-full bg-purple-500/20 border border-purple-500/30 px-2 py-0.5 text-[10px] font-bold text-purple-400">You</span>}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {entry.completed ? (
+                                                    <span className="rounded bg-green-900/30 text-green-400 px-2 py-0.5 text-xs font-bold border border-green-900">Submitted</span>
+                                                ) : (
+                                                    <span className="rounded bg-gray-800 text-gray-400 px-2 py-0.5 text-xs font-bold">Did Not Submit</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-bold text-green-400">{entry.score}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
+
+            {/* ── Question Analysis ── */}
+            {activeTab === "analysis" && (
+                <div className="space-y-6">
+                    {rounds.length === 0 ? (
+                        <div className="rounded-xl border border-gray-800 bg-[#161616] p-8 text-center text-gray-500 italic">
+                            {myScore === null
+                                ? "You did not attempt this assessment."
+                                : "No detailed results are available for your submission."}
+                        </div>
+                    ) : (
+                        rounds.map((round: any, roundIdx: number) => {
+                            const meta = ROUND_META[round.type];
+                            if (!meta) return null;
+                            const Icon = meta.icon;
+                            return (
+                                <div key={roundIdx} className={`rounded-xl border p-5 space-y-4 ${meta.bg}`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Icon className={`h-5 w-5 ${meta.color}`} />
+                                            <h2 className={`font-bold ${meta.color}`}>{meta.label}</h2>
+                                        </div>
+                                        <span className="rounded-full bg-black/30 px-3 py-1 text-sm font-bold text-white">
+                                            {round.score ?? 0} / {round.maxScore ?? "—"} marks
+                                        </span>
+                                    </div>
+
+                                    {/* MCQ analysis */}
+                                    {round.type === "mcq" && Array.isArray(round.questions) && (
+                                        <div className="space-y-4">
+                                            {round.questions.map((q: any, qIdx: number) => {
+                                                const isCorrect = q.selectedIndex === q.correctIndex;
+                                                return (
+                                                    <div key={qIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-3">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <p className="font-medium text-white text-sm">
+                                                                <span className="text-gray-500 mr-2">Q{qIdx + 1}.</span>
+                                                                {q.question}
+                                                            </p>
+                                                            {isCorrect ? (
+                                                                <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-green-400"><CheckCircle2 className="h-4 w-4" /> +1</span>
+                                                            ) : (
+                                                                <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-red-400"><XCircle className="h-4 w-4" /> 0</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            {(q.options || []).map((opt: string, optIdx: number) => {
+                                                                const isAnswer = optIdx === q.correctIndex;
+                                                                const isPicked = optIdx === q.selectedIndex;
+                                                                return (
+                                                                    <div key={optIdx} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm ${
+                                                                        isAnswer
+                                                                            ? "border-green-500/50 bg-green-500/10 text-green-300"
+                                                                            : isPicked
+                                                                                ? "border-red-500/50 bg-red-500/10 text-red-300"
+                                                                                : "border-gray-800 text-gray-400"
+                                                                    }`}>
+                                                                        <span className="font-bold text-xs">{optionLabels[optIdx]}</span>
+                                                                        <span className="flex-1">{opt}</span>
+                                                                        {isAnswer && <span className="text-[10px] font-bold text-green-400">CORRECT</span>}
+                                                                        {isPicked && !isAnswer && <span className="text-[10px] font-bold text-red-400">YOUR ANSWER</span>}
+                                                                        {isPicked && isAnswer && <span className="text-[10px] font-bold text-green-400">YOUR ANSWER</span>}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                            {q.selectedIndex === null && (
+                                                                <p className="text-xs text-yellow-400 italic">Not answered</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Coding analysis */}
+                                    {round.type === "coding" && Array.isArray(round.problems) && (
+                                        <div className="space-y-3">
+                                            {round.problems.map((p: any, pIdx: number) => (
+                                                <div key={pIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="font-medium text-white text-sm">{p.title || `Problem ${pIdx + 1}`}</p>
+                                                        <span className={`text-xs font-bold ${p.passedCount === p.testCaseCount && p.testCaseCount > 0 ? "text-green-400" : "text-yellow-400"}`}>
+                                                            {p.passedCount}/{p.testCaseCount} test cases • +{(p.passedCount || 0) * 5} marks
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {Array.from({ length: p.testCaseCount || 0 }, (_, tcIdx) => {
+                                                            const result = p.testResults?.[tcIdx];
+                                                            const passed = !!result?.passed;
+                                                            return (
+                                                                <span key={tcIdx} className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold border ${
+                                                                    passed
+                                                                        ? "bg-green-500/10 text-green-400 border-green-500/30"
+                                                                        : "bg-red-500/10 text-red-400 border-red-500/30"
+                                                                }`}>
+                                                                    {passed ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                                    TC {tcIdx + 1}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        {(!p.testCaseCount || p.testCaseCount === 0) && (
+                                                            <span className="text-xs text-gray-500 italic">Not attempted</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Voice analysis */}
+                                    {round.type === "voice" && Array.isArray(round.questions) && (
+                                        <div className="space-y-3">
+                                            {round.questions.map((q: any, qIdx: number) => (
+                                                <div key={qIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-2">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <p className="font-medium text-white text-sm">
+                                                            <span className="text-gray-500 mr-2">Q{qIdx + 1}.</span>
+                                                            {q.question}
+                                                        </p>
+                                                        <span className={`shrink-0 text-xs font-bold ${q.marks >= 3 ? "text-green-400" : q.marks > 0 ? "text-yellow-400" : "text-red-400"}`}>
+                                                            {q.marks}/5 marks
+                                                        </span>
+                                                    </div>
+                                                    {q.transcript && (
+                                                        <p className="text-xs text-gray-400 border-l-2 border-gray-700 pl-3 italic">
+                                                            &ldquo;{q.transcript}&rdquo;
+                                                        </p>
+                                                    )}
+                                                    {q.feedback && (
+                                                        <p className="flex items-start gap-2 text-xs text-purple-300">
+                                                            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                                            {q.feedback}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}

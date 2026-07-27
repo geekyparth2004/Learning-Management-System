@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X } from "lucide-react";
+import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MCQPlayer from "./MCQPlayer";
 import CodingPlayer from "./CodingPlayer";
@@ -23,6 +23,7 @@ interface AssessmentPlayerProps {
     duration: number;
     isRegistered: boolean;
     userId: string;
+    endTime: string;
 }
 
 const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -31,7 +32,7 @@ const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: 
     voice: { label: "Voice Round", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
 };
 
-export default function AssessmentPlayer({ assessmentId, title, config, duration, isRegistered, userId }: AssessmentPlayerProps) {
+export default function AssessmentPlayer({ assessmentId, title, config, duration, isRegistered, userId, endTime }: AssessmentPlayerProps) {
     const router = useRouter();
     const [hasStarted, setHasStarted] = useState(false);
     const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
@@ -44,16 +45,23 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
     const [showWarning, setShowWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState("");
     const [cameraError, setCameraError] = useState("");
+    const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const cameraStreamRef = useRef<MediaStream | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const isSubmittingRef = useRef(false);
     const warningCountRef = useRef(0);
+    const elapsedTimeRef = useRef(0);
 
     const rounds = config.rounds || [];
 
     React.useEffect(() => {
         if (!hasStarted || isComplete) return;
-        const timer = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
+        const timer = setInterval(() => {
+            setElapsedTime(prev => {
+                elapsedTimeRef.current = prev + 1;
+                return prev + 1;
+            });
+        }, 1000);
         return () => clearInterval(timer);
     }, [hasStarted, isComplete]);
 
@@ -63,22 +71,30 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
-    const autoSubmitAssessment = useCallback(async () => {
+    const submitAssessment = useCallback(async (resultRounds: any[], autoSubmitted: boolean) => {
         if (isSubmittingRef.current) return;
         isSubmittingRef.current = true;
 
         if (cameraStreamRef.current) {
             cameraStreamRef.current.getTracks().forEach(track => track.stop());
+            cameraStreamRef.current = null;
         }
 
         try {
             await fetch(`/api/contest/${assessmentId}/complete`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ results: roundResults, duration: elapsedTime, autoSubmitted: true }),
+                body: JSON.stringify({
+                    results: {
+                        rounds: resultRounds,
+                        warningCount: warningCountRef.current,
+                        autoSubmitted,
+                    },
+                    duration: elapsedTimeRef.current,
+                }),
             });
         } catch (e) {
-            console.error("Auto-submit failed", e);
+            console.error("Submission failed", e);
         }
 
         if (document.fullscreenElement) {
@@ -86,7 +102,11 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
         }
 
         setIsComplete(true);
-    }, [assessmentId, roundResults, elapsedTime]);
+    }, [assessmentId]);
+
+    const autoSubmitAssessment = useCallback(() => {
+        submitAssessment(roundResults, true);
+    }, [submitAssessment, roundResults]);
 
     const triggerWarning = useCallback((message: string) => {
         const newCount = warningCountRef.current + 1;
@@ -206,19 +226,13 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
         if (currentRoundIndex < rounds.length - 1) {
             setCurrentRoundIndex(prev => prev + 1);
         } else {
-            setIsComplete(true);
-            if (cameraStreamRef.current) {
-                cameraStreamRef.current.getTracks().forEach(track => track.stop());
-            }
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(() => {});
-            }
-            fetch(`/api/contest/${assessmentId}/complete`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ results: newResults, duration: elapsedTime }),
-            }).catch(console.error);
+            submitAssessment(newResults, false);
         }
+    }
+
+    function handleManualSubmit() {
+        setShowSubmitConfirm(false);
+        submitAssessment(roundResults, false);
     }
 
     // ── Security Step Modals ──
@@ -309,17 +323,17 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                 </p>
                             </div>
                             <div className="space-y-2 text-left">
-                                <div className="flex items-center gap-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
-                                    <Maximize className="h-5 w-5 text-blue-400 shrink-0" />
-                                    <span className="text-sm text-gray-300">Fullscreen mode enforced</span>
-                                    <span className="ml-auto text-xs text-green-400 font-bold">Active</span>
-                                </div>
                                 <div className="flex items-center gap-3 rounded-lg bg-green-500/10 border border-green-500/20 p-3">
                                     <Camera className="h-5 w-5 text-green-400 shrink-0" />
                                     <span className="text-sm text-gray-300">Camera monitoring</span>
                                     <span className={`ml-auto text-xs font-bold ${cameraStreamRef.current ? "text-green-400" : "text-yellow-400"}`}>
                                         {cameraStreamRef.current ? "Active" : "Denied"}
                                     </span>
+                                </div>
+                                <div className="flex items-center gap-3 rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
+                                    <Maximize className="h-5 w-5 text-blue-400 shrink-0" />
+                                    <span className="text-sm text-gray-300">Fullscreen mode enforced</span>
+                                    <span className="ml-auto text-xs text-green-400 font-bold">Active</span>
                                 </div>
                                 <div className="flex items-center gap-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-3">
                                     <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0" />
@@ -376,9 +390,9 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                         <div className="flex-1">
                                             <h3 className={`font-bold ${meta.color}`}>{meta.label}</h3>
                                             <p className="text-xs text-gray-400">
-                                                {round.type === "mcq" && `${round.questionCount || 10} questions • Role: ${round.role} • Level ${round.level}/10`}
-                                                {round.type === "coding" && `${round.problemCount || 3} problems • Level ${round.level}/10`}
-                                                {round.type === "voice" && `${round.questionCount || 10} questions • Topic: ${round.topic} • Level ${round.level}/10`}
+                                                {round.type === "mcq" && `${round.questionCount || 10} questions • Role: ${round.role} • Level ${round.level}/10 • +1 mark per correct answer`}
+                                                {round.type === "coding" && `${round.problemCount || 3} problems • Level ${round.level}/10 • +5 marks per passed test case`}
+                                                {round.type === "voice" && `${round.questionCount || 10} questions • Topic: ${round.topic} • Level ${round.level}/10 • Up to 5 marks per answer (AI evaluated)`}
                                             </p>
                                         </div>
                                         <div className="text-sm text-gray-500 font-mono">Round {idx + 1}</div>
@@ -395,8 +409,9 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                             <div className="space-y-1">
                                 <p className="text-sm font-bold text-yellow-400">Proctored Assessment</p>
                                 <p className="text-xs text-gray-400">
-                                    This assessment is proctored. You will be asked to enable fullscreen mode and camera access.
+                                    This assessment is proctored. You will be asked to enable camera access and fullscreen mode.
                                     Exiting fullscreen or switching tabs will result in warnings. 3 warnings will auto-submit your assessment.
+                                    Scores and the leaderboard are revealed only after the assessment ends for everyone.
                                 </p>
                             </div>
                         </div>
@@ -412,7 +427,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
         );
     }
 
-    // ── Complete: Show results ──
+    // ── Complete: Submission confirmation (scores stay hidden until the assessment ends) ──
     if (isComplete) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
@@ -420,22 +435,33 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
                         <Trophy className="h-10 w-10 text-green-400" />
                     </div>
-                    <h1 className="text-3xl font-bold">Assessment Complete!</h1>
+                    <h1 className="text-3xl font-bold">Assessment Submitted!</h1>
                     <p className="text-gray-400">You completed {title} in {formatTime(elapsedTime)}</p>
 
                     <div className="space-y-3">
                         {roundResults.map((result, idx) => {
-                            const round = rounds[idx];
-                            const meta = ROUND_META[round.type];
+                            const meta = ROUND_META[result.type];
+                            if (!meta) return null;
                             return (
                                 <div key={idx} className="flex items-center justify-between rounded-lg border border-gray-800 bg-[#161616] p-4">
                                     <span className={`font-bold ${meta.color}`}>{meta.label}</span>
-                                    <span className="text-gray-300">
-                                        {result.score !== undefined ? `Score: ${result.score}` : "Completed ✓"}
-                                    </span>
+                                    <span className="text-gray-300">Submitted ✓</span>
                                 </div>
                             );
                         })}
+                    </div>
+
+                    <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4">
+                        <div className="flex items-start gap-3 text-left">
+                            <BarChart3 className="h-5 w-5 text-purple-400 mt-0.5 shrink-0" />
+                            <div className="space-y-1">
+                                <p className="text-sm font-bold text-purple-400">Results Pending</p>
+                                <p className="text-xs text-gray-400">
+                                    Your score, the leaderboard, and the full question analysis will be available here after the
+                                    assessment ends for everyone on {new Date(endTime).toLocaleString()}.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     <button onClick={() => router.push("/assessment")}
@@ -474,7 +500,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
 
             {/* Warning counter badge */}
             {warningCount > 0 && warningCount < 3 && (
-                <div className="fixed top-4 right-4 z-[9998]">
+                <div className="fixed top-16 right-4 z-[9998]">
                     <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
                         warningCount === 1 ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" :
                         "bg-red-500/20 text-red-400 border border-red-500/30"
@@ -493,12 +519,46 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         autoPlay
                         muted
                         playsInline
-                        className="w-40 h-30 object-cover mirror"
+                        className="w-40 h-30 object-cover"
                         style={{ transform: "scaleX(-1)" }}
                     />
                     <div className="absolute top-1 left-1 flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5">
                         <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
                         <span className="text-[10px] font-bold text-white">LIVE</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Submit confirmation modal */}
+            {showSubmitConfirm && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="max-w-md w-full rounded-xl border border-gray-800 bg-[#161616] p-6 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20">
+                                <Send className="h-5 w-5 text-red-400" />
+                            </div>
+                            <h2 className="text-lg font-bold text-white">Submit Test?</h2>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                            This will end your assessment immediately and submit your progress so far.
+                            {currentRoundIndex < rounds.length && (
+                                <span className="block mt-1 text-yellow-400">
+                                    Rounds you haven't finished will not receive any marks.
+                                </span>
+                            )}
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowSubmitConfirm(false)}
+                                className="flex-1 rounded-lg bg-gray-800 py-2.5 font-bold text-white hover:bg-gray-700 border border-gray-700"
+                            >
+                                Continue Test
+                            </button>
+                            <button onClick={handleManualSubmit}
+                                className="flex-1 rounded-lg bg-red-600 py-2.5 font-bold text-white hover:bg-red-500"
+                            >
+                                Submit Now
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -532,6 +592,11 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         <Clock className="h-4 w-4 text-purple-400" />
                         <span className="font-mono">{formatTime(elapsedTime)}</span>
                     </div>
+                    <button onClick={() => setShowSubmitConfirm(true)}
+                        className="flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-red-500 transition-colors"
+                    >
+                        <Send className="h-3.5 w-3.5" /> Submit Test
+                    </button>
                 </div>
             </div>
 
@@ -542,7 +607,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         role={currentRound.role || "Software Development Engineer"}
                         level={currentRound.level || 5}
                         questionCount={currentRound.questionCount || 10}
-                        onComplete={(score) => handleRoundComplete({ type: "mcq", score })}
+                        onComplete={(result) => handleRoundComplete({ type: "mcq", ...result })}
                     />
                 )}
                 {currentRound.type === "coding" && (
@@ -557,7 +622,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         topic={currentRound.topic || "General"}
                         questionCount={currentRound.questionCount || 10}
                         level={currentRound.level || 5}
-                        onComplete={() => handleRoundComplete({ type: "voice", completed: true })}
+                        onComplete={(result) => handleRoundComplete({ type: "voice", ...result })}
                     />
                 )}
             </div>

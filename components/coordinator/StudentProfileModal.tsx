@@ -100,6 +100,15 @@ interface StudentDetail {
         score: number;
         joinedAt: string;
     }>;
+    assessments?: Array<{
+        title: string;
+        startTime: string;
+        endTime: string;
+        score: number;
+        joinedAt: string;
+        completed: boolean;
+        roundScores: Array<{ type: string; score: number; maxScore: number | null }>;
+    }>;
 }
 
 interface StudentProfileModalProps {
@@ -470,6 +479,55 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                             {/* ========= COMPETITIONS TAB ========= */}
                             {activeTab === "competitions" && (
                                 <div className="space-y-6">
+                                    {/* Assessments */}
+                                    <div>
+                                        <h3 className="mb-3 text-sm font-bold text-gray-900">
+                                            Assessments Taken ({student.assessments?.length || 0})
+                                        </h3>
+                                        {!student.assessments || student.assessments.length === 0 ? (
+                                            <div className="rounded-xl border border-gray-200 py-8 text-center text-sm text-gray-400">
+                                                No assessments taken yet.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {student.assessments.map((assessment, i) => (
+                                                    <div key={i} className="rounded-lg border border-gray-200 p-3 space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
+                                                                    <Target className="h-4 w-4 text-blue-600" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-medium text-gray-900">{assessment.title}</p>
+                                                                    <p className="text-[10px] text-gray-400">
+                                                                        {new Date(assessment.startTime).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
+                                                                        {!assessment.completed && " • Did not submit"}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
+                                                                Score: {assessment.score}
+                                                            </span>
+                                                        </div>
+                                                        {assessment.roundScores.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1.5 pl-11">
+                                                                {assessment.roundScores.map((round, rIdx) => (
+                                                                    <span key={rIdx} className={`rounded px-2 py-0.5 text-[10px] font-medium ${
+                                                                        round.type === "mcq" ? "bg-pink-50 text-pink-600" :
+                                                                        round.type === "coding" ? "bg-indigo-50 text-indigo-600" :
+                                                                        "bg-green-50 text-green-600"
+                                                                    }`}>
+                                                                        {round.type === "mcq" ? "MCQ" : round.type === "coding" ? "Coding" : "Voice (AI)"}: {round.score}{round.maxScore !== null ? `/${round.maxScore}` : ""}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
                                     {/* Contests */}
                                     <div>
                                         <h3 className="mb-3 text-sm font-bold text-gray-900">

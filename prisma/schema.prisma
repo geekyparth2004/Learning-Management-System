@@ -510,7 +510,8 @@ model ContestRegistration {
   contestId String
   contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
 
-  score Int @default(0)
+  score   Int     @default(0)
+  results String? @db.Text // Detailed per-round results JSON (question analysis, shown after assessment ends)
 
   joinedAt    DateTime  @default(now())
   startedAt   DateTime?

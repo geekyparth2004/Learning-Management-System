@@ -172,7 +172,7 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                 {/* Participant Submissions / Leaderboard */}
                 <div className="rounded-xl border border-gray-800 bg-[#161616] p-6 space-y-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Users className="h-5 w-5 text-blue-400" /> Student Submissions & Scores
+                        <Users className="h-5 w-5 text-blue-400" /> Leaderboard — Student Submissions & Scores
                     </h2>
 
                     {assessment.registrations.length === 0 ? (
@@ -182,6 +182,7 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                             <table className="w-full text-left text-sm text-gray-300">
                                 <thead className="bg-[#1a1a1a] text-xs uppercase text-gray-400 border-b border-gray-800">
                                     <tr>
+                                        <th className="px-4 py-3 w-16">Rank</th>
                                         <th className="px-4 py-3">Student</th>
                                         <th className="px-4 py-3">Joined At</th>
                                         <th className="px-4 py-3">Status</th>
@@ -189,8 +190,11 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800">
-                                    {assessment.registrations.map((reg) => (
+                                    {assessment.registrations.map((reg, idx) => (
                                         <tr key={reg.id} className="hover:bg-gray-800/50">
+                                            <td className={`px-4 py-3 font-bold ${idx === 0 ? "text-yellow-400" : idx === 1 ? "text-gray-300" : idx === 2 ? "text-amber-600" : "text-gray-500"}`}>
+                                                #{idx + 1}
+                                            </td>
                                             <td className="px-4 py-3 font-medium text-white">
                                                 {reg.user.name || reg.user.email || "Student"}
                                             </td>

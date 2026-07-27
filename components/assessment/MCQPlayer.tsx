@@ -9,11 +9,24 @@ interface MCQQuestion {
     correctIndex: number;
 }
 
+export interface MCQRoundResult {
+    score: number;
+    maxScore: number;
+    correct: number;
+    totalQuestions: number;
+    questions: {
+        question: string;
+        options: string[];
+        correctIndex: number;
+        selectedIndex: number | null;
+    }[];
+}
+
 interface MCQPlayerProps {
     role: string;
     level: number;
     questionCount: number;
-    onComplete: (score: number) => void;
+    onComplete: (result: MCQRoundResult) => void;
 }
 
 export default function MCQPlayer({ role, level, questionCount, onComplete }: MCQPlayerProps) {
@@ -22,8 +35,6 @@ export default function MCQPlayer({ role, level, questionCount, onComplete }: MC
     const [error, setError] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<(number | null)[]>([]);
-    const [isAnswered, setIsAnswered] = useState(false);
-    const [showResult, setShowResult] = useState(false);
 
     // Fetch questions on mount
     useEffect(() => {
@@ -82,25 +93,32 @@ export default function MCQPlayer({ role, level, questionCount, onComplete }: MC
     }
 
     const current = questions[currentIndex];
-    const totalCorrect = selectedAnswers.filter((ans, idx) => ans === questions[idx]?.correctIndex).length;
+    const hasSelected = selectedAnswers[currentIndex] !== null;
 
     function selectOption(optIndex: number) {
-        if (isAnswered) return;
         const newAnswers = [...selectedAnswers];
         newAnswers[currentIndex] = optIndex;
         setSelectedAnswers(newAnswers);
-        setIsAnswered(true);
     }
 
     function nextQuestion() {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(prev => prev + 1);
-            setIsAnswered(false);
         } else {
-            // Calculate final score
-            const score = selectedAnswers.filter((ans, idx) => ans === questions[idx]?.correctIndex).length;
-            const percentage = Math.round((score / questions.length) * 100);
-            onComplete(percentage);
+            // +1 mark per correct answer; correctness is never revealed during the round
+            const correct = selectedAnswers.filter((ans, idx) => ans === questions[idx]?.correctIndex).length;
+            onComplete({
+                score: correct,
+                maxScore: questions.length,
+                correct,
+                totalQuestions: questions.length,
+                questions: questions.map((q, idx) => ({
+                    question: q.question,
+                    options: q.options,
+                    correctIndex: q.correctIndex,
+                    selectedIndex: selectedAnswers[idx],
+                })),
+            });
         }
     }
 
@@ -133,36 +151,24 @@ export default function MCQPlayer({ role, level, questionCount, onComplete }: MC
                     {current.question}
                 </h2>
 
-                {/* Options */}
+                {/* Options — no correct/wrong feedback during the assessment */}
                 <div className="space-y-3">
                     {current.options.map((option, optIdx) => {
                         const isSelected = selectedAnswers[currentIndex] === optIdx;
-                        const isCorrect = optIdx === current.correctIndex;
-                        const showCorrect = isAnswered && isCorrect;
-                        const showWrong = isAnswered && isSelected && !isCorrect;
-
                         return (
                             <button
                                 key={optIdx}
                                 onClick={() => selectOption(optIdx)}
-                                disabled={isAnswered}
-                                className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-all ${
-                                    showCorrect
-                                        ? "border-green-500 bg-green-500/10 text-green-300"
-                                        : showWrong
-                                            ? "border-red-500 bg-red-500/10 text-red-300"
-                                            : isSelected
-                                                ? "border-pink-500 bg-pink-500/10 text-white"
-                                                : "border-gray-800 bg-[#111111] text-gray-300 hover:border-gray-600 hover:bg-[#1a1a1a]"
-                                } ${isAnswered ? "cursor-default" : "cursor-pointer"}`}
+                                className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-all cursor-pointer ${
+                                    isSelected
+                                        ? "border-pink-500 bg-pink-500/10 text-white"
+                                        : "border-gray-800 bg-[#111111] text-gray-300 hover:border-gray-600 hover:bg-[#1a1a1a]"
+                                }`}
                             >
                                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-bold text-sm ${
-                                    showCorrect ? "bg-green-500 text-white" :
-                                    showWrong ? "bg-red-500 text-white" :
-                                    isSelected ? "bg-pink-500 text-white" :
-                                    "bg-gray-800 text-gray-400"
+                                    isSelected ? "bg-pink-500 text-white" : "bg-gray-800 text-gray-400"
                                 }`}>
-                                    {showCorrect ? "✓" : showWrong ? "✗" : optionLabels[optIdx]}
+                                    {optionLabels[optIdx]}
                                 </span>
                                 <span className="flex-1">{option}</span>
                             </button>
@@ -171,7 +177,7 @@ export default function MCQPlayer({ role, level, questionCount, onComplete }: MC
                 </div>
 
                 {/* Next button */}
-                {isAnswered && (
+                {hasSelected && (
                     <div className="mt-6 flex justify-end">
                         <button onClick={nextQuestion}
                             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-3 font-bold text-white hover:from-pink-500 hover:to-purple-500 transition-all"
@@ -186,9 +192,8 @@ export default function MCQPlayer({ role, level, questionCount, onComplete }: MC
                 )}
             </div>
 
-            {/* Score tracker */}
             <div className="text-center text-sm text-gray-500">
-                Score: <span className="text-green-400 font-bold">{totalCorrect}</span> / {currentIndex + (isAnswered ? 1 : 0)}
+                Answers are evaluated after the assessment ends for everyone.
             </div>
         </div>
     );

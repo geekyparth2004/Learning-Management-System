@@ -17,10 +17,25 @@ interface CodingProblem {
     testCases: TestCase[];
 }
 
+export interface CodingRoundResult {
+    score: number;
+    maxScore: number;
+    solved: number;
+    total: number;
+    passedTestCases: number;
+    totalTestCases: number;
+    problems: {
+        title: string;
+        passedCount: number;
+        testCaseCount: number;
+        testResults: { input: string; expected: string; actual: string; passed: boolean; isHidden: boolean; error?: string }[];
+    }[];
+}
+
 interface CodingPlayerProps {
     level: number;
     problemCount: number;
-    onComplete: (results: { solved: number; total: number; score: number }) => void;
+    onComplete: (results: CodingRoundResult) => void;
 }
 
 export default function CodingPlayer({ level, problemCount, onComplete }: CodingPlayerProps) {
@@ -135,9 +150,32 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
     }
 
     function finishCoding() {
+        // +5 marks per passed test case, judged from each problem's latest run
         const solved = Object.values(resultMap).filter(r => r.passed).length;
-        const score = Math.round((solved / problems.length) * 100);
-        onComplete({ solved, total: problems.length, score });
+        let passedTestCases = 0;
+        let totalTestCases = 0;
+        const problemResults = problems.map((p, idx) => {
+            const run = resultMap[idx];
+            const testResults = run?.results || [];
+            const passedCount = testResults.filter((r: any) => r.passed).length;
+            passedTestCases += passedCount;
+            totalTestCases += p.testCases.length;
+            return {
+                title: p.title,
+                passedCount,
+                testCaseCount: p.testCases.length,
+                testResults,
+            };
+        });
+        onComplete({
+            score: passedTestCases * 5,
+            maxScore: totalTestCases * 5,
+            solved,
+            total: problems.length,
+            passedTestCases,
+            totalTestCases,
+            problems: problemResults,
+        });
     }
 
     if (loading) {

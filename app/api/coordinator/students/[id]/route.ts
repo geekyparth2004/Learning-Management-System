@@ -151,12 +151,15 @@ export async function GET(
             externalProblems = Math.max(0, currentTotal - baseline);
         }
 
-        // --- Contests & Hackathons ---
+        // --- Contests, Hackathons & Assessments ---
         const contests = student.contestRegistrations.filter(
             (r) => r.contest.category === "CONTEST"
         );
         const hackathons = student.contestRegistrations.filter(
             (r) => r.contest.category === "HACKATHON"
+        );
+        const assessments = student.contestRegistrations.filter(
+            (r) => r.contest.category === "ASSESSMENT"
         );
 
         // --- Course Enrollments with completion % ---
@@ -285,6 +288,31 @@ export async function GET(
                     score: r.score,
                     joinedAt: r.joinedAt,
                 })),
+                assessments: assessments.map((r) => {
+                    // Per-round score breakdown (MCQ / Coding / Voice with AI-evaluated marks)
+                    let roundScores: { type: string; score: number; maxScore: number | null }[] = [];
+                    try {
+                        const parsed = r.results ? JSON.parse(r.results) : null;
+                        if (Array.isArray(parsed?.rounds)) {
+                            roundScores = parsed.rounds.map((round: any) => ({
+                                type: round.type,
+                                score: typeof round.score === "number" ? round.score : 0,
+                                maxScore: typeof round.maxScore === "number" ? round.maxScore : null,
+                            }));
+                        }
+                    } catch {
+                        // ignore malformed results
+                    }
+                    return {
+                        title: r.contest.title,
+                        startTime: r.contest.startTime,
+                        endTime: r.contest.endTime,
+                        score: r.score,
+                        joinedAt: r.joinedAt,
+                        completed: !!r.completedAt,
+                        roundScores,
+                    };
+                }),
             },
         });
     } catch (error) {

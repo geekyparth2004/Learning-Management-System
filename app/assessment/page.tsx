@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { CheckSquare, Code, Mic, CheckCircle2, XCircle, Clock, ArrowRight } from "lucide-react";
+import { CheckSquare, Code, Mic, CheckCircle2, XCircle, Clock, ArrowRight, Trophy } from "lucide-react";
 import FormattedDate from "@/components/FormattedDate";
 import StudentShell from "@/components/layout/StudentShell";
 
@@ -122,6 +122,7 @@ function AssessmentCard({ assessment, status, registration }: { assessment: any;
     const rounds = parseRounds(assessment.description);
     const now = new Date();
     const isLive = assessment.startTime <= now && assessment.endTime > now;
+    const hasEnded = assessment.endTime <= now;
 
     let borderColor = "border-gray-800 bg-[#161616] hover:border-gray-600";
     if (status === "NEW" && isLive) {
@@ -194,7 +195,12 @@ function AssessmentCard({ assessment, status, registration }: { assessment: any;
                     {status === "ATTENDED" && registration && (
                         <div className="flex justify-between mt-2 pt-2 border-t border-gray-800 text-green-400">
                             <span>Score:</span>
-                            <span className="font-bold">{registration.score}</span>
+                            {/* Scores stay hidden until the assessment ends for everyone */}
+                            {hasEnded ? (
+                                <span className="font-bold">{registration.score}</span>
+                            ) : (
+                                <span className="font-bold text-yellow-400">Pending</span>
+                            )}
                         </div>
                     )}
                 </div>
@@ -210,6 +216,13 @@ function AssessmentCard({ assessment, status, registration }: { assessment: any;
                     <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-800 py-2.5 text-sm font-medium text-gray-400 border border-gray-700">
                         <Clock className="h-4 w-4" /> Starts Soon
                     </div>
+                )}
+                {hasEnded && (
+                    <Link href={`/assessment/${assessment.id}`}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-800 py-2.5 text-sm font-bold text-purple-300 hover:bg-gray-700 border border-purple-500/30 transition-all"
+                    >
+                        <Trophy className="h-4 w-4" /> View Results & Leaderboard
+                    </Link>
                 )}
             </div>
         </div>
