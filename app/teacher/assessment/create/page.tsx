@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, CheckSquare, Code, Mic, Loader2, TrendingUp, SlidersHorizontal, Bug, Terminal, Database, Mail } from "lucide-react";
+import { ArrowLeft, Save, CheckSquare, Code, Mic, Loader2, TrendingUp, SlidersHorizontal, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
 import Link from "next/link";
 
 const ROLES = [
@@ -18,7 +18,7 @@ const ROLES = [
     "Mobile App Developer",
 ];
 
-type RoundType = "mcq" | "coding" | "voice" | "debug" | "output" | "sql" | "email";
+type RoundType = "mcq" | "coding" | "voice" | "debug" | "output" | "sql" | "email" | "aptitude";
 
 // Difficulty mode for a round: a teacher-fixed level, or adaptive (starts at level 1
 // and moves up on a correct answer / down on a wrong one).
@@ -71,6 +71,11 @@ export default function CreateAssessmentPage() {
     // Email writing config
     const [emailLevel, setEmailLevel] = useState(5);
     const [emailCount, setEmailCount] = useState(3);
+
+    // Aptitude config
+    const [aptitudeLevel, setAptitudeLevel] = useState(5);
+    const [aptitudeCount, setAptitudeCount] = useState(10);
+    const [aptitudeMode, setAptitudeMode] = useState<DifficultyMode>("fixed");
 
     function toggleRound(round: RoundType) {
         setSelectedRounds(prev => {
@@ -147,6 +152,13 @@ export default function CreateAssessmentPage() {
                 type: "email",
                 level: emailLevel,
                 questionCount: emailCount,
+            });
+        }
+        if (selectedRounds.has("aptitude")) {
+            rounds.push({
+                type: "aptitude",
+                questionCount: aptitudeCount,
+                ...(aptitudeMode === "adaptive" ? { adaptive: true } : { level: aptitudeLevel }),
             });
         }
 
@@ -362,6 +374,23 @@ export default function CreateAssessmentPage() {
                                 <div>
                                     <h3 className="font-bold text-white">Email Writing</h3>
                                     <p className="text-xs text-gray-400 mt-1">AI grades grammar &amp; professionalism</p>
+                                </div>
+                            </button>
+
+                            {/* Aptitude */}
+                            <button type="button" onClick={() => toggleRound("aptitude")}
+                                className={`group flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all ${
+                                    selectedRounds.has("aptitude")
+                                        ? "border-teal-500 bg-teal-500/10 shadow-[0_0_20px_rgba(20,184,166,0.15)]"
+                                        : "border-gray-800 bg-[#111111] hover:border-gray-600"
+                                }`}
+                            >
+                                <div className={`rounded-full p-3 transition-colors ${selectedRounds.has("aptitude") ? "bg-teal-500/20 text-teal-400" : "bg-gray-800 text-gray-400"}`}>
+                                    <Brain className="h-7 w-7" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">Aptitude Round</h3>
+                                    <p className="text-xs text-gray-400 mt-1">Quantitative, logical &amp; verbal MCQs</p>
                                 </div>
                             </button>
                         </div>
@@ -627,6 +656,45 @@ export default function CreateAssessmentPage() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Aptitude Config */}
+                            {selectedRounds.has("aptitude") && (
+                                <div className="rounded-lg border border-teal-500/30 bg-teal-500/5 p-5 space-y-4">
+                                    <h3 className="font-bold text-teal-400 flex items-center gap-2">
+                                        <Brain className="h-4 w-4" /> Aptitude Round Configuration
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        AI generates aptitude MCQs across quantitative, logical reasoning, verbal ability and
+                                        data interpretation. +1 mark per correct answer.
+                                    </p>
+
+                                    <ModeSelector mode={aptitudeMode} onChange={setAptitudeMode} accent="teal"
+                                        adaptiveHint="Starts at Level 1. Each correct answer makes the next question harder, each wrong answer makes it easier." />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {aptitudeMode === "fixed" ? (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">
+                                                    Difficulty Level: <span className="text-teal-400 font-bold">{aptitudeLevel}</span>
+                                                    <span className="text-gray-500 ml-1">({levelLabels[aptitudeLevel]})</span>
+                                                </label>
+                                                <input type="range" min={1} max={10} value={aptitudeLevel} onChange={e => setAptitudeLevel(Number(e.target.value))}
+                                                    className="w-full accent-teal-500" />
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">Starting Level</label>
+                                                <p className="text-sm text-teal-400 font-bold">Level 1 ({levelLabels[1]})</p>
+                                                <p className="text-xs text-gray-500">Difficulty adjusts automatically per answer.</p>
+                                            </div>
+                                        )}
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">Number of Questions</label>
+                                            <input type="number" min={5} max={50} value={aptitudeCount} onChange={e => setAptitudeCount(Number(e.target.value))} className={inputClass} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -650,12 +718,13 @@ const ACCENTS: Record<string, { active: string; icon: string }> = {
     pink: { active: "border-pink-500 bg-pink-500/15 text-pink-300", icon: "text-pink-400" },
     blue: { active: "border-blue-500 bg-blue-500/15 text-blue-300", icon: "text-blue-400" },
     green: { active: "border-green-500 bg-green-500/15 text-green-300", icon: "text-green-400" },
+    teal: { active: "border-teal-500 bg-teal-500/15 text-teal-300", icon: "text-teal-400" },
 };
 
 function ModeSelector({ mode, onChange, accent, adaptiveHint }: {
     mode: DifficultyMode;
     onChange: (mode: DifficultyMode) => void;
-    accent: "pink" | "blue" | "green";
+    accent: "pink" | "blue" | "green" | "teal";
     adaptiveHint: string;
 }) {
     const styles = ACCENTS[accent];

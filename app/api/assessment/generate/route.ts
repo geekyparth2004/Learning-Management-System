@@ -80,6 +80,48 @@ correctIndex is the 0-based index of the correct option (0=A, 1=B, 2=C, 3=D).`;
             return NextResponse.json({ questions });
         }
 
+        if (type === "aptitude") {
+            const count = questionCount || 10;
+            const prompt = `You are an expert aptitude-test designer for campus placement exams.
+Generate exactly ${count} aptitude multiple-choice question${count === 1 ? "" : "s"} at "${difficulty}" difficulty level (Level ${level}/10).
+
+Mix the questions across these areas: quantitative aptitude (percentages, ratios, profit & loss, time & work, speed & distance), logical reasoning (series, coding-decoding, blood relations, syllogisms, seating arrangements), verbal ability (analogies, sentence completion), and data interpretation.
+
+Level ${level} of 10 must be respected strictly: level 1 is basic single-step arithmetic or an obvious pattern; level 10 needs multi-step reasoning under tricky constraints.
+
+Each question must:
+- Be fully self-contained with every number needed to solve it
+- Have exactly 4 options labeled A, B, C, D
+- Have exactly 1 correct answer — double-check the arithmetic before choosing correctIndex${exclusionNote}
+
+Return a JSON object with a key "questions" containing an array in this exact format:
+{
+  "questions": [
+    {
+      "question": "A shopkeeper sells an item at a 20% profit ...?",
+      "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
+      "correctIndex": 0
+    }
+  ]
+}
+
+correctIndex is the 0-based index of the correct option (0=A, 1=B, 2=C, 3=D).`;
+
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [{ role: "user", content: prompt }],
+                response_format: { type: "json_object" },
+                temperature: 0.7,
+            });
+
+            let content = completion.choices[0].message.content || "{}";
+            content = content.replace(/```json\n?|```/g, "").trim();
+            const parsed = JSON.parse(content);
+            const questions = extractArrayFromJSON(parsed);
+
+            return NextResponse.json({ questions });
+        }
+
         if (type === "coding") {
             const count = problemCount || 3;
             const prompt = `You are an expert coding assessment designer.

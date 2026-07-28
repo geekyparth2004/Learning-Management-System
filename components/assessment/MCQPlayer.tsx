@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { CheckSquare, Loader2, ChevronRight, CheckCircle2, TrendingUp } from "lucide-react";
+import { CheckSquare, Loader2, ChevronRight, CheckCircle2, TrendingUp, Brain } from "lucide-react";
 import { nextLevel, levelLabel } from "@/lib/adaptive";
 
 interface MCQQuestion {
@@ -9,6 +9,44 @@ interface MCQQuestion {
     options: string[];
     correctIndex: number;
 }
+
+// The aptitude round is the same player with a different question source and accent.
+type MCQVariant = "mcq" | "aptitude";
+
+const VARIANT_META: Record<MCQVariant, {
+    icon: any;
+    accentText: string;
+    badge: string;
+    levelTag: string;
+    barGradient: string;
+    selectedOption: string;
+    selectedBadge: string;
+    nextButton: string;
+    spinner: string;
+}> = {
+    mcq: {
+        icon: CheckSquare,
+        accentText: "text-pink-400",
+        badge: "border-pink-500/30 bg-pink-500/10 text-pink-400",
+        levelTag: "text-pink-400/70",
+        barGradient: "from-pink-500 to-purple-500",
+        selectedOption: "border-pink-500 bg-pink-500/10 text-white",
+        selectedBadge: "bg-pink-500 text-white",
+        nextButton: "bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500",
+        spinner: "text-pink-400",
+    },
+    aptitude: {
+        icon: Brain,
+        accentText: "text-teal-400",
+        badge: "border-teal-500/30 bg-teal-500/10 text-teal-400",
+        levelTag: "text-teal-400/70",
+        barGradient: "from-teal-500 to-emerald-500",
+        selectedOption: "border-teal-500 bg-teal-500/10 text-white",
+        selectedBadge: "bg-teal-500 text-white",
+        nextButton: "bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500",
+        spinner: "text-teal-400",
+    },
+};
 
 export interface MCQRoundResult {
     score: number;
@@ -32,10 +70,13 @@ interface MCQPlayerProps {
     level: number;
     questionCount: number;
     adaptive?: boolean;
+    variant?: MCQVariant;
     onComplete: (result: MCQRoundResult) => void;
 }
 
-export default function MCQPlayer({ role, level, questionCount, adaptive = false, onComplete }: MCQPlayerProps) {
+export default function MCQPlayer({ role, level, questionCount, adaptive = false, variant = "mcq", onComplete }: MCQPlayerProps) {
+    const meta = VARIANT_META[variant];
+    const roundLabel = variant === "aptitude" ? "Aptitude Round" : `MCQ Round — ${role}`;
     const [questions, setQuestions] = useState<MCQQuestion[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -53,7 +94,7 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                type: "mcq",
+                type: variant,
                 role,
                 level: atLevel,
                 questionCount: 1,
@@ -65,7 +106,7 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
         const question = (data.questions || [])[0];
         if (!question) throw new Error("Failed to generate the next question");
         return question as MCQQuestion;
-    }, [role]);
+    }, [role, variant]);
 
     // Initial load: adaptive fetches only the first question (at level 1), fixed fetches the whole set.
     useEffect(() => {
@@ -83,7 +124,7 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
                     const res = await fetch("/api/assessment/generate", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ type: "mcq", role, level, questionCount }),
+                        body: JSON.stringify({ type: variant, role, level, questionCount }),
                     });
                     const data = await res.json();
                     if (cancelled) return;
@@ -102,7 +143,7 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
         }
         loadQuestions();
         return () => { cancelled = true; };
-    }, [role, level, questionCount, adaptive, fetchAdaptiveQuestion]);
+    }, [role, level, questionCount, adaptive, variant, fetchAdaptiveQuestion]);
 
     function buildResult(finalQuestions: MCQQuestion[], finalAnswers: (number | null)[]): MCQRoundResult {
         const correct = finalAnswers.filter((ans, idx) => ans === finalQuestions[idx]?.correctIndex).length;
@@ -175,17 +216,21 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[60vh] gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-pink-400" />
+                <Loader2 className={`h-10 w-10 animate-spin ${meta.spinner}`} />
                 {adaptive ? (
                     <>
                         <p className="text-gray-400">
-                            AI is preparing your next question at <span className="text-pink-400 font-bold">Level {currentLevel}</span>...
+                            AI is preparing your next question at <span className={`${meta.accentText} font-bold`}>Level {currentLevel}</span>...
                         </p>
                         <p className="text-xs text-gray-500">Adaptive mode — difficulty follows your answers</p>
                     </>
                 ) : (
                     <>
-                        <p className="text-gray-400">AI is generating {questionCount} MCQ questions for <span className="text-pink-400 font-bold">{role}</span>...</p>
+                        <p className="text-gray-400">
+                            {variant === "aptitude"
+                                ? <>AI is generating {questionCount} <span className={`${meta.accentText} font-bold`}>aptitude</span> questions...</>
+                                : <>AI is generating {questionCount} MCQ questions for <span className={`${meta.accentText} font-bold`}>{role}</span>...</>}
+                        </p>
                         <p className="text-xs text-gray-500">This may take 10-15 seconds</p>
                     </>
                 )}
@@ -220,16 +265,17 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
     const isLastQuestion = currentIndex + 1 >= totalToAsk;
 
     const optionLabels = ["A", "B", "C", "D"];
+    const HeaderIcon = meta.icon;
 
     return (
         <div className="max-w-3xl mx-auto p-6 space-y-6">
             {/* Progress */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <CheckSquare className="h-4 w-4 text-pink-400" />
-                    <span>MCQ Round — {role}</span>
+                    <HeaderIcon className={`h-4 w-4 ${meta.accentText}`} />
+                    <span>{roundLabel}</span>
                     {adaptive && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-pink-500/30 bg-pink-500/10 px-2 py-0.5 text-[10px] font-bold text-pink-400">
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${meta.badge}`}>
                             <TrendingUp className="h-3 w-3" /> ADAPTIVE
                         </span>
                     )}
@@ -242,7 +288,7 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
             {/* Progress bar */}
             <div className="h-1.5 w-full rounded-full bg-gray-800 overflow-hidden">
                 <div
-                    className="h-full rounded-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-500"
+                    className={`h-full rounded-full bg-gradient-to-r ${meta.barGradient} transition-all duration-500`}
                     style={{ width: `${((currentIndex + 1) / totalToAsk) * 100}%` }}
                 />
             </div>
@@ -250,7 +296,7 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
             {/* Question */}
             <div className="rounded-xl border border-gray-800 bg-[#161616] p-6">
                 {adaptive && (
-                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-pink-400/70">
+                    <p className={`mb-3 text-xs font-bold uppercase tracking-wider ${meta.levelTag}`}>
                         Level {currentLevel} · {levelLabel(currentLevel)}
                     </p>
                 )}
@@ -268,12 +314,12 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
                                 onClick={() => selectOption(optIdx)}
                                 className={`w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-all cursor-pointer ${
                                     isSelected
-                                        ? "border-pink-500 bg-pink-500/10 text-white"
+                                        ? meta.selectedOption
                                         : "border-gray-800 bg-[#111111] text-gray-300 hover:border-gray-600 hover:bg-[#1a1a1a]"
                                 }`}
                             >
                                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-bold text-sm ${
-                                    isSelected ? "bg-pink-500 text-white" : "bg-gray-800 text-gray-400"
+                                    isSelected ? meta.selectedBadge : "bg-gray-800 text-gray-400"
                                 }`}>
                                     {optionLabels[optIdx]}
                                 </span>
@@ -287,12 +333,12 @@ export default function MCQPlayer({ role, level, questionCount, adaptive = false
                 {hasSelected && (
                     <div className="mt-6 flex justify-end">
                         <button onClick={nextQuestion}
-                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-3 font-bold text-white hover:from-pink-500 hover:to-purple-500 transition-all"
+                            className={`flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white transition-all ${meta.nextButton}`}
                         >
                             {!isLastQuestion ? (
                                 <>Next Question <ChevronRight className="h-4 w-4" /></>
                             ) : (
-                                <>Finish MCQ Round <CheckCircle2 className="h-4 w-4" /></>
+                                <>Finish {variant === "aptitude" ? "Aptitude" : "MCQ"} Round <CheckCircle2 className="h-4 w-4" /></>
                             )}
                         </button>
                     </div>

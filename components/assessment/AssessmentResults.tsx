@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp, Bug, Terminal, Database, Mail } from "lucide-react";
+import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
 import { levelLabel } from "@/lib/adaptive";
 
 interface LeaderboardEntry {
@@ -30,6 +30,7 @@ const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: 
     output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
     sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
     email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
+    aptitude: { label: "Aptitude Round", icon: Brain, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/30" },
 };
 
 const optionLabels = ["A", "B", "C", "D"];
@@ -192,8 +193,8 @@ export default function AssessmentResults({ title, endTime, currentUserId, leade
                                         </div>
                                     )}
 
-                                    {/* MCQ analysis */}
-                                    {round.type === "mcq" && Array.isArray(round.questions) && (
+                                    {/* MCQ / Aptitude analysis (same question format, +1 per correct) */}
+                                    {(round.type === "mcq" || round.type === "aptitude") && Array.isArray(round.questions) && (
                                         <div className="space-y-4">
                                             {round.questions.map((q: any, qIdx: number) => {
                                                 const isCorrect = q.selectedIndex === q.correctIndex;

@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { CheckSquare, Code, Mic, CheckCircle2, XCircle, Clock, ArrowRight, Trophy, Bug, Terminal, Database, Mail } from "lucide-react";
+import { CheckSquare, Code, Mic, CheckCircle2, XCircle, Clock, ArrowRight, Trophy, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
 import FormattedDate from "@/components/FormattedDate";
 import StudentShell from "@/components/layout/StudentShell";
 
@@ -120,6 +120,7 @@ const ROUND_BADGES: Record<string, { label: string; icon: any; color: string; bg
     output: { label: "Output", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
     sql: { label: "SQL", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
     email: { label: "Email", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
+    aptitude: { label: "Aptitude", icon: Brain, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/30" },
 };
 
 function AssessmentCard({ assessment, status, registration }: { assessment: any; status: "NEW" | "ATTENDED" | "UNATTENDED"; registration?: any }) {

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { ArrowLeft, Clock, Calendar, Globe, Users, CheckSquare, Code, Mic, Trophy, Bug, Terminal, Database, Mail } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Globe, Users, CheckSquare, Code, Mic, Trophy, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
 import ContestEditor from "@/components/ContestEditor";
 
 const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -14,6 +14,7 @@ const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: 
     output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
     sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
     email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
+    aptitude: { label: "Aptitude Round", icon: Brain, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/30" },
 };
 
 export default async function TeacherAssessmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -211,6 +212,15 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                                                     <div>Difficulty Level: <span className="text-white font-medium">Level {round.level}/10</span></div>
                                                     <div>Emails: <span className="text-white font-medium">{round.questionCount || 3}</span></div>
                                                     <div>Marking: <span className="text-white font-medium">Up to 10 per email (AI graded)</span></div>
+                                                </>
+                                            )}
+                                            {round.type === "aptitude" && (
+                                                <>
+                                                    <div>Difficulty: {round.adaptive
+                                                        ? <span className="text-white font-medium">Adaptive (starts at Level 1)</span>
+                                                        : <span className="text-white font-medium">Level {round.level}/10</span>}</div>
+                                                    <div>Questions: <span className="text-white font-medium">{round.questionCount || 10}</span></div>
+                                                    <div>Marking: <span className="text-white font-medium">+1 per correct answer</span></div>
                                                 </>
                                             )}
                                         </div>

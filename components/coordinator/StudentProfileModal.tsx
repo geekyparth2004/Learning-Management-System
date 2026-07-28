@@ -519,6 +519,7 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                                                                         round.type === "output" ? "bg-cyan-50 text-cyan-600" :
                                                                         round.type === "sql" ? "bg-violet-50 text-violet-600" :
                                                                         round.type === "email" ? "bg-amber-50 text-amber-600" :
+                                                                        round.type === "aptitude" ? "bg-teal-50 text-teal-600" :
                                                                         "bg-green-50 text-green-600"
                                                                     }`}>
                                                                         {round.type === "mcq" ? "MCQ" :
@@ -527,6 +528,7 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                                                                          round.type === "output" ? "Output" :
                                                                          round.type === "sql" ? "SQL" :
                                                                          round.type === "email" ? "Email (AI)" :
+                                                                         round.type === "aptitude" ? "Aptitude" :
                                                                          "Voice (AI)"}: {round.score}{round.maxScore !== null ? `/${round.maxScore}` : ""}
                                                                         {round.adaptive && round.highestLevel !== null && (
                                                                             <span className="ml-1 font-bold">• Adaptive, peak L{round.highestLevel}/10</span>

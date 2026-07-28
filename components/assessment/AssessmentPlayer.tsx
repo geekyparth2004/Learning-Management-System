@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3, TrendingUp, Bug, Terminal, Database, Mail } from "lucide-react";
+import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3, TrendingUp, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MCQPlayer from "./MCQPlayer";
 import CodingPlayer from "./CodingPlayer";
@@ -12,7 +12,7 @@ import SQLPlayer from "./SQLPlayer";
 import EmailPlayer from "./EmailPlayer";
 
 interface RoundConfig {
-    type: "mcq" | "coding" | "voice" | "debug" | "output" | "sql" | "email";
+    type: "mcq" | "coding" | "voice" | "debug" | "output" | "sql" | "email" | "aptitude";
     role?: string;
     level?: number;
     questionCount?: number;
@@ -41,6 +41,7 @@ const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: 
     output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
     sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
     email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
+    aptitude: { label: "Aptitude Round", icon: Brain, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/30" },
 };
 
 export default function AssessmentPlayer({ assessmentId, title, config, duration, isRegistered, userId, endTime }: AssessmentPlayerProps) {
@@ -452,6 +453,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                                 {round.type === "output" && `${round.questionCount || 5} code snippets • Level ${round.level}/10 • Predict the exact output — +5 marks per correct prediction`}
                                                 {round.type === "sql" && `${round.questionCount || 3} SQL questions • Level ${round.level}/10 • +3 marks per passed test case (visible & hidden)`}
                                                 {round.type === "email" && `${round.questionCount || 3} emails to write • Level ${round.level}/10 • Up to 10 marks per email (AI checks grammar & professionalism)`}
+                                                {round.type === "aptitude" && `${round.questionCount || 10} aptitude questions • ${round.adaptive ? "Starts at Level 1, adapts to your answers" : `Level ${round.level}/10`} • +1 mark per correct answer`}
                                             </p>
                                         </div>
                                         <div className="text-sm text-gray-500 font-mono">Round {idx + 1}</div>
@@ -744,6 +746,16 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         level={currentRound.level || 5}
                         questionCount={currentRound.questionCount || 3}
                         onComplete={(result) => handleRoundComplete({ type: "email", ...result })}
+                    />
+                )}
+                {currentRound.type === "aptitude" && (
+                    <MCQPlayer
+                        variant="aptitude"
+                        role="Aptitude"
+                        level={currentRound.level || 5}
+                        questionCount={currentRound.questionCount || 10}
+                        adaptive={!!currentRound.adaptive}
+                        onComplete={(result) => handleRoundComplete({ type: "aptitude", ...result })}
                     />
                 )}
             </div>
