@@ -568,19 +568,6 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                 </div>
             )}
 
-            {/* Warning counter badge */}
-            {warningCount > 0 && warningCount < 3 && (
-                <div className="fixed top-16 right-4 z-[9998]">
-                    <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
-                        warningCount === 1 ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" :
-                        "bg-red-500/20 text-red-400 border border-red-500/30"
-                    }`}>
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Warnings: {warningCount}/3
-                    </div>
-                </div>
-            )}
-
             {/* Camera preview */}
             {cameraStreamRef.current && (
                 <div className="fixed bottom-4 right-4 z-[9998] rounded-xl overflow-hidden border-2 border-gray-700 shadow-2xl bg-black">

@@ -7,7 +7,6 @@ import GitHubConnect from "@/components/GitHubConnect";
 import NotificationBell from "@/components/NotificationBell";
 import StreakIndicator from "@/components/StreakIndicator";
 import BadgeCheckOnLogin from "@/components/BadgeCheckOnLogin";
-import NewContestBanner from "@/components/NewContestBanner";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { StatsSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import ServicesGrid from "@/components/ServicesGrid";
@@ -149,7 +148,6 @@ export default async function Home() {
   if (isTeacher) {
     return (
       <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
-        <NewContestBanner />
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="mb-8 flex items-center justify-between">
             <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
@@ -278,56 +276,55 @@ export default async function Home() {
   return (
     <StudentShell>
       <div className="min-h-[100dvh] bg-[#0e0e0e] px-4 py-6 text-white md:p-8">
-        <NewContestBanner />
         <div className="mx-auto max-w-7xl space-y-8">
           {/* Header */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center justify-between md:justify-start md:gap-8">
-              <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+            <div className="flex items-center justify-between md:justify-start md:gap-5 lg:gap-6">
+              <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent whitespace-nowrap">
                 KodeCraft
               </div>
-              <nav className="hidden md:flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-4 lg:gap-5 whitespace-nowrap">
                 <Link
                   href="/practice"
-                  className="text-sm font-medium text-gray-400 hover:text-green-400 transition-colors"
+                  className="text-xs font-medium text-gray-400 hover:text-green-400 transition-colors"
                 >
                   Practice Arena
                 </Link>
                 <Link
                   href="/courses"
-                  className="text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors"
+                  className="text-xs font-medium text-gray-400 hover:text-blue-400 transition-colors"
                 >
                   Explore Courses
                 </Link>
                 <Link
                   href="/contest"
-                  className="text-sm font-medium text-gray-400 hover:text-orange-400 transition-colors"
+                  className="text-xs font-medium text-gray-400 hover:text-orange-400 transition-colors"
                 >
                   Contests
                 </Link>
                 <Link
                   href="/hackathon"
-                  className="text-sm font-medium text-gray-400 hover:text-purple-400 transition-colors"
+                  className="text-xs font-medium text-gray-400 hover:text-purple-400 transition-colors"
                 >
                   Hackathons
                 </Link>
                 <Link
                   href="/assessment"
-                  className="text-sm font-medium text-gray-400 hover:text-pink-400 transition-colors"
+                  className="text-xs font-medium text-gray-400 hover:text-pink-400 transition-colors"
                 >
                   Assessments
                 </Link>
                 {isOrgStudent ? (
                   <Link
                     href="/placement"
-                    className="text-sm font-medium text-gray-400 hover:text-teal-400 transition-colors"
+                    className="text-xs font-medium text-gray-400 hover:text-teal-400 transition-colors"
                   >
                     Placement
                   </Link>
                 ) : (
                   <Link
                     href="/jobs"
-                    className="text-sm font-medium text-gray-400 hover:text-yellow-400 transition-colors"
+                    className="text-xs font-medium text-gray-400 hover:text-yellow-400 transition-colors"
                   >
                     Jobs
                   </Link>
