@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp } from "lucide-react";
+import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp, Bug, Terminal, Database, Mail } from "lucide-react";
 import { levelLabel } from "@/lib/adaptive";
 
 interface LeaderboardEntry {
@@ -26,6 +26,10 @@ const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: 
     mcq: { label: "MCQ Round", icon: CheckSquare, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/30" },
     coding: { label: "Coding Round", icon: Code, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
     voice: { label: "Voice Round", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
+    debug: { label: "Debug Challenge", icon: Bug, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/30" },
+    output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
+    sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
+    email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
 };
 
 const optionLabels = ["A", "B", "C", "D"];
@@ -276,6 +280,171 @@ export default function AssessmentResults({ title, endTime, currentUserId, leade
                                                             <span className="text-xs text-gray-500 italic">Not attempted</span>
                                                         )}
                                                     </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Debug challenge analysis */}
+                                    {round.type === "debug" && Array.isArray(round.challenges) && (
+                                        <div className="space-y-3">
+                                            {round.challenges.map((c: any, cIdx: number) => (
+                                                <div key={cIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-2">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <p className="font-medium text-white text-sm flex items-center gap-2">
+                                                            <Bug className="h-4 w-4 text-orange-400 shrink-0" />
+                                                            {c.title || `Challenge ${cIdx + 1}`}
+                                                        </p>
+                                                        {c.passed ? (
+                                                            <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-green-400">
+                                                                <CheckCircle2 className="h-4 w-4" /> Fixed • +5 marks
+                                                            </span>
+                                                        ) : (
+                                                            <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-red-400">
+                                                                <XCircle className="h-4 w-4" /> Not fixed • 0 marks
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {Array.from({ length: c.testCaseCount || 0 }, (_, tcIdx) => {
+                                                            const result = c.testResults?.[tcIdx];
+                                                            const passed = !!result?.passed;
+                                                            return (
+                                                                <span key={tcIdx} className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold border ${
+                                                                    passed
+                                                                        ? "bg-green-500/10 text-green-400 border-green-500/30"
+                                                                        : "bg-red-500/10 text-red-400 border-red-500/30"
+                                                                }`}>
+                                                                    {passed ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                                    TC {tcIdx + 1}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        {(!c.testCaseCount || c.testResults?.length === 0) && (
+                                                            <span className="text-xs text-gray-500 italic">Not attempted</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Output prediction analysis */}
+                                    {round.type === "output" && Array.isArray(round.questions) && (
+                                        <div className="space-y-3">
+                                            {round.questions.map((q: any, qIdx: number) => (
+                                                <div key={qIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-3">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <p className="font-medium text-white text-sm">
+                                                            <span className="text-gray-500 mr-2">Q{qIdx + 1}.</span>
+                                                            What does this {q.language || "code"} print?
+                                                        </p>
+                                                        {q.correct ? (
+                                                            <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-green-400"><CheckCircle2 className="h-4 w-4" /> +5</span>
+                                                        ) : (
+                                                            <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-red-400"><XCircle className="h-4 w-4" /> 0</span>
+                                                        )}
+                                                    </div>
+                                                    <pre className="rounded-lg border border-gray-800 bg-[#0b0b0b] p-3 overflow-x-auto text-xs leading-relaxed text-gray-200 font-mono whitespace-pre">
+                                                        {q.code}
+                                                    </pre>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                                                        <div className={`rounded-lg border p-2 ${q.correct ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"}`}>
+                                                            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Your Answer</p>
+                                                            <pre className={`font-mono whitespace-pre-wrap ${q.correct ? "text-green-300" : "text-red-300"}`}>{q.predicted || "(empty)"}</pre>
+                                                        </div>
+                                                        <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-2">
+                                                            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Correct Output</p>
+                                                            <pre className="font-mono whitespace-pre-wrap text-green-300">{q.expectedOutput}</pre>
+                                                        </div>
+                                                    </div>
+                                                    {q.explanation && (
+                                                        <p className="flex items-start gap-2 text-xs text-cyan-300">
+                                                            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                                            {q.explanation}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* SQL analysis */}
+                                    {round.type === "sql" && Array.isArray(round.questions) && (
+                                        <div className="space-y-3">
+                                            {round.questions.map((q: any, qIdx: number) => (
+                                                <div key={qIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-2">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <p className="font-medium text-white text-sm flex items-center gap-2">
+                                                            <Database className="h-4 w-4 text-violet-400 shrink-0" />
+                                                            {q.title || `Question ${qIdx + 1}`}
+                                                        </p>
+                                                        <span className={`shrink-0 text-xs font-bold ${q.passedCount === q.testCaseCount && q.testCaseCount > 0 ? "text-green-400" : "text-yellow-400"}`}>
+                                                            {q.passedCount}/{q.testCaseCount} test cases • +{(q.passedCount || 0) * 3} marks
+                                                        </span>
+                                                    </div>
+                                                    {q.finalQuery && q.finalQuery.trim() && (
+                                                        <pre className="rounded-lg border border-gray-800 bg-[#0b0b0b] p-3 overflow-x-auto text-xs leading-relaxed text-violet-200 font-mono whitespace-pre-wrap">
+                                                            {q.finalQuery}
+                                                        </pre>
+                                                    )}
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {Array.from({ length: q.testCaseCount || 0 }, (_, tcIdx) => {
+                                                            const result = q.testResults?.[tcIdx];
+                                                            const passed = !!result?.passed;
+                                                            return (
+                                                                <span key={tcIdx} className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold border ${
+                                                                    passed
+                                                                        ? "bg-green-500/10 text-green-400 border-green-500/30"
+                                                                        : "bg-red-500/10 text-red-400 border-red-500/30"
+                                                                }`}>
+                                                                    {passed ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                                                    TC {tcIdx + 1}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        {(!q.testResults || q.testResults.length === 0) && (
+                                                            <span className="text-xs text-gray-500 italic">Not attempted</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Email writing analysis */}
+                                    {round.type === "email" && Array.isArray(round.questions) && (
+                                        <div className="space-y-3">
+                                            {round.questions.map((q: any, qIdx: number) => (
+                                                <div key={qIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-3">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <p className="font-medium text-white text-sm">
+                                                            <span className="text-gray-500 mr-2">Email {qIdx + 1}.</span>
+                                                            {q.topic}
+                                                        </p>
+                                                        <span className={`shrink-0 text-xs font-bold ${q.marks >= 7 ? "text-green-400" : q.marks >= 4 ? "text-yellow-400" : "text-red-400"}`}>
+                                                            {q.marks}/10 marks
+                                                        </span>
+                                                    </div>
+                                                    {q.scenario && (
+                                                        <p className="text-xs text-gray-500 italic">{q.scenario}</p>
+                                                    )}
+                                                    <pre className="rounded-lg border border-gray-800 bg-[#0b0b0b] p-3 overflow-x-auto text-xs leading-relaxed text-gray-200 font-sans whitespace-pre-wrap max-h-64 overflow-y-auto">
+                                                        {q.email || "(empty)"}
+                                                    </pre>
+                                                    <div className="flex items-center gap-3 text-xs">
+                                                        {typeof q.grammarIssues === "number" && (
+                                                            <span className={`rounded px-2 py-0.5 font-bold ${q.grammarIssues === 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                                                                {q.grammarIssues === 0 ? "No grammar issues" : `${q.grammarIssues} grammar issue${q.grammarIssues === 1 ? "" : "s"}`}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {q.feedback && (
+                                                        <p className="flex items-start gap-2 text-xs text-amber-300">
+                                                            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                                            {q.feedback}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

@@ -1,18 +1,24 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3, TrendingUp } from "lucide-react";
+import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3, TrendingUp, Bug, Terminal, Database, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MCQPlayer from "./MCQPlayer";
 import CodingPlayer from "./CodingPlayer";
 import VoicePlayer from "./VoicePlayer";
+import DebugPlayer from "./DebugPlayer";
+import OutputPlayer from "./OutputPlayer";
+import SQLPlayer from "./SQLPlayer";
+import EmailPlayer from "./EmailPlayer";
 
 interface RoundConfig {
-    type: "mcq" | "coding" | "voice";
+    type: "mcq" | "coding" | "voice" | "debug" | "output" | "sql" | "email";
     role?: string;
     level?: number;
     questionCount?: number;
     problemCount?: number;
+    challengeCount?: number;
+    language?: "python" | "java" | "cpp";
     topic?: string;
     adaptive?: boolean;
 }
@@ -31,6 +37,10 @@ const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: 
     mcq: { label: "MCQ Round", icon: CheckSquare, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/30" },
     coding: { label: "Coding Round", icon: Code, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
     voice: { label: "Voice Round", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
+    debug: { label: "Debug Challenge", icon: Bug, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/30" },
+    output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
+    sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
+    email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
 };
 
 export default function AssessmentPlayer({ assessmentId, title, config, duration, isRegistered, userId, endTime }: AssessmentPlayerProps) {
@@ -47,28 +57,47 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
     const [warningMessage, setWarningMessage] = useState("");
     const [cameraError, setCameraError] = useState("");
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+    const [timeExpired, setTimeExpired] = useState(false);
     const cameraStreamRef = useRef<MediaStream | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const isSubmittingRef = useRef(false);
     const warningCountRef = useRef(0);
     const elapsedTimeRef = useRef(0);
+    // Timer callbacks fire outside React's render flow, so the latest round results
+    // are mirrored into a ref for the time-up auto-submit to read.
+    const roundResultsRef = useRef<any[]>([]);
 
     const rounds = config.rounds || [];
+
+    // The teacher-set duration is the countdown budget. Without one, the round is untimed.
+    const totalSeconds = duration > 0 ? duration * 60 : 0;
+    const hasTimeLimit = totalSeconds > 0;
+    const [remainingTime, setRemainingTime] = useState(totalSeconds);
 
     React.useEffect(() => {
         if (!hasStarted || isComplete) return;
         const timer = setInterval(() => {
-            setElapsedTime(prev => {
-                elapsedTimeRef.current = prev + 1;
-                return prev + 1;
-            });
+            elapsedTimeRef.current += 1;
+            setElapsedTime(elapsedTimeRef.current);
+            if (hasTimeLimit) {
+                setRemainingTime(prev => Math.max(0, prev - 1));
+            }
         }, 1000);
         return () => clearInterval(timer);
-    }, [hasStarted, isComplete]);
+    }, [hasStarted, isComplete, hasTimeLimit]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, "0")}`;
+    };
+
+    // Countdown display: h:mm:ss once past an hour, m:ss below it.
+    const formatCountdown = (seconds: number) => {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
@@ -108,6 +137,16 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
     const autoSubmitAssessment = useCallback(() => {
         submitAssessment(roundResults, true);
     }, [submitAssessment, roundResults]);
+
+    // Time's up — submit whatever the student has completed so far, immediately.
+    useEffect(() => {
+        if (!hasStarted || isComplete || !hasTimeLimit) return;
+        if (remainingTime > 0) return;
+        setTimeExpired(true);
+        setWarningMessage("Time is up! Your assessment is being submitted automatically.");
+        setShowWarning(true);
+        submitAssessment(roundResultsRef.current, true);
+    }, [remainingTime, hasStarted, isComplete, hasTimeLimit, submitAssessment]);
 
     const triggerWarning = useCallback((message: string) => {
         const newCount = warningCountRef.current + 1;
@@ -223,6 +262,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
     function handleRoundComplete(result: any) {
         const newResults = [...roundResults, result];
         setRoundResults(newResults);
+        roundResultsRef.current = newResults;
 
         if (currentRoundIndex < rounds.length - 1) {
             setCurrentRoundIndex(prev => prev + 1);
@@ -341,6 +381,13 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                     <span className="text-sm text-gray-300">Tab switch detection</span>
                                     <span className="ml-auto text-xs text-green-400 font-bold">Active</span>
                                 </div>
+                                {hasTimeLimit && (
+                                    <div className="flex items-center gap-3 rounded-lg bg-purple-500/10 border border-purple-500/20 p-3">
+                                        <Clock className="h-5 w-5 text-purple-400 shrink-0" />
+                                        <span className="text-sm text-gray-300">Countdown timer</span>
+                                        <span className="ml-auto text-xs text-purple-400 font-bold">{duration} min</span>
+                                    </div>
+                                )}
                             </div>
                             {cameraError && (
                                 <p className="text-yellow-400 text-xs">{cameraError}</p>
@@ -369,10 +416,10 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         {config.description && (
                             <p className="text-gray-400">{config.description}</p>
                         )}
-                        {duration > 0 && (
+                        {hasTimeLimit && (
                             <div className="inline-flex items-center gap-2 rounded-full bg-gray-800 px-4 py-1.5 text-sm text-gray-300">
                                 <Clock className="h-4 w-4 text-purple-400" />
-                                <span>Duration: {duration} minutes</span>
+                                <span>Time limit: {duration} minutes — auto-submits at 0:00</span>
                             </div>
                         )}
                     </div>
@@ -401,6 +448,10 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                                 {round.type === "mcq" && `${round.questionCount || 10} questions • Role: ${round.role} • ${round.adaptive ? "Starts at Level 1, adapts to your answers" : `Level ${round.level}/10`} • +1 mark per correct answer`}
                                                 {round.type === "coding" && `${round.problemCount || 3} problems • ${round.adaptive ? "Starts at Level 1, adapts to your results" : `Level ${round.level}/10`} • +5 marks per passed test case`}
                                                 {round.type === "voice" && `${round.questionCount || 10} questions • Topic: ${round.topic} • ${round.adaptive ? "Starts at Level 1, adapts to your marks" : `Level ${round.level}/10`} • Up to 5 marks per answer (AI evaluated)`}
+                                                {round.type === "debug" && `${round.challengeCount || 3} buggy programs (${(round.language || "python").toUpperCase()}) • Level ${round.level}/10 • Fix the bugs — +5 marks per program passing all tests`}
+                                                {round.type === "output" && `${round.questionCount || 5} code snippets • Level ${round.level}/10 • Predict the exact output — +5 marks per correct prediction`}
+                                                {round.type === "sql" && `${round.questionCount || 3} SQL questions • Level ${round.level}/10 • +3 marks per passed test case (visible & hidden)`}
+                                                {round.type === "email" && `${round.questionCount || 3} emails to write • Level ${round.level}/10 • Up to 10 marks per email (AI checks grammar & professionalism)`}
                                             </p>
                                         </div>
                                         <div className="text-sm text-gray-500 font-mono">Round {idx + 1}</div>
@@ -419,7 +470,8 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                 <p className="text-xs text-gray-400">
                                     This assessment is proctored. You will be asked to enable camera access and fullscreen mode.
                                     Exiting fullscreen or switching tabs will result in warnings. 3 warnings will auto-submit your assessment.
-                                    Scores and the leaderboard are revealed only after the assessment ends for everyone.
+                                    {hasTimeLimit && ` A ${duration}-minute countdown starts when you begin — the assessment submits automatically when it reaches zero.`}
+                                    {" "}Scores and the leaderboard are revealed only after the assessment ends for everyone.
                                 </p>
                             </div>
                         </div>
@@ -440,11 +492,19 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="max-w-2xl w-full text-center space-y-8">
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
-                        <Trophy className="h-10 w-10 text-green-400" />
+                    <div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${timeExpired ? "bg-red-500/20" : "bg-green-500/20"}`}>
+                        {timeExpired
+                            ? <Clock className="h-10 w-10 text-red-400" />
+                            : <Trophy className="h-10 w-10 text-green-400" />}
                     </div>
-                    <h1 className="text-3xl font-bold">Assessment Submitted!</h1>
-                    <p className="text-gray-400">You completed {title} in {formatTime(elapsedTime)}</p>
+                    <h1 className="text-3xl font-bold">
+                        {timeExpired ? "Time's Up — Assessment Submitted" : "Assessment Submitted!"}
+                    </h1>
+                    <p className="text-gray-400">
+                        {timeExpired
+                            ? `Your allotted ${duration} minutes ran out, so ${title} was submitted automatically.`
+                            : `You completed ${title} in ${formatTime(elapsedTime)}`}
+                    </p>
 
                     <div className="space-y-3">
                         {roundResults.map((result, idx) => {
@@ -549,9 +609,14 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         </div>
                         <p className="text-sm text-gray-400">
                             This will end your assessment immediately and submit your progress so far.
+                            {hasTimeLimit && (
+                                <span className="block mt-1 text-gray-300">
+                                    You still have <span className="font-mono font-bold text-white">{formatCountdown(remainingTime)}</span> remaining.
+                                </span>
+                            )}
                             {currentRoundIndex < rounds.length && (
                                 <span className="block mt-1 text-yellow-400">
-                                    Rounds you haven't finished will not receive any marks.
+                                    Rounds you haven&apos;t finished will not receive any marks.
                                 </span>
                             )}
                         </p>
@@ -596,10 +661,26 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         <Shield className="h-3.5 w-3.5 text-green-400" />
                         <span className="text-green-400 font-bold">Proctored</span>
                     </div>
-                    <div className="flex items-center gap-2 rounded-full bg-gray-800 px-3 py-1.5 text-sm text-gray-300">
-                        <Clock className="h-4 w-4 text-purple-400" />
-                        <span className="font-mono">{formatTime(elapsedTime)}</span>
-                    </div>
+                    {hasTimeLimit ? (
+                        <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm border transition-colors ${
+                            remainingTime <= 60
+                                ? "bg-red-500/20 border-red-500/40 text-red-300 animate-pulse"
+                                : remainingTime <= 300
+                                    ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-300"
+                                    : "bg-gray-800 border-gray-700 text-gray-300"
+                        }`}>
+                            <Clock className={`h-4 w-4 ${
+                                remainingTime <= 60 ? "text-red-400" : remainingTime <= 300 ? "text-yellow-400" : "text-purple-400"
+                            }`} />
+                            <span className="font-mono font-bold">{formatCountdown(remainingTime)}</span>
+                            <span className="text-[10px] uppercase tracking-wider opacity-70">left</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 rounded-full bg-gray-800 px-3 py-1.5 text-sm text-gray-300">
+                            <Clock className="h-4 w-4 text-purple-400" />
+                            <span className="font-mono">{formatTime(elapsedTime)}</span>
+                        </div>
+                    )}
                     <button onClick={() => setShowSubmitConfirm(true)}
                         className="flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-red-500 transition-colors"
                     >
@@ -634,6 +715,35 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         level={currentRound.level || 5}
                         adaptive={!!currentRound.adaptive}
                         onComplete={(result) => handleRoundComplete({ type: "voice", ...result })}
+                    />
+                )}
+                {currentRound.type === "debug" && (
+                    <DebugPlayer
+                        level={currentRound.level || 5}
+                        challengeCount={currentRound.challengeCount || 3}
+                        language={currentRound.language || "python"}
+                        onComplete={(result) => handleRoundComplete({ type: "debug", ...result })}
+                    />
+                )}
+                {currentRound.type === "output" && (
+                    <OutputPlayer
+                        level={currentRound.level || 5}
+                        questionCount={currentRound.questionCount || 5}
+                        onComplete={(result) => handleRoundComplete({ type: "output", ...result })}
+                    />
+                )}
+                {currentRound.type === "sql" && (
+                    <SQLPlayer
+                        level={currentRound.level || 5}
+                        questionCount={currentRound.questionCount || 3}
+                        onComplete={(result) => handleRoundComplete({ type: "sql", ...result })}
+                    />
+                )}
+                {currentRound.type === "email" && (
+                    <EmailPlayer
+                        level={currentRound.level || 5}
+                        questionCount={currentRound.questionCount || 3}
+                        onComplete={(result) => handleRoundComplete({ type: "email", ...result })}
                     />
                 )}
             </div>

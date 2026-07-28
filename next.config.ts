@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // sql.js loads its WASM binary from node_modules at runtime — keep it unbundled
+  serverExternalPackages: ["sql.js"],
   images: {
     remotePatterns: [
       {

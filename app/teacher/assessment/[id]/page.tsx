@@ -3,13 +3,17 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
-import { ArrowLeft, Clock, Calendar, Globe, Users, CheckSquare, Code, Mic, Trophy } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Globe, Users, CheckSquare, Code, Mic, Trophy, Bug, Terminal, Database, Mail } from "lucide-react";
 import ContestEditor from "@/components/ContestEditor";
 
 const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     mcq: { label: "MCQ Round", icon: CheckSquare, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/30" },
     coding: { label: "Coding Round", icon: Code, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
     voice: { label: "Voice Round", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
+    debug: { label: "Debug Challenge", icon: Bug, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/30" },
+    output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
+    sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
+    email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
 };
 
 export default async function TeacherAssessmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -180,6 +184,33 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                                                         ? <span className="text-white font-medium">Adaptive (starts at Level 1)</span>
                                                         : <span className="text-white font-medium">Level {round.level}/10</span>}</div>
                                                     <div>Questions: <span className="text-white font-medium">{round.questionCount || 10}</span></div>
+                                                </>
+                                            )}
+                                            {round.type === "debug" && (
+                                                <>
+                                                    <div>Language: <span className="text-white font-medium">{(round.language || "python").toUpperCase()}</span></div>
+                                                    <div>Difficulty Level: <span className="text-white font-medium">Level {round.level}/10</span></div>
+                                                    <div>Challenges: <span className="text-white font-medium">{round.challengeCount || 3}</span></div>
+                                                </>
+                                            )}
+                                            {round.type === "output" && (
+                                                <>
+                                                    <div>Difficulty Level: <span className="text-white font-medium">Level {round.level}/10</span></div>
+                                                    <div>Questions: <span className="text-white font-medium">{round.questionCount || 5}</span></div>
+                                                </>
+                                            )}
+                                            {round.type === "sql" && (
+                                                <>
+                                                    <div>Difficulty Level: <span className="text-white font-medium">Level {round.level}/10</span></div>
+                                                    <div>Questions: <span className="text-white font-medium">{round.questionCount || 3}</span></div>
+                                                    <div>Marking: <span className="text-white font-medium">+3 per passed test case</span></div>
+                                                </>
+                                            )}
+                                            {round.type === "email" && (
+                                                <>
+                                                    <div>Difficulty Level: <span className="text-white font-medium">Level {round.level}/10</span></div>
+                                                    <div>Emails: <span className="text-white font-medium">{round.questionCount || 3}</span></div>
+                                                    <div>Marking: <span className="text-white font-medium">Up to 10 per email (AI graded)</span></div>
                                                 </>
                                             )}
                                         </div>

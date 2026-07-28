@@ -515,9 +515,19 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                                                                     <span key={rIdx} className={`rounded px-2 py-0.5 text-[10px] font-medium ${
                                                                         round.type === "mcq" ? "bg-pink-50 text-pink-600" :
                                                                         round.type === "coding" ? "bg-indigo-50 text-indigo-600" :
+                                                                        round.type === "debug" ? "bg-orange-50 text-orange-600" :
+                                                                        round.type === "output" ? "bg-cyan-50 text-cyan-600" :
+                                                                        round.type === "sql" ? "bg-violet-50 text-violet-600" :
+                                                                        round.type === "email" ? "bg-amber-50 text-amber-600" :
                                                                         "bg-green-50 text-green-600"
                                                                     }`}>
-                                                                        {round.type === "mcq" ? "MCQ" : round.type === "coding" ? "Coding" : "Voice (AI)"}: {round.score}{round.maxScore !== null ? `/${round.maxScore}` : ""}
+                                                                        {round.type === "mcq" ? "MCQ" :
+                                                                         round.type === "coding" ? "Coding" :
+                                                                         round.type === "debug" ? "Debug" :
+                                                                         round.type === "output" ? "Output" :
+                                                                         round.type === "sql" ? "SQL" :
+                                                                         round.type === "email" ? "Email (AI)" :
+                                                                         "Voice (AI)"}: {round.score}{round.maxScore !== null ? `/${round.maxScore}` : ""}
                                                                         {round.adaptive && round.highestLevel !== null && (
                                                                             <span className="ml-1 font-bold">• Adaptive, peak L{round.highestLevel}/10</span>
                                                                         )}

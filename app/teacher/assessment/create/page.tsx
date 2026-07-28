@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, CheckSquare, Code, Mic, Loader2, TrendingUp, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Save, CheckSquare, Code, Mic, Loader2, TrendingUp, SlidersHorizontal, Bug, Terminal, Database, Mail } from "lucide-react";
 import Link from "next/link";
 
 const ROLES = [
@@ -18,7 +18,7 @@ const ROLES = [
     "Mobile App Developer",
 ];
 
-type RoundType = "mcq" | "coding" | "voice";
+type RoundType = "mcq" | "coding" | "voice" | "debug" | "output" | "sql" | "email";
 
 // Difficulty mode for a round: a teacher-fixed level, or adaptive (starts at level 1
 // and moves up on a correct answer / down on a wrong one).
@@ -54,6 +54,23 @@ export default function CreateAssessmentPage() {
     const [voiceCount, setVoiceCount] = useState(10);
     const [voiceLevel, setVoiceLevel] = useState(5);
     const [voiceMode, setVoiceMode] = useState<DifficultyMode>("fixed");
+
+    // Debug challenge config
+    const [debugLevel, setDebugLevel] = useState(5);
+    const [debugCount, setDebugCount] = useState(3);
+    const [debugLanguage, setDebugLanguage] = useState<"python" | "java" | "cpp">("python");
+
+    // Output prediction config
+    const [outputLevel, setOutputLevel] = useState(5);
+    const [outputCount, setOutputCount] = useState(5);
+
+    // SQL config
+    const [sqlLevel, setSqlLevel] = useState(5);
+    const [sqlCount, setSqlCount] = useState(3);
+
+    // Email writing config
+    const [emailLevel, setEmailLevel] = useState(5);
+    const [emailCount, setEmailCount] = useState(3);
 
     function toggleRound(round: RoundType) {
         setSelectedRounds(prev => {
@@ -101,6 +118,35 @@ export default function CreateAssessmentPage() {
                 topic: voiceTopic,
                 questionCount: voiceCount,
                 ...(voiceMode === "adaptive" ? { adaptive: true } : { level: voiceLevel }),
+            });
+        }
+        if (selectedRounds.has("debug")) {
+            rounds.push({
+                type: "debug",
+                level: debugLevel,
+                challengeCount: debugCount,
+                language: debugLanguage,
+            });
+        }
+        if (selectedRounds.has("output")) {
+            rounds.push({
+                type: "output",
+                level: outputLevel,
+                questionCount: outputCount,
+            });
+        }
+        if (selectedRounds.has("sql")) {
+            rounds.push({
+                type: "sql",
+                level: sqlLevel,
+                questionCount: sqlCount,
+            });
+        }
+        if (selectedRounds.has("email")) {
+            rounds.push({
+                type: "email",
+                level: emailLevel,
+                questionCount: emailCount,
             });
         }
 
@@ -250,6 +296,74 @@ export default function CreateAssessmentPage() {
                                     <p className="text-xs text-gray-400 mt-1">AI voice interview with verbal answers</p>
                                 </div>
                             </button>
+
+                            {/* Debug Challenge */}
+                            <button type="button" onClick={() => toggleRound("debug")}
+                                className={`group flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all ${
+                                    selectedRounds.has("debug")
+                                        ? "border-orange-500 bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,0.15)]"
+                                        : "border-gray-800 bg-[#111111] hover:border-gray-600"
+                                }`}
+                            >
+                                <div className={`rounded-full p-3 transition-colors ${selectedRounds.has("debug") ? "bg-orange-500/20 text-orange-400" : "bg-gray-800 text-gray-400"}`}>
+                                    <Bug className="h-7 w-7" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">Debug Challenge</h3>
+                                    <p className="text-xs text-gray-400 mt-1">Fix buggy code until all tests pass</p>
+                                </div>
+                            </button>
+
+                            {/* Output Prediction */}
+                            <button type="button" onClick={() => toggleRound("output")}
+                                className={`group flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all ${
+                                    selectedRounds.has("output")
+                                        ? "border-cyan-500 bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+                                        : "border-gray-800 bg-[#111111] hover:border-gray-600"
+                                }`}
+                            >
+                                <div className={`rounded-full p-3 transition-colors ${selectedRounds.has("output") ? "bg-cyan-500/20 text-cyan-400" : "bg-gray-800 text-gray-400"}`}>
+                                    <Terminal className="h-7 w-7" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">Output Prediction</h3>
+                                    <p className="text-xs text-gray-400 mt-1">Predict what a code snippet prints</p>
+                                </div>
+                            </button>
+
+                            {/* SQL */}
+                            <button type="button" onClick={() => toggleRound("sql")}
+                                className={`group flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all ${
+                                    selectedRounds.has("sql")
+                                        ? "border-violet-500 bg-violet-500/10 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
+                                        : "border-gray-800 bg-[#111111] hover:border-gray-600"
+                                }`}
+                            >
+                                <div className={`rounded-full p-3 transition-colors ${selectedRounds.has("sql") ? "bg-violet-500/20 text-violet-400" : "bg-gray-800 text-gray-400"}`}>
+                                    <Database className="h-7 w-7" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">SQL Round</h3>
+                                    <p className="text-xs text-gray-400 mt-1">Write queries tested against real data</p>
+                                </div>
+                            </button>
+
+                            {/* Email Writing */}
+                            <button type="button" onClick={() => toggleRound("email")}
+                                className={`group flex flex-col items-center gap-3 rounded-xl border-2 p-6 text-center transition-all ${
+                                    selectedRounds.has("email")
+                                        ? "border-amber-500 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)]"
+                                        : "border-gray-800 bg-[#111111] hover:border-gray-600"
+                                }`}
+                            >
+                                <div className={`rounded-full p-3 transition-colors ${selectedRounds.has("email") ? "bg-amber-500/20 text-amber-400" : "bg-gray-800 text-gray-400"}`}>
+                                    <Mail className="h-7 w-7" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">Email Writing</h3>
+                                    <p className="text-xs text-gray-400 mt-1">AI grades grammar &amp; professionalism</p>
+                                </div>
+                            </button>
                         </div>
                     </div>
 
@@ -377,6 +491,138 @@ export default function CreateAssessmentPage() {
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-gray-300">Number of Questions</label>
                                             <input type="number" min={3} max={20} value={voiceCount} onChange={e => setVoiceCount(Number(e.target.value))} className={inputClass} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Debug Challenge Config */}
+                            {selectedRounds.has("debug") && (
+                                <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-5 space-y-4">
+                                    <h3 className="font-bold text-orange-400 flex items-center gap-2">
+                                        <Bug className="h-4 w-4" /> Debug Challenge Configuration
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        AI writes programs with planted bugs — low levels get syntax errors, mid levels logical errors,
+                                        high levels both. Students fix the code and must pass all test cases. +5 marks per fixed program.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">
+                                                Difficulty Level: <span className="text-orange-400 font-bold">{debugLevel}</span>
+                                                <span className="text-gray-500 ml-1">({levelLabels[debugLevel]})</span>
+                                            </label>
+                                            <input type="range" min={1} max={10} value={debugLevel} onChange={e => setDebugLevel(Number(e.target.value))}
+                                                className="w-full accent-orange-500" />
+                                            <p className="text-xs text-gray-500">
+                                                1-3: syntax errors • 4-6: logical errors • 7-8: both • 9-10: multiple subtle bugs
+                                            </p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">Number of Challenges</label>
+                                                <input type="number" min={1} max={10} value={debugCount} onChange={e => setDebugCount(Number(e.target.value))} className={inputClass} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">Language</label>
+                                                <select value={debugLanguage} onChange={e => setDebugLanguage(e.target.value as any)} className={inputClass}>
+                                                    <option value="python">Python</option>
+                                                    <option value="java">Java</option>
+                                                    <option value="cpp">C++</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Output Prediction Config */}
+                            {selectedRounds.has("output") && (
+                                <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-5 space-y-4">
+                                    <h3 className="font-bold text-cyan-400 flex items-center gap-2">
+                                        <Terminal className="h-4 w-4" /> Output Prediction Configuration
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        AI generates code or pseudocode snippets; students type the exact output they predict.
+                                        +5 marks per correct prediction.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">
+                                                Difficulty Level: <span className="text-cyan-400 font-bold">{outputLevel}</span>
+                                                <span className="text-gray-500 ml-1">({levelLabels[outputLevel]})</span>
+                                            </label>
+                                            <input type="range" min={1} max={10} value={outputLevel} onChange={e => setOutputLevel(Number(e.target.value))}
+                                                className="w-full accent-cyan-500" />
+                                            <p className="text-xs text-gray-500">Higher levels use trickier language semantics.</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">Number of Questions</label>
+                                            <input type="number" min={3} max={20} value={outputCount} onChange={e => setOutputCount(Number(e.target.value))} className={inputClass} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* SQL Config */}
+                            {selectedRounds.has("sql") && (
+                                <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-5 space-y-4">
+                                    <h3 className="font-bold text-violet-400 flex items-center gap-2">
+                                        <Database className="h-4 w-4" /> SQL Round Configuration
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        AI generates SQL questions with sample data and visible + hidden test cases. Students write
+                                        queries and run them against a real in-memory database. +3 marks per passed test case.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">
+                                                Difficulty Level: <span className="text-violet-400 font-bold">{sqlLevel}</span>
+                                                <span className="text-gray-500 ml-1">({levelLabels[sqlLevel]})</span>
+                                            </label>
+                                            <input type="range" min={1} max={10} value={sqlLevel} onChange={e => setSqlLevel(Number(e.target.value))}
+                                                className="w-full accent-violet-500" />
+                                            <p className="text-xs text-gray-500">
+                                                1-3: simple SELECT/WHERE • 4-7: JOINs &amp; GROUP BY • 8-10: subqueries &amp; advanced logic
+                                            </p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">Number of Questions</label>
+                                            <input type="number" min={1} max={10} value={sqlCount} onChange={e => setSqlCount(Number(e.target.value))} className={inputClass} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Email Writing Config */}
+                            {selectedRounds.has("email") && (
+                                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 space-y-4">
+                                    <h3 className="font-bold text-amber-400 flex items-center gap-2">
+                                        <Mail className="h-4 w-4" /> Email Writing Configuration
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        AI gives each student a workplace email scenario. They write the email; AI grades it out of 10,
+                                        deducting for grammar mistakes and unprofessional tone.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">
+                                                Difficulty Level: <span className="text-amber-400 font-bold">{emailLevel}</span>
+                                                <span className="text-gray-500 ml-1">({levelLabels[emailLevel]})</span>
+                                            </label>
+                                            <input type="range" min={1} max={10} value={emailLevel} onChange={e => setEmailLevel(Number(e.target.value))}
+                                                className="w-full accent-amber-500" />
+                                            <p className="text-xs text-gray-500">
+                                                1-3: everyday emails • 4-7: workplace nuance • 8-10: high-stakes communication
+                                            </p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-300">Number of Emails</label>
+                                            <input type="number" min={1} max={10} value={emailCount} onChange={e => setEmailCount(Number(e.target.value))} className={inputClass} />
                                         </div>
                                     </div>
                                 </div>
