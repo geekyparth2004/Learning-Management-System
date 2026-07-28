@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles } from "lucide-react";
+import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp } from "lucide-react";
+import { levelLabel } from "@/lib/adaptive";
 
 interface LeaderboardEntry {
     rank: number;
@@ -154,11 +155,38 @@ export default function AssessmentResults({ title, endTime, currentUserId, leade
                                         <div className="flex items-center gap-2">
                                             <Icon className={`h-5 w-5 ${meta.color}`} />
                                             <h2 className={`font-bold ${meta.color}`}>{meta.label}</h2>
+                                            {round.adaptive && (
+                                                <span className={`inline-flex items-center gap-1 rounded-full border border-current/30 bg-black/30 px-2 py-0.5 text-[10px] font-bold ${meta.color}`}>
+                                                    <TrendingUp className="h-3 w-3" /> ADAPTIVE
+                                                </span>
+                                            )}
                                         </div>
                                         <span className="rounded-full bg-black/30 px-3 py-1 text-sm font-bold text-white">
                                             {round.score ?? 0} / {round.maxScore ?? "—"} marks
                                         </span>
                                     </div>
+
+                                    {/* Adaptive summary: how far up the difficulty ladder the student got */}
+                                    {round.adaptive && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="rounded-lg border border-gray-800 bg-black/30 p-3 text-center">
+                                                <p className="text-2xl font-bold text-white">
+                                                    {round.highestLevel ?? 1}<span className="text-sm text-gray-500">/10</span>
+                                                </p>
+                                                <p className="text-[10px] uppercase tracking-wider text-gray-500">
+                                                    Highest Level Achieved · {levelLabel(round.highestLevel ?? 1)}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-lg border border-gray-800 bg-black/30 p-3 text-center">
+                                                <p className="text-2xl font-bold text-white">
+                                                    {round.finalLevel ?? 1}<span className="text-sm text-gray-500">/10</span>
+                                                </p>
+                                                <p className="text-[10px] uppercase tracking-wider text-gray-500">
+                                                    Final Level · {levelLabel(round.finalLevel ?? 1)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* MCQ analysis */}
                                     {round.type === "mcq" && Array.isArray(round.questions) && (
@@ -172,11 +200,16 @@ export default function AssessmentResults({ title, endTime, currentUserId, leade
                                                                 <span className="text-gray-500 mr-2">Q{qIdx + 1}.</span>
                                                                 {q.question}
                                                             </p>
-                                                            {isCorrect ? (
-                                                                <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-green-400"><CheckCircle2 className="h-4 w-4" /> +1</span>
-                                                            ) : (
-                                                                <span className="shrink-0 flex items-center gap-1 text-xs font-bold text-red-400"><XCircle className="h-4 w-4" /> 0</span>
-                                                            )}
+                                                            <div className="shrink-0 flex items-center gap-2">
+                                                                {q.level !== undefined && (
+                                                                    <span className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-bold text-gray-400">L{q.level}</span>
+                                                                )}
+                                                                {isCorrect ? (
+                                                                    <span className="flex items-center gap-1 text-xs font-bold text-green-400"><CheckCircle2 className="h-4 w-4" /> +1</span>
+                                                                ) : (
+                                                                    <span className="flex items-center gap-1 text-xs font-bold text-red-400"><XCircle className="h-4 w-4" /> 0</span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div className="space-y-1.5">
                                                             {(q.options || []).map((opt: string, optIdx: number) => {
@@ -213,9 +246,14 @@ export default function AssessmentResults({ title, endTime, currentUserId, leade
                                         <div className="space-y-3">
                                             {round.problems.map((p: any, pIdx: number) => (
                                                 <div key={pIdx} className="rounded-lg border border-gray-800 bg-[#111111] p-4 space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <p className="font-medium text-white text-sm">{p.title || `Problem ${pIdx + 1}`}</p>
-                                                        <span className={`text-xs font-bold ${p.passedCount === p.testCaseCount && p.testCaseCount > 0 ? "text-green-400" : "text-yellow-400"}`}>
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <p className="font-medium text-white text-sm flex items-center gap-2">
+                                                            {p.level !== undefined && (
+                                                                <span className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-bold text-gray-400">L{p.level}</span>
+                                                            )}
+                                                            {p.title || `Problem ${pIdx + 1}`}
+                                                        </p>
+                                                        <span className={`shrink-0 text-xs font-bold ${p.passedCount === p.testCaseCount && p.testCaseCount > 0 ? "text-green-400" : "text-yellow-400"}`}>
                                                             {p.passedCount}/{p.testCaseCount} test cases • +{(p.passedCount || 0) * 5} marks
                                                         </span>
                                                     </div>
@@ -253,9 +291,14 @@ export default function AssessmentResults({ title, endTime, currentUserId, leade
                                                             <span className="text-gray-500 mr-2">Q{qIdx + 1}.</span>
                                                             {q.question}
                                                         </p>
-                                                        <span className={`shrink-0 text-xs font-bold ${q.marks >= 3 ? "text-green-400" : q.marks > 0 ? "text-yellow-400" : "text-red-400"}`}>
-                                                            {q.marks}/5 marks
-                                                        </span>
+                                                        <div className="shrink-0 flex items-center gap-2">
+                                                            {q.level !== undefined && (
+                                                                <span className="rounded bg-gray-800 px-2 py-0.5 text-[10px] font-bold text-gray-400">L{q.level}</span>
+                                                            )}
+                                                            <span className={`text-xs font-bold ${q.marks >= 3 ? "text-green-400" : q.marks > 0 ? "text-yellow-400" : "text-red-400"}`}>
+                                                                {q.marks}/5 marks
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                     {q.transcript && (
                                                         <p className="text-xs text-gray-400 border-l-2 border-gray-700 pl-3 italic">

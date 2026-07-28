@@ -25,20 +25,31 @@ function extractArrayFromJSON(parsed: any): any[] {
     return [];
 }
 
+// Adaptive rounds request one item at a time and pass what the student has already
+// seen so the AI does not repeat itself as the level moves up and down.
+function buildExclusionNote(exclude?: string[]): string {
+    if (!Array.isArray(exclude) || exclude.length === 0) return "";
+    const list = exclude.slice(-15).map(t => `- ${t}`).join("\n");
+    return `\n\nThe candidate has ALREADY been asked the following. Do NOT repeat or rephrase any of them:\n${list}`;
+}
+
 export async function POST(req: Request) {
     try {
-        const { type, role, level, questionCount, problemCount, topic } = await req.json();
+        const { type, role, level, questionCount, problemCount, topic, exclude } = await req.json();
         const difficulty = LEVEL_LABELS[level] || "Intermediate";
+        const exclusionNote = buildExclusionNote(exclude);
 
         if (type === "mcq") {
             const count = questionCount || 10;
             const prompt = `You are an expert assessment designer for the role of "${role}".
-Generate exactly ${count} multiple-choice questions at "${difficulty}" difficulty level (Level ${level}/10).
+Generate exactly ${count} multiple-choice question${count === 1 ? "" : "s"} at "${difficulty}" difficulty level (Level ${level}/10).
+
+Level ${level} of 10 must be respected strictly: level 1 is trivial for a beginner, level 10 is expert-only.
 
 Each question must:
 - Be relevant to the "${role}" job role
 - Have exactly 4 options labeled A, B, C, D
-- Have exactly 1 correct answer
+- Have exactly 1 correct answer${exclusionNote}
 
 Return a JSON object with a key "questions" containing an array in this exact format:
 {
@@ -71,13 +82,15 @@ correctIndex is the 0-based index of the correct option (0=A, 1=B, 2=C, 3=D).`;
         if (type === "coding") {
             const count = problemCount || 3;
             const prompt = `You are an expert coding assessment designer.
-Generate exactly ${count} coding problems at "${difficulty}" difficulty level (Level ${level}/10).
+Generate exactly ${count} coding problem${count === 1 ? "" : "s"} at "${difficulty}" difficulty level (Level ${level}/10).
+
+Level ${level} of 10 must be respected strictly: level 1 is a trivial warm-up (basic I/O, single loop), level 10 is a hard algorithmic challenge.
 
 Each problem must have:
 - A clear title
 - A detailed description explaining the problem, input format, output format, and constraints
 - Default code templates for Python, Java, and C++. Each template should include the function signature and basic I/O boilerplate that reads from stdin and prints to stdout.
-- At least 3 test cases (2 visible, 1 hidden) with input and expectedOutput strings
+- At least 3 test cases (2 visible, 1 hidden) with input and expectedOutput strings${exclusionNote}
 
 Return a JSON object with a key "problems" containing an array in this exact format:
 {
@@ -118,7 +131,36 @@ IMPORTANT:
             return NextResponse.json({ problems });
         }
 
-        return NextResponse.json({ error: "Invalid type. Use 'mcq' or 'coding'." }, { status: 400 });
+        if (type === "voice") {
+            const prompt = `You are a technical interviewer conducting a spoken interview on the topic "${topic}".
+Ask exactly ONE question at "${difficulty}" difficulty level (Level ${level}/10).
+
+Level ${level} of 10 must be respected strictly: level 1 is a basic definition question a beginner could answer, level 10 requires deep expert reasoning.
+
+Rules:
+- The question must be answerable verbally. Do NOT ask the candidate to write code.
+- Keep it short, concise, and focused on ONE concept.
+- It must be strictly about "${topic}".${exclusionNote}
+
+Return a JSON object in this exact format:
+{ "question": "..." }`;
+
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [{ role: "user", content: prompt }],
+                response_format: { type: "json_object" },
+                temperature: 0.8,
+            });
+
+            let content = completion.choices[0].message.content || "{}";
+            content = content.replace(/```json\n?|```/g, "").trim();
+            const parsed = JSON.parse(content);
+            const question = parsed.question || parsed.nextQuestion || "";
+
+            return NextResponse.json({ question });
+        }
+
+        return NextResponse.json({ error: "Invalid type. Use 'mcq', 'coding' or 'voice'." }, { status: 400 });
 
     } catch (error: any) {
         console.error("Assessment generation error:", error);

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Code, Loader2, Play, CheckCircle2, XCircle, ChevronRight, ChevronDown } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Code, Loader2, Play, CheckCircle2, XCircle, TrendingUp, ChevronRight } from "lucide-react";
 import CodeEditor from "@/components/CodeEditor";
+import { nextLevel, levelLabel } from "@/lib/adaptive";
 
 interface TestCase {
     input: string;
@@ -24,10 +25,14 @@ export interface CodingRoundResult {
     total: number;
     passedTestCases: number;
     totalTestCases: number;
+    adaptive: boolean;
+    highestLevel?: number;
+    finalLevel?: number;
     problems: {
         title: string;
         passedCount: number;
         testCaseCount: number;
+        level?: number;
         testResults: { input: string; expected: string; actual: string; passed: boolean; isHidden: boolean; error?: string }[];
     }[];
 }
@@ -35,10 +40,11 @@ export interface CodingRoundResult {
 interface CodingPlayerProps {
     level: number;
     problemCount: number;
+    adaptive?: boolean;
     onComplete: (results: CodingRoundResult) => void;
 }
 
-export default function CodingPlayer({ level, problemCount, onComplete }: CodingPlayerProps) {
+export default function CodingPlayer({ level, problemCount, adaptive = false, onComplete }: CodingPlayerProps) {
     const [problems, setProblems] = useState<CodingProblem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -51,41 +57,84 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
     // Results per problem
     const [resultMap, setResultMap] = useState<Record<number, { passed: boolean; results: any[] }>>({});
     const [isRunning, setIsRunning] = useState(false);
-    const [output, setOutput] = useState<string>("");
     const [showTestResults, setShowTestResults] = useState(false);
 
-    // Load problems
+    // Adaptive state: the round starts at level 1 and moves with the student's success.
+    const [currentLevel, setCurrentLevel] = useState(1);
+    const problemLevelsRef = useRef<number[]>([]);
+    const highestLevelRef = useRef(1);
+    const askedRef = useRef<string[]>([]);
+
+    const seedCodeForProblem = useCallback((problem: CodingProblem, idx: number) => {
+        setCodeMap(prev => ({
+            ...prev,
+            [`${idx}_python`]: problem.defaultCode?.python || "# Your code here\n",
+            [`${idx}_java`]: problem.defaultCode?.java || "// Your code here\n",
+            [`${idx}_cpp`]: problem.defaultCode?.cpp || "// Your code here\n",
+        }));
+    }, []);
+
+    const fetchAdaptiveProblem = useCallback(async (atLevel: number) => {
+        const res = await fetch("/api/assessment/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: "coding",
+                level: atLevel,
+                problemCount: 1,
+                exclude: askedRef.current,
+            }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        const problem = (data.problems || [])[0];
+        if (!problem) throw new Error("Failed to generate the next problem");
+        return problem as CodingProblem;
+    }, []);
+
+    // Initial load: adaptive fetches only the first problem (at level 1), fixed fetches the whole set.
     useEffect(() => {
+        let cancelled = false;
         async function loadProblems() {
             try {
-                const res = await fetch("/api/assessment/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ type: "coding", level, problemCount }),
-                });
-                const data = await res.json();
-                if (data.error) {
-                    setError(data.error);
+                if (adaptive) {
+                    const problem = await fetchAdaptiveProblem(1);
+                    if (cancelled) return;
+                    askedRef.current = [problem.title];
+                    problemLevelsRef.current = [1];
+                    setProblems([problem]);
+                    seedCodeForProblem(problem, 0);
                 } else {
-                    const probs = data.problems || [];
-                    setProblems(probs);
-                    // Initialize code map
-                    const initial: Record<string, string> = {};
-                    probs.forEach((p: CodingProblem, idx: number) => {
-                        initial[`${idx}_python`] = p.defaultCode?.python || "# Your code here\n";
-                        initial[`${idx}_java`] = p.defaultCode?.java || "// Your code here\n";
-                        initial[`${idx}_cpp`] = p.defaultCode?.cpp || "// Your code here\n";
+                    const res = await fetch("/api/assessment/generate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ type: "coding", level, problemCount }),
                     });
-                    setCodeMap(initial);
+                    const data = await res.json();
+                    if (cancelled) return;
+                    if (data.error) {
+                        setError(data.error);
+                    } else {
+                        const probs: CodingProblem[] = data.problems || [];
+                        setProblems(probs);
+                        const initial: Record<string, string> = {};
+                        probs.forEach((p, idx) => {
+                            initial[`${idx}_python`] = p.defaultCode?.python || "# Your code here\n";
+                            initial[`${idx}_java`] = p.defaultCode?.java || "// Your code here\n";
+                            initial[`${idx}_cpp`] = p.defaultCode?.cpp || "// Your code here\n";
+                        });
+                        setCodeMap(initial);
+                    }
                 }
             } catch (err: any) {
-                setError(err.message || "Failed to load problems");
+                if (!cancelled) setError(err.message || "Failed to load problems");
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         }
         loadProblems();
-    }, [level, problemCount]);
+        return () => { cancelled = true; };
+    }, [level, problemCount, adaptive, fetchAdaptiveProblem, seedCodeForProblem]);
 
     const currentCode = codeMap[`${activeProblemIndex}_${language}`] || "";
 
@@ -102,7 +151,6 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
         if (!problem) return;
 
         setIsRunning(true);
-        setOutput("");
         setShowTestResults(true);
 
         const testResults: any[] = [];
@@ -149,13 +197,13 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
         setIsRunning(false);
     }
 
-    function finishCoding() {
+    function buildResult(finalProblems: CodingProblem[], finalResultMap: Record<number, { passed: boolean; results: any[] }>): CodingRoundResult {
         // +5 marks per passed test case, judged from each problem's latest run
-        const solved = Object.values(resultMap).filter(r => r.passed).length;
+        const solved = Object.values(finalResultMap).filter(r => r.passed).length;
         let passedTestCases = 0;
         let totalTestCases = 0;
-        const problemResults = problems.map((p, idx) => {
-            const run = resultMap[idx];
+        const problemResults = finalProblems.map((p, idx) => {
+            const run = finalResultMap[idx];
             const testResults = run?.results || [];
             const passedCount = testResults.filter((r: any) => r.passed).length;
             passedTestCases += passedCount;
@@ -164,26 +212,77 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
                 title: p.title,
                 passedCount,
                 testCaseCount: p.testCases.length,
+                ...(adaptive ? { level: problemLevelsRef.current[idx] } : {}),
                 testResults,
             };
         });
-        onComplete({
+        return {
             score: passedTestCases * 5,
             maxScore: totalTestCases * 5,
             solved,
-            total: problems.length,
+            total: finalProblems.length,
             passedTestCases,
             totalTestCases,
+            adaptive,
+            ...(adaptive ? { highestLevel: highestLevelRef.current, finalLevel: currentLevel } : {}),
             problems: problemResults,
-        });
+        };
+    }
+
+    function finishCoding() {
+        onComplete(buildResult(problems, resultMap));
+    }
+
+    // Adaptive: grade this problem, move the level, then fetch the next one.
+    async function submitAndAdvance() {
+        const solvedThis = !!resultMap[activeProblemIndex]?.passed;
+        const answeredCount = activeProblemIndex + 1;
+
+        if (answeredCount >= problemCount) {
+            onComplete(buildResult(problems, resultMap));
+            return;
+        }
+
+        const upcomingLevel = nextLevel(currentLevel, solvedThis);
+        setCurrentLevel(upcomingLevel);
+        if (upcomingLevel > highestLevelRef.current) highestLevelRef.current = upcomingLevel;
+
+        setLoading(true);
+        try {
+            const problem = await fetchAdaptiveProblem(upcomingLevel);
+            const newIndex = problems.length;
+            askedRef.current = [...askedRef.current, problem.title];
+            problemLevelsRef.current = [...problemLevelsRef.current, upcomingLevel];
+            setProblems(prev => [...prev, problem]);
+            seedCodeForProblem(problem, newIndex);
+            setActiveProblemIndex(newIndex);
+            setShowTestResults(false);
+        } catch {
+            // Generation failed — end the round with what has been solved so far.
+            onComplete(buildResult(problems, resultMap));
+            return;
+        } finally {
+            setLoading(false);
+        }
     }
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[60vh] gap-4">
                 <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
-                <p className="text-gray-400">AI is generating {problemCount} coding problems at Level {level}...</p>
-                <p className="text-xs text-gray-500">This may take 15-20 seconds</p>
+                {adaptive ? (
+                    <>
+                        <p className="text-gray-400">
+                            AI is preparing your next problem at <span className="text-blue-400 font-bold">Level {currentLevel}</span>...
+                        </p>
+                        <p className="text-xs text-gray-500">Adaptive mode — difficulty follows your results</p>
+                    </>
+                ) : (
+                    <>
+                        <p className="text-gray-400">AI is generating {problemCount} coding problems at Level {level}...</p>
+                        <p className="text-xs text-gray-500">This may take 15-20 seconds</p>
+                    </>
+                )}
             </div>
         );
     }
@@ -208,35 +307,64 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
     }
 
     const activeProblem = problems[activeProblemIndex];
+    const totalToSolve = adaptive ? problemCount : problems.length;
+    const isLastProblem = activeProblemIndex + 1 >= totalToSolve;
+    const hasRunCurrent = !!resultMap[activeProblemIndex];
 
     return (
         <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-            {/* Problem tabs */}
+            {/* Problem tabs (fixed mode) or adaptive progress header */}
             <div className="flex items-center gap-2 border-b border-gray-800 px-4 py-2 overflow-x-auto">
-                {problems.map((p, idx) => {
-                    const result = resultMap[idx];
-                    return (
-                        <button key={idx} onClick={() => { setActiveProblemIndex(idx); setShowTestResults(false); }}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
-                                idx === activeProblemIndex
-                                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                    : "text-gray-400 hover:text-white hover:bg-gray-800"
-                            }`}
-                        >
-                            {result?.passed ? <CheckCircle2 className="h-3.5 w-3.5 text-green-400" /> :
-                             result ? <XCircle className="h-3.5 w-3.5 text-red-400" /> :
-                             <Code className="h-3.5 w-3.5" />}
-                            Problem {idx + 1}
-                        </button>
-                    );
-                })}
+                {adaptive ? (
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold text-blue-400">
+                            <TrendingUp className="h-3 w-3" /> ADAPTIVE
+                        </span>
+                        <span className="text-sm font-medium text-white">
+                            Problem {activeProblemIndex + 1} / {totalToSolve}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                            Level {currentLevel} · {levelLabel(currentLevel)}
+                        </span>
+                    </div>
+                ) : (
+                    problems.map((p, idx) => {
+                        const result = resultMap[idx];
+                        return (
+                            <button key={idx} onClick={() => { setActiveProblemIndex(idx); setShowTestResults(false); }}
+                                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                                    idx === activeProblemIndex
+                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                        : "text-gray-400 hover:text-white hover:bg-gray-800"
+                                }`}
+                            >
+                                {result?.passed ? <CheckCircle2 className="h-3.5 w-3.5 text-green-400" /> :
+                                 result ? <XCircle className="h-3.5 w-3.5 text-red-400" /> :
+                                 <Code className="h-3.5 w-3.5" />}
+                                Problem {idx + 1}
+                            </button>
+                        );
+                    })
+                )}
 
                 <div className="ml-auto flex items-center gap-2">
-                    <button onClick={finishCoding}
-                        className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-green-500"
-                    >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Finish Coding Round
-                    </button>
+                    {adaptive ? (
+                        <button onClick={submitAndAdvance}
+                            className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-green-500"
+                        >
+                            {isLastProblem ? (
+                                <><CheckCircle2 className="h-3.5 w-3.5" /> Finish Coding Round</>
+                            ) : (
+                                <>Submit & Next Problem <ChevronRight className="h-3.5 w-3.5" /></>
+                            )}
+                        </button>
+                    ) : (
+                        <button onClick={finishCoding}
+                            className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-green-500"
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Finish Coding Round
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -259,6 +387,12 @@ export default function CodingPlayer({ level, problemCount, onComplete }: Coding
                             </div>
                         ))}
                     </div>
+
+                    {adaptive && !hasRunCurrent && (
+                        <p className="text-xs text-yellow-400">
+                            Run your code before moving on — only test cases you have run and passed count toward your score.
+                        </p>
+                    )}
                 </div>
 
                 {/* Right: code editor */}

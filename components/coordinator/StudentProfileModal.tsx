@@ -107,7 +107,7 @@ interface StudentDetail {
         score: number;
         joinedAt: string;
         completed: boolean;
-        roundScores: Array<{ type: string; score: number; maxScore: number | null }>;
+        roundScores: Array<{ type: string; score: number; maxScore: number | null; adaptive: boolean; highestLevel: number | null }>;
     }>;
 }
 
@@ -518,6 +518,9 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                                                                         "bg-green-50 text-green-600"
                                                                     }`}>
                                                                         {round.type === "mcq" ? "MCQ" : round.type === "coding" ? "Coding" : "Voice (AI)"}: {round.score}{round.maxScore !== null ? `/${round.maxScore}` : ""}
+                                                                        {round.adaptive && round.highestLevel !== null && (
+                                                                            <span className="ml-1 font-bold">• Adaptive, peak L{round.highestLevel}/10</span>
+                                                                        )}
                                                                     </span>
                                                                 ))}
                                                             </div>

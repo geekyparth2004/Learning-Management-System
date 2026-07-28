@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Mic, Volume2, Loader2, Clock, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Mic, Volume2, Loader2, Clock, Sparkles, TrendingUp } from "lucide-react";
+import { nextLevel, levelLabel, LEVEL_LABELS } from "@/lib/adaptive";
 
 export interface VoiceRoundResult {
     score: number;
     maxScore: number;
+    adaptive: boolean;
+    highestLevel?: number;
+    finalLevel?: number;
     questions: {
         question: string;
         transcript: string;
         marks: number;
         feedback: string;
+        level?: number;
     }[];
 }
 
@@ -18,15 +23,14 @@ interface VoicePlayerProps {
     topic: string;
     questionCount: number;
     level: number;
+    adaptive?: boolean;
     onComplete: (result: VoiceRoundResult) => void;
 }
 
-const LEVEL_LABELS: Record<number, string> = {
-    1: "Beginner", 2: "Beginner+", 3: "Elementary", 4: "Elementary+", 5: "Intermediate",
-    6: "Intermediate+", 7: "Advanced", 8: "Advanced+", 9: "Expert", 10: "Master",
-};
+// An answer scoring at least this many of 5 marks counts as "correct" and raises the level.
+const ADAPTIVE_PASS_MARK = 3;
 
-export default function VoicePlayer({ topic, questionCount, level, onComplete }: VoicePlayerProps) {
+export default function VoicePlayer({ topic, questionCount, level, adaptive = false, onComplete }: VoicePlayerProps) {
     const [hasStarted, setHasStarted] = useState(false);
     const [currentQuestion, setCurrentQuestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +49,13 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
     const currentQuestionRef = useRef<string>("");
     const evaluationsRef = useRef<VoiceRoundResult["questions"]>([]);
 
-    const difficulty = LEVEL_LABELS[level] || "Intermediate";
+    // Adaptive state: the round starts at level 1 and moves with the AI marks.
+    const [currentLevel, setCurrentLevel] = useState(1);
+    const currentLevelRef = useRef(1);
+    const highestLevelRef = useRef(1);
+    const askedRef = useRef<string[]>([]);
+
+    const difficulty = adaptive ? levelLabel(currentLevel) : (LEVEL_LABELS[level] || "Intermediate");
 
     // Timer
     useEffect(() => {
@@ -87,26 +97,49 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
         synthesisRef.current.speak(utterance);
     }
 
+    const fetchAdaptiveQuestion = useCallback(async (atLevel: number) => {
+        const res = await fetch("/api/assessment/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: "voice",
+                topic,
+                level: atLevel,
+                exclude: askedRef.current,
+            }),
+        });
+        const data = await res.json();
+        if (data.error || !data.question) throw new Error(data.error || "Failed to generate the next question");
+        return data.question as string;
+    }, [topic]);
+
     async function startInterview() {
         setHasStarted(true);
         setIsLoading(true);
         try {
-            const res = await fetch("/api/interview", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    messages: [],
-                    questionCount: 0,
-                    type: "custom",
-                    subject: topic,
-                    difficulty,
-                }),
-            });
-            const data = await res.json();
-            if (data.nextQuestion) {
-                setCurrentQuestion(data.nextQuestion);
-                setMessages([{ role: "assistant", content: data.nextQuestion }]);
+            if (adaptive) {
+                const question = await fetchAdaptiveQuestion(1);
+                askedRef.current = [question];
+                setCurrentQuestion(question);
                 setQCount(1);
+            } else {
+                const res = await fetch("/api/interview", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        messages: [],
+                        questionCount: 0,
+                        type: "custom",
+                        subject: topic,
+                        difficulty,
+                    }),
+                });
+                const data = await res.json();
+                if (data.nextQuestion) {
+                    setCurrentQuestion(data.nextQuestion);
+                    setMessages([{ role: "assistant", content: data.nextQuestion }]);
+                    setQCount(1);
+                }
             }
         } catch (err) {
             console.error("Failed to start voice round", err);
@@ -147,9 +180,16 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
     async function handleRecordingComplete(blob: Blob) {
         setIsEvaluating(true);
         const question = currentQuestionRef.current;
+        const askedAtLevel = currentLevelRef.current;
 
         // AI evaluation: transcribe + grade out of 5 marks. The recording itself is never stored.
-        let evaluation = { question, transcript: "", marks: 0, feedback: "Answer could not be evaluated." };
+        let evaluation: VoiceRoundResult["questions"][number] = {
+            question,
+            transcript: "",
+            marks: 0,
+            feedback: "Answer could not be evaluated.",
+            ...(adaptive ? { level: askedAtLevel } : {}),
+        };
         try {
             const formData = new FormData();
             formData.append("audio", new File([blob], "answer.webm", { type: "audio/webm" }));
@@ -168,6 +208,7 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                     transcript: data.transcript || "",
                     marks: typeof data.marks === "number" ? data.marks : 0,
                     feedback: data.feedback || "",
+                    ...(adaptive ? { level: askedAtLevel } : {}),
                 };
             }
         } catch (err) {
@@ -175,21 +216,36 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
         }
 
         evaluationsRef.current = [...evaluationsRef.current, evaluation];
-        await advanceToNextQuestion(evaluation.transcript);
+        await advanceToNextQuestion(evaluation.transcript, evaluation.marks);
     }
 
-    async function advanceToNextQuestion(transcript: string) {
+    async function advanceToNextQuestion(transcript: string, marks: number) {
         const answerText = transcript || "[No answer detected]";
-        const userMsg = { role: "user", content: answerText };
-        const updatedMessages = [...messages, userMsg];
-        setMessages(updatedMessages);
-        setIsLoading(true);
 
         try {
             if (qCount >= questionCount) {
                 finishRound();
                 return;
             }
+
+            if (adaptive) {
+                // Marks at or above the pass mark raise the difficulty, below it lowers.
+                const upcomingLevel = nextLevel(currentLevelRef.current, marks >= ADAPTIVE_PASS_MARK);
+                currentLevelRef.current = upcomingLevel;
+                setCurrentLevel(upcomingLevel);
+                if (upcomingLevel > highestLevelRef.current) highestLevelRef.current = upcomingLevel;
+
+                setIsLoading(true);
+                const question = await fetchAdaptiveQuestion(upcomingLevel);
+                askedRef.current = [...askedRef.current, question];
+                setCurrentQuestion(question);
+                setQCount(prev => prev + 1);
+                return;
+            }
+
+            const updatedMessages = [...messages, { role: "user", content: answerText }];
+            setMessages(updatedMessages);
+            setIsLoading(true);
 
             const res = await fetch("/api/interview", {
                 method: "POST",
@@ -214,6 +270,8 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
             }
         } catch (err) {
             console.error("Failed to get next question", err);
+            // Don't strand the student on a dead screen — close the round with what was graded.
+            finishRound();
         } finally {
             setIsLoading(false);
             setIsEvaluating(false);
@@ -226,6 +284,8 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
         onComplete({
             score,
             maxScore: questionCount * 5,
+            adaptive,
+            ...(adaptive ? { highestLevel: highestLevelRef.current, finalLevel: currentLevelRef.current } : {}),
             questions: evaluations,
         });
     }
@@ -251,7 +311,17 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                 </div>
                 <h2 className="mb-2 text-2xl font-bold">Voice Interview Round</h2>
                 <p className="text-gray-400 mb-2">Topic: <span className="text-green-400 font-bold">{topic}</span></p>
-                <p className="text-gray-400 mb-2">{questionCount} questions • {difficulty} difficulty</p>
+                {adaptive ? (
+                    <p className="text-gray-400 mb-2">
+                        {questionCount} questions •{" "}
+                        <span className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-400 align-middle">
+                            <TrendingUp className="h-3 w-3" /> ADAPTIVE
+                        </span>{" "}
+                        starting at Level 1
+                    </p>
+                ) : (
+                    <p className="text-gray-400 mb-2">{questionCount} questions • {difficulty} difficulty</p>
+                )}
                 <p className="text-xs text-gray-500 mb-6">Each answer is evaluated by AI for up to 5 marks. Recordings are not stored.</p>
                 <button onClick={startInterview}
                     className="rounded-xl bg-green-600 px-8 py-3 font-bold text-white hover:bg-green-500 transition-colors"
@@ -266,11 +336,21 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
         <div className="mx-auto max-w-3xl p-6 h-full flex flex-col">
             {/* Header */}
             <div className="mb-8 flex items-center justify-between shrink-0">
-                <span className="text-sm font-medium text-green-400">
-                    <Mic className="inline h-4 w-4 mr-1" />
+                <span className="flex items-center gap-2 text-sm font-medium text-green-400">
+                    <Mic className="inline h-4 w-4" />
                     Voice Round — {topic}
+                    {adaptive && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-400">
+                            <TrendingUp className="h-3 w-3" /> ADAPTIVE
+                        </span>
+                    )}
                 </span>
                 <div className="flex items-center space-x-4">
+                    {adaptive && (
+                        <div className="text-xs text-gray-400">
+                            Level {currentLevel} · {levelLabel(currentLevel)}
+                        </div>
+                    )}
                     <div className="flex items-center text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
                         <Clock className="w-4 h-4 mr-2 text-green-400" />
                         <span className="font-mono text-sm">{formatTime(duration)}</span>
@@ -293,13 +373,15 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                     <div className="flex items-center justify-center gap-3 text-gray-400">
                         <Loader2 className="h-5 w-5 animate-spin" /> Loading question...
                     </div>
-                ) : isEvaluating ? (
+                ) : isEvaluating || isLoading ? (
                     <div className="flex flex-col items-center justify-center gap-4 py-16">
                         <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-purple-500/20">
                             <Sparkles className="h-10 w-10 animate-pulse text-purple-400" />
                             <div className="absolute inset-0 animate-ping rounded-full bg-purple-500/20" />
                         </div>
-                        <p className="text-purple-400 font-medium">AI is evaluating your answer...</p>
+                        <p className="text-purple-400 font-medium">
+                            {isEvaluating ? "AI is evaluating your answer..." : "Preparing your next question..."}
+                        </p>
                         <p className="text-xs text-gray-500">Marks will be revealed after the assessment ends</p>
                     </div>
                 ) : (
@@ -334,9 +416,7 @@ export default function VoicePlayer({ topic, questionCount, level, onComplete }:
                                     </button>
 
                                     <p className="text-lg text-gray-400">
-                                        {isRecording ? "Listening... (click to stop)" :
-                                         isLoading ? "Processing..." :
-                                         "Click mic to answer"}
+                                        {isRecording ? "Listening... (click to stop)" : "Click mic to answer"}
                                     </p>
                                 </div>
                             )}

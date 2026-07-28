@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3 } from "lucide-react";
+import { CheckSquare, Code, Mic, ChevronRight, Play, Clock, Trophy, Shield, Camera, Maximize, AlertTriangle, X, Send, BarChart3, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import MCQPlayer from "./MCQPlayer";
 import CodingPlayer from "./CodingPlayer";
@@ -14,6 +14,7 @@ interface RoundConfig {
     questionCount?: number;
     problemCount?: number;
     topic?: string;
+    adaptive?: boolean;
 }
 
 interface AssessmentPlayerProps {
@@ -388,11 +389,18 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                                             <Icon className={`h-5 w-5 ${meta.color}`} />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className={`font-bold ${meta.color}`}>{meta.label}</h3>
+                                            <h3 className={`font-bold ${meta.color} flex items-center gap-2`}>
+                                                {meta.label}
+                                                {round.adaptive && (
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-current/30 bg-black/30 px-2 py-0.5 text-[10px] font-bold">
+                                                        <TrendingUp className="h-3 w-3" /> ADAPTIVE
+                                                    </span>
+                                                )}
+                                            </h3>
                                             <p className="text-xs text-gray-400">
-                                                {round.type === "mcq" && `${round.questionCount || 10} questions • Role: ${round.role} • Level ${round.level}/10 • +1 mark per correct answer`}
-                                                {round.type === "coding" && `${round.problemCount || 3} problems • Level ${round.level}/10 • +5 marks per passed test case`}
-                                                {round.type === "voice" && `${round.questionCount || 10} questions • Topic: ${round.topic} • Level ${round.level}/10 • Up to 5 marks per answer (AI evaluated)`}
+                                                {round.type === "mcq" && `${round.questionCount || 10} questions • Role: ${round.role} • ${round.adaptive ? "Starts at Level 1, adapts to your answers" : `Level ${round.level}/10`} • +1 mark per correct answer`}
+                                                {round.type === "coding" && `${round.problemCount || 3} problems • ${round.adaptive ? "Starts at Level 1, adapts to your results" : `Level ${round.level}/10`} • +5 marks per passed test case`}
+                                                {round.type === "voice" && `${round.questionCount || 10} questions • Topic: ${round.topic} • ${round.adaptive ? "Starts at Level 1, adapts to your marks" : `Level ${round.level}/10`} • Up to 5 marks per answer (AI evaluated)`}
                                             </p>
                                         </div>
                                         <div className="text-sm text-gray-500 font-mono">Round {idx + 1}</div>
@@ -607,6 +615,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         role={currentRound.role || "Software Development Engineer"}
                         level={currentRound.level || 5}
                         questionCount={currentRound.questionCount || 10}
+                        adaptive={!!currentRound.adaptive}
                         onComplete={(result) => handleRoundComplete({ type: "mcq", ...result })}
                     />
                 )}
@@ -614,6 +623,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                     <CodingPlayer
                         level={currentRound.level || 5}
                         problemCount={currentRound.problemCount || 3}
+                        adaptive={!!currentRound.adaptive}
                         onComplete={(results) => handleRoundComplete({ type: "coding", ...results })}
                     />
                 )}
@@ -622,6 +632,7 @@ export default function AssessmentPlayer({ assessmentId, title, config, duration
                         topic={currentRound.topic || "General"}
                         questionCount={currentRound.questionCount || 10}
                         level={currentRound.level || 5}
+                        adaptive={!!currentRound.adaptive}
                         onComplete={(result) => handleRoundComplete({ type: "voice", ...result })}
                     />
                 )}

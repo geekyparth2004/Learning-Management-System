@@ -48,6 +48,21 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
 
     const displayDescription = parsedConfig?.description || assessment.description || "AI-powered assessment";
     const rounds = parsedConfig?.rounds || [];
+    const hasAdaptiveRound = rounds.some((r: any) => r.adaptive);
+
+    // Peak difficulty each student reached across the adaptive rounds they attempted
+    function adaptiveLevelsFor(results: string | null): { type: string; highestLevel: number }[] {
+        if (!results) return [];
+        try {
+            const parsed = JSON.parse(results);
+            if (!Array.isArray(parsed?.rounds)) return [];
+            return parsed.rounds
+                .filter((r: any) => r.adaptive && typeof r.highestLevel === "number")
+                .map((r: any) => ({ type: r.type, highestLevel: r.highestLevel }));
+        } catch {
+            return [];
+        }
+    }
 
     if (assessment.type === "EXTERNAL") {
         return (
@@ -144,20 +159,26 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                                             {round.type === "mcq" && (
                                                 <>
                                                     <div>Role: <span className="text-white font-medium">{round.role}</span></div>
-                                                    <div>Difficulty Level: <span className="text-white font-medium">{round.level}/10</span></div>
+                                                    <div>Difficulty: {round.adaptive
+                                                        ? <span className="text-white font-medium">Adaptive (starts at Level 1)</span>
+                                                        : <span className="text-white font-medium">Level {round.level}/10</span>}</div>
                                                     <div>Questions: <span className="text-white font-medium">{round.questionCount || 10}</span></div>
                                                 </>
                                             )}
                                             {round.type === "coding" && (
                                                 <>
-                                                    <div>Difficulty Level: <span className="text-white font-medium">{round.level}/10</span></div>
+                                                    <div>Difficulty: {round.adaptive
+                                                        ? <span className="text-white font-medium">Adaptive (starts at Level 1)</span>
+                                                        : <span className="text-white font-medium">Level {round.level}/10</span>}</div>
                                                     <div>Problems: <span className="text-white font-medium">{round.problemCount || 3}</span></div>
                                                 </>
                                             )}
                                             {round.type === "voice" && (
                                                 <>
                                                     <div>Topic: <span className="text-white font-medium">{round.topic}</span></div>
-                                                    <div>Difficulty Level: <span className="text-white font-medium">{round.level}/10</span></div>
+                                                    <div>Difficulty: {round.adaptive
+                                                        ? <span className="text-white font-medium">Adaptive (starts at Level 1)</span>
+                                                        : <span className="text-white font-medium">Level {round.level}/10</span>}</div>
                                                     <div>Questions: <span className="text-white font-medium">{round.questionCount || 10}</span></div>
                                                 </>
                                             )}
@@ -186,6 +207,7 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                                         <th className="px-4 py-3">Student</th>
                                         <th className="px-4 py-3">Joined At</th>
                                         <th className="px-4 py-3">Status</th>
+                                        {hasAdaptiveRound && <th className="px-4 py-3">Highest Level</th>}
                                         <th className="px-4 py-3 text-right">Score</th>
                                     </tr>
                                 </thead>
@@ -216,6 +238,23 @@ export default async function TeacherAssessmentDetailsPage({ params }: { params:
                                                     </span>
                                                 )}
                                             </td>
+                                            {hasAdaptiveRound && (
+                                                <td className="px-4 py-3">
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {adaptiveLevelsFor(reg.results).map((lvl, i) => {
+                                                            const meta = ROUND_META[lvl.type];
+                                                            return (
+                                                                <span key={i} className={`rounded px-2 py-0.5 text-[10px] font-bold border ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-800 text-gray-400 border-gray-700"}`}>
+                                                                    {lvl.type.toUpperCase()} L{lvl.highestLevel}/10
+                                                                </span>
+                                                            );
+                                                        })}
+                                                        {adaptiveLevelsFor(reg.results).length === 0 && (
+                                                            <span className="text-xs text-gray-600">—</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
                                             <td className="px-4 py-3 text-right font-bold text-green-400">
                                                 {reg.score}
                                             </td>

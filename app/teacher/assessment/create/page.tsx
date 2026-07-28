@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, CheckSquare, Code, Mic, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, CheckSquare, Code, Mic, Loader2, TrendingUp, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 
 const ROLES = [
@@ -20,9 +20,9 @@ const ROLES = [
 
 type RoundType = "mcq" | "coding" | "voice";
 
-interface MCQConfig { role: string; level: number; questionCount: number; }
-interface CodingConfig { level: number; problemCount: number; }
-interface VoiceConfig { topic: string; questionCount: number; level: number; }
+// Difficulty mode for a round: a teacher-fixed level, or adaptive (starts at level 1
+// and moves up on a correct answer / down on a wrong one).
+type DifficultyMode = "fixed" | "adaptive";
 
 export default function CreateAssessmentPage() {
     const router = useRouter();
@@ -42,15 +42,18 @@ export default function CreateAssessmentPage() {
     const [mcqRole, setMcqRole] = useState(ROLES[0]);
     const [mcqLevel, setMcqLevel] = useState(5);
     const [mcqCount, setMcqCount] = useState(10);
+    const [mcqMode, setMcqMode] = useState<DifficultyMode>("fixed");
 
     // Coding config
     const [codingLevel, setCodingLevel] = useState(5);
     const [codingCount, setCodingCount] = useState(3);
+    const [codingMode, setCodingMode] = useState<DifficultyMode>("fixed");
 
     // Voice config
     const [voiceTopic, setVoiceTopic] = useState("");
     const [voiceCount, setVoiceCount] = useState(10);
     const [voiceLevel, setVoiceLevel] = useState(5);
+    const [voiceMode, setVoiceMode] = useState<DifficultyMode>("fixed");
 
     function toggleRound(round: RoundType) {
         setSelectedRounds(prev => {
@@ -74,16 +77,31 @@ export default function CreateAssessmentPage() {
 
         setLoading(true);
 
-        // Build rounds config
+        // Build rounds config. Adaptive rounds always start at level 1, so the teacher's
+        // level slider does not apply to them.
         const rounds: any[] = [];
         if (selectedRounds.has("mcq")) {
-            rounds.push({ type: "mcq", role: mcqRole, level: mcqLevel, questionCount: mcqCount });
+            rounds.push({
+                type: "mcq",
+                role: mcqRole,
+                questionCount: mcqCount,
+                ...(mcqMode === "adaptive" ? { adaptive: true } : { level: mcqLevel }),
+            });
         }
         if (selectedRounds.has("coding")) {
-            rounds.push({ type: "coding", level: codingLevel, problemCount: codingCount });
+            rounds.push({
+                type: "coding",
+                problemCount: codingCount,
+                ...(codingMode === "adaptive" ? { adaptive: true } : { level: codingLevel }),
+            });
         }
         if (selectedRounds.has("voice")) {
-            rounds.push({ type: "voice", topic: voiceTopic, questionCount: voiceCount, level: voiceLevel });
+            rounds.push({
+                type: "voice",
+                topic: voiceTopic,
+                questionCount: voiceCount,
+                ...(voiceMode === "adaptive" ? { adaptive: true } : { level: voiceLevel }),
+            });
         }
 
         const configJson = JSON.stringify({ rounds, description });
@@ -258,15 +276,26 @@ export default function CreateAssessmentPage() {
                                         <p className="text-xs text-gray-500">AI will generate MCQs relevant to this job role.</p>
                                     </div>
 
+                                    <ModeSelector mode={mcqMode} onChange={setMcqMode} accent="pink"
+                                        adaptiveHint="Starts at Level 1. Each correct answer makes the next question harder, each wrong answer makes it easier." />
+
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-300">
-                                                Difficulty Level: <span className="text-pink-400 font-bold">{mcqLevel}</span>
-                                                <span className="text-gray-500 ml-1">({levelLabels[mcqLevel]})</span>
-                                            </label>
-                                            <input type="range" min={1} max={10} value={mcqLevel} onChange={e => setMcqLevel(Number(e.target.value))}
-                                                className="w-full accent-pink-500" />
-                                        </div>
+                                        {mcqMode === "fixed" ? (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">
+                                                    Difficulty Level: <span className="text-pink-400 font-bold">{mcqLevel}</span>
+                                                    <span className="text-gray-500 ml-1">({levelLabels[mcqLevel]})</span>
+                                                </label>
+                                                <input type="range" min={1} max={10} value={mcqLevel} onChange={e => setMcqLevel(Number(e.target.value))}
+                                                    className="w-full accent-pink-500" />
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">Starting Level</label>
+                                                <p className="text-sm text-pink-400 font-bold">Level 1 ({levelLabels[1]})</p>
+                                                <p className="text-xs text-gray-500">Difficulty adjusts automatically per answer.</p>
+                                            </div>
+                                        )}
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-gray-300">Number of Questions</label>
                                             <input type="number" min={5} max={50} value={mcqCount} onChange={e => setMcqCount(Number(e.target.value))} className={inputClass} />
@@ -282,16 +311,27 @@ export default function CreateAssessmentPage() {
                                         <Code className="h-4 w-4" /> Coding Round Configuration
                                     </h3>
 
+                                    <ModeSelector mode={codingMode} onChange={setCodingMode} accent="blue"
+                                        adaptiveHint="Starts at Level 1. Solving all test cases makes the next problem harder, failing any makes it easier." />
+
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-300">
-                                                Difficulty Level: <span className="text-blue-400 font-bold">{codingLevel}</span>
-                                                <span className="text-gray-500 ml-1">({levelLabels[codingLevel]})</span>
-                                            </label>
-                                            <input type="range" min={1} max={10} value={codingLevel} onChange={e => setCodingLevel(Number(e.target.value))}
-                                                className="w-full accent-blue-500" />
-                                            <p className="text-xs text-gray-500">AI generates coding problems matching this difficulty.</p>
-                                        </div>
+                                        {codingMode === "fixed" ? (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">
+                                                    Difficulty Level: <span className="text-blue-400 font-bold">{codingLevel}</span>
+                                                    <span className="text-gray-500 ml-1">({levelLabels[codingLevel]})</span>
+                                                </label>
+                                                <input type="range" min={1} max={10} value={codingLevel} onChange={e => setCodingLevel(Number(e.target.value))}
+                                                    className="w-full accent-blue-500" />
+                                                <p className="text-xs text-gray-500">AI generates coding problems matching this difficulty.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">Starting Level</label>
+                                                <p className="text-sm text-blue-400 font-bold">Level 1 ({levelLabels[1]})</p>
+                                                <p className="text-xs text-gray-500">Problems are served one at a time, difficulty adjusts per problem.</p>
+                                            </div>
+                                        )}
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-gray-300">Number of Problems</label>
                                             <input type="number" min={1} max={10} value={codingCount} onChange={e => setCodingCount(Number(e.target.value))} className={inputClass} />
@@ -314,15 +354,26 @@ export default function CreateAssessmentPage() {
                                         <p className="text-xs text-gray-500">AI will ask verbal questions on this topic.</p>
                                     </div>
 
+                                    <ModeSelector mode={voiceMode} onChange={setVoiceMode} accent="green"
+                                        adaptiveHint="Starts at Level 1. Scoring 3+ of 5 on an answer makes the next question harder, below that makes it easier." />
+
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-300">
-                                                Difficulty Level: <span className="text-green-400 font-bold">{voiceLevel}</span>
-                                                <span className="text-gray-500 ml-1">({levelLabels[voiceLevel]})</span>
-                                            </label>
-                                            <input type="range" min={1} max={10} value={voiceLevel} onChange={e => setVoiceLevel(Number(e.target.value))}
-                                                className="w-full accent-green-500" />
-                                        </div>
+                                        {voiceMode === "fixed" ? (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">
+                                                    Difficulty Level: <span className="text-green-400 font-bold">{voiceLevel}</span>
+                                                    <span className="text-gray-500 ml-1">({levelLabels[voiceLevel]})</span>
+                                                </label>
+                                                <input type="range" min={1} max={10} value={voiceLevel} onChange={e => setVoiceLevel(Number(e.target.value))}
+                                                    className="w-full accent-green-500" />
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-300">Starting Level</label>
+                                                <p className="text-sm text-green-400 font-bold">Level 1 ({levelLabels[1]})</p>
+                                                <p className="text-xs text-gray-500">Difficulty adjusts based on the AI marks for each answer.</p>
+                                            </div>
+                                        )}
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium text-gray-300">Number of Questions</label>
                                             <input type="number" min={3} max={20} value={voiceCount} onChange={e => setVoiceCount(Number(e.target.value))} className={inputClass} />
@@ -345,6 +396,51 @@ export default function CreateAssessmentPage() {
                     </button>
                 </form>
             </div>
+        </div>
+    );
+}
+
+const ACCENTS: Record<string, { active: string; icon: string }> = {
+    pink: { active: "border-pink-500 bg-pink-500/15 text-pink-300", icon: "text-pink-400" },
+    blue: { active: "border-blue-500 bg-blue-500/15 text-blue-300", icon: "text-blue-400" },
+    green: { active: "border-green-500 bg-green-500/15 text-green-300", icon: "text-green-400" },
+};
+
+function ModeSelector({ mode, onChange, accent, adaptiveHint }: {
+    mode: DifficultyMode;
+    onChange: (mode: DifficultyMode) => void;
+    accent: "pink" | "blue" | "green";
+    adaptiveHint: string;
+}) {
+    const styles = ACCENTS[accent];
+    const inactive = "border-gray-800 bg-[#111111] text-gray-400 hover:border-gray-600";
+
+    return (
+        <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Difficulty Mode</label>
+            <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => onChange("fixed")}
+                    className={`flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all ${mode === "fixed" ? styles.active : inactive}`}
+                >
+                    <SlidersHorizontal className={`h-5 w-5 shrink-0 ${mode === "fixed" ? styles.icon : "text-gray-500"}`} />
+                    <div>
+                        <p className="text-sm font-bold">Fixed Level</p>
+                        <p className="text-[11px] opacity-70">Same difficulty throughout</p>
+                    </div>
+                </button>
+                <button type="button" onClick={() => onChange("adaptive")}
+                    className={`flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all ${mode === "adaptive" ? styles.active : inactive}`}
+                >
+                    <TrendingUp className={`h-5 w-5 shrink-0 ${mode === "adaptive" ? styles.icon : "text-gray-500"}`} />
+                    <div>
+                        <p className="text-sm font-bold">Adaptive Mode</p>
+                        <p className="text-[11px] opacity-70">Adjusts to the student</p>
+                    </div>
+                </button>
+            </div>
+            {mode === "adaptive" && (
+                <p className="text-xs text-gray-500">{adaptiveHint}</p>
+            )}
         </div>
     );
 }

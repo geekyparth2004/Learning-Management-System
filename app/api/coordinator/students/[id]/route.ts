@@ -289,8 +289,9 @@ export async function GET(
                     joinedAt: r.joinedAt,
                 })),
                 assessments: assessments.map((r) => {
-                    // Per-round score breakdown (MCQ / Coding / Voice with AI-evaluated marks)
-                    let roundScores: { type: string; score: number; maxScore: number | null }[] = [];
+                    // Per-round score breakdown (MCQ / Coding / Voice with AI-evaluated marks),
+                    // including the peak difficulty reached in adaptive rounds.
+                    let roundScores: { type: string; score: number; maxScore: number | null; adaptive: boolean; highestLevel: number | null }[] = [];
                     try {
                         const parsed = r.results ? JSON.parse(r.results) : null;
                         if (Array.isArray(parsed?.rounds)) {
@@ -298,6 +299,8 @@ export async function GET(
                                 type: round.type,
                                 score: typeof round.score === "number" ? round.score : 0,
                                 maxScore: typeof round.maxScore === "number" ? round.maxScore : null,
+                                adaptive: !!round.adaptive,
+                                highestLevel: typeof round.highestLevel === "number" ? round.highestLevel : null,
                             }));
                         }
                     } catch {
