@@ -24,7 +24,21 @@ export default async function TeacherContestPage() {
 
     async function deleteContest(formData: FormData) {
         "use server";
+        // A server action is a POST endpoint in its own right, so it must re-authenticate
+        // rather than relying on the page's check above.
+        const actionSession = await auth();
+        if (actionSession?.user?.role !== "TEACHER") {
+            throw new Error("Unauthorized");
+        }
         const contestId = formData.get("contestId") as string;
+        const target = await db.contest.findUnique({
+            where: { id: contestId },
+            select: { organizationId: true },
+        });
+        if (!target) throw new Error("Not found");
+        if (target.organizationId !== null) {
+            throw new Error("Forbidden: this contest belongs to an organization");
+        }
         await db.contest.delete({ where: { id: contestId } });
         redirect("/teacher/contest");
     }

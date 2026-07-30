@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Trophy, CheckSquare, Code, Mic, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
+import { Trophy, CheckCircle2, XCircle, ArrowLeft, Medal, BarChart3, Sparkles, TrendingUp, Bug, Database } from "lucide-react";
 import { levelLabel } from "@/lib/adaptive";
+import { ROUND_META } from "./round-meta";
 
 interface LeaderboardEntry {
     rank: number;
@@ -21,17 +22,6 @@ interface AssessmentResultsProps {
     myScore: number | null;
     myResults: any;
 }
-
-const ROUND_META: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    mcq: { label: "MCQ Round", icon: CheckSquare, color: "text-pink-400", bg: "bg-pink-500/10 border-pink-500/30" },
-    coding: { label: "Coding Round", icon: Code, color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
-    voice: { label: "Voice Round", icon: Mic, color: "text-green-400", bg: "bg-green-500/10 border-green-500/30" },
-    debug: { label: "Debug Challenge", icon: Bug, color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/30" },
-    output: { label: "Output Prediction", icon: Terminal, color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
-    sql: { label: "SQL Round", icon: Database, color: "text-violet-400", bg: "bg-violet-500/10 border-violet-500/30" },
-    email: { label: "Email Writing", icon: Mail, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30" },
-    aptitude: { label: "Aptitude Round", icon: Brain, color: "text-teal-400", bg: "bg-teal-500/10 border-teal-500/30" },
-};
 
 const optionLabels = ["A", "B", "C", "D"];
 

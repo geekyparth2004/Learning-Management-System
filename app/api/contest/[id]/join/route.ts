@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { CACHE_KEYS, cacheDelete } from "@/lib/redis";
+import { viewerOrgId, visibleContestWhere } from "@/lib/org-scope";
 
 export async function POST(
     req: Request,
@@ -15,9 +16,11 @@ export async function POST(
 
         const { id } = await params;
 
-        // Check if contest is active or upcoming
-        const contest = await db.contest.findUnique({
-            where: { id },
+        // Org-scoped lookup: a student cannot register for another organization's
+        // assessment even by POSTing the id directly.
+        const orgId = await viewerOrgId(session.user.id);
+        const contest = await db.contest.findFirst({
+            where: { id, ...visibleContestWhere(orgId) },
         });
 
         if (!contest) {

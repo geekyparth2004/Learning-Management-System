@@ -5,11 +5,14 @@ import { auth } from "@/auth";
 import { CheckSquare, Code, Mic, CheckCircle2, XCircle, Clock, ArrowRight, Trophy, Bug, Terminal, Database, Mail, Brain } from "lucide-react";
 import FormattedDate from "@/components/FormattedDate";
 import StudentShell from "@/components/layout/StudentShell";
+import { viewerOrgId, visibleContestWhere } from "@/lib/org-scope";
 
 export default async function AssessmentPage() {
     const session = await auth();
+    // Global assessments plus any restricted to this student's own organization.
+    const orgId = await viewerOrgId(session?.user?.id);
     const assessments = await db.contest.findMany({
-        where: { category: "ASSESSMENT" },
+        where: { category: "ASSESSMENT", ...visibleContestWhere(orgId) },
         orderBy: { startTime: "asc" },
     });
 

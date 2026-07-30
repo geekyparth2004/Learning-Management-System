@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import AssessmentPlayer from "@/components/assessment/AssessmentPlayer";
 import AssessmentResults from "@/components/assessment/AssessmentResults";
+import { viewerOrgId, visibleContestWhere } from "@/lib/org-scope";
 
 export default async function StudentAssessmentPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -13,11 +14,15 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
     }
 
     const { id } = await params;
-    const assessment = await db.contest.findUnique({
-        where: { id },
+    // Org scoping is folded into the lookup, so an assessment belonging to another
+    // organization is an ordinary 404 — this covers the pre-start, in-progress and
+    // post-end (leaderboard + question analysis) branches below in one place.
+    const orgId = await viewerOrgId(session.user.id);
+    const assessment = await db.contest.findFirst({
+        where: { id, category: "ASSESSMENT", ...visibleContestWhere(orgId) },
     });
 
-    if (!assessment || assessment.category !== "ASSESSMENT") {
+    if (!assessment) {
         notFound();
     }
 

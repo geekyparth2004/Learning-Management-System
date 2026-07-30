@@ -79,6 +79,7 @@ model Organization {
   users             User[]
   recruitmentDrives RecruitmentDrive[]
   placementGroups   PlacementGroup[]
+  contests          Contest[]
   createdAt         DateTime           @default(now())
 }
 
@@ -450,7 +451,12 @@ model Contest {
   title       String
   description String?
   type        String // "INTERNAL" | "EXTERNAL"
-  category    String  @default("CONTEST") // "CONTEST" | "HACKATHON"
+  category    String  @default("CONTEST") // "CONTEST" | "HACKATHON" | "ASSESSMENT"
+
+  // Org scoping: null = global (teacher-created, visible to every student);
+  // set = visible only to students of that organization (TPO-created).
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   // Timings
   startTime DateTime
@@ -470,6 +476,7 @@ model Contest {
 
   @@index([category, endTime])              // Dashboard: findMany where category+endTime>now ORDER BY startTime
   @@index([endTime])                        // General: upcoming/past contests filter
+  @@index([organizationId, category])       // Org-scoped lists: TPO manage page, student visibility filter
 }
 
 model ContestProblem {

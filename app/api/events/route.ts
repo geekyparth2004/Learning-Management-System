@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { viewerOrgId, visibleContestWhere } from "@/lib/org-scope";
 
 export async function GET(req: Request) {
     try {
@@ -25,8 +26,12 @@ export async function GET(req: Request) {
             };
         }
 
+        // The calendar feed spans every category, so org-restricted assessments must be
+        // filtered out here too. Safe to spread: `where` only ever holds startTime/endTime.
+        const orgId = await viewerOrgId(session.user.id);
+
         const events = await db.contest.findMany({
-            where,
+            where: { ...where, ...visibleContestWhere(orgId) },
             orderBy: { startTime: 'asc' }
         });
 

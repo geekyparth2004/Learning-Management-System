@@ -10,6 +10,7 @@ import {
     Users,
     MessageSquare,
     BarChart3,
+    ClipboardList,
     LogOut,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ interface CoordinatorSidebarProps {
 const navItems = [
     { label: "Dashboard", href: "/coordinator", icon: LayoutDashboard },
     { label: "Opportunities", href: "/coordinator/opportunities", icon: Briefcase },
+    { label: "Assessments", href: "/coordinator/assessments", icon: ClipboardList },
     { label: "Students", href: "/coordinator/students", icon: Users },
     { label: "Reports", href: "/coordinator/reports", icon: BarChart3 },
 ];

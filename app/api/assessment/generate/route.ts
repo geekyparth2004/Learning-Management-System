@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { stripRevealingComments } from "@/lib/strip-hints";
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
@@ -222,7 +223,13 @@ Each challenge is a small, complete ${langName} program that reads from stdin an
 Rules for each challenge:
 - The description must clearly state what the program is SUPPOSED to do (input format, output format) but must NOT reveal where the bugs are.
 - The buggy code must be fixable with small edits — the correct overall approach is already there, only the planted bugs are wrong.
-- Provide at least 3 test cases (2 visible, 1 hidden) that the CORRECTED program passes. The buggy program must fail to compile or produce wrong output on at least one of them.${exclusionNote}
+- Provide at least 3 test cases (2 visible, 1 hidden) that the CORRECTED program passes. The buggy program must fail to compile or produce wrong output on at least one of them.
+
+ABSOLUTELY CRITICAL — do NOT hint at the bug anywhere in buggyCode:
+- NEVER write a comment that points at a bug or states the correction. Banned examples: "// Should be num > 0", "# BUG here", "// fix this", "# wrong operator", "/* incorrect */", "// TODO", "// <---", "# off-by-one".
+- NEVER use the words bug, buggy, fix, error, wrong, incorrect, mistake, typo, missing, should be, instead of, correct, or hint in ANY comment.
+- Comments are allowed ONLY if they neutrally describe what the code does, exactly as they would appear in normal working code (e.g. "# Read input", "// Compute the total").
+- The buggy code must look like ordinary code a developer wrote believing it was correct. A student must have to find the bug by reading the logic, not by reading a comment.${exclusionNote}
 
 Return a JSON object with a key "challenges" containing an array in this exact format:
 {
@@ -256,7 +263,14 @@ IMPORTANT:
             const parsed = JSON.parse(content);
             const challenges = extractArrayFromJSON(parsed);
 
-            return NextResponse.json({ challenges });
+            // The prompt forbids give-away comments, but the model writes them anyway
+            // ("// Should be num > 0"), which hands the student the answer. Strip them.
+            const sanitized = challenges.map((c: any) => ({
+                ...c,
+                buggyCode: stripRevealingComments(c.buggyCode || "", language || "python"),
+            }));
+
+            return NextResponse.json({ challenges: sanitized });
         }
 
         if (type === "output") {

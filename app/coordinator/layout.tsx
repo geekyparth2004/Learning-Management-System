@@ -41,6 +41,7 @@ export default async function CoordinatorLayout({
             bottomNav={[
                 { label: "Dashboard", href: "/coordinator", icon: "dashboard", match: "exact" },
                 { label: "Opps", href: "/coordinator/opportunities", icon: "briefcase" },
+                { label: "Tests", href: "/coordinator/assessments", icon: "contests" },
                 { label: "Students", href: "/coordinator/students", icon: "users" },
                 { label: "Reports", href: "/coordinator/reports", icon: "reports" },
             ]}

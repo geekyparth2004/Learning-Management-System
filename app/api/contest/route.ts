@@ -37,23 +37,6 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET(req: Request) {
-    try {
-        const url = new URL(req.url);
-        const category = url.searchParams.get("category") || "CONTEST";
-
-        const contests = await db.contest.findMany({
-            where: {
-                category: category
-            },
-            orderBy: {
-                startTime: "asc",
-            },
-        });
-
-        return NextResponse.json(contests);
-    } catch (error) {
-        console.error("Error fetching contests:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
-}
+// The unauthenticated GET that used to live here was removed: it returned every contest
+// of a category to anyone, which bypassed the org-visibility filtering applied elsewhere
+// (see lib/org-scope.ts). Nothing consumed it. Pages query the DB directly instead.

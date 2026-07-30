@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { CACHE_KEYS, cacheDelete } from "@/lib/redis";
+import { viewerOrgId, visibleContestWhere } from "@/lib/org-scope";
 
 export async function POST(
     req: Request,
@@ -17,9 +18,11 @@ export async function POST(
         const data = await req.json();
         const { problemId, code, language, passed } = data;
 
-        // Check if contest is active
-        const contest = await db.contest.findUnique({
-            where: { id },
+        // Org-scoped lookup: this handler auto-creates a registration below, so it is a
+        // second registration entry point and needs the same guard as /join.
+        const orgId = await viewerOrgId(session.user.id);
+        const contest = await db.contest.findFirst({
+            where: { id, ...visibleContestWhere(orgId) },
         });
 
         if (!contest) {

@@ -175,6 +175,9 @@ async function buildStudentDashboardData(userId: string): Promise<StudentDashboa
             where: { userId, startedAt: { not: null }, completedAt: { not: null } },
             select: { startedAt: true, completedAt: true },
         }),
+        // These two are CONTEST/HACKATHON only and today only teachers create those,
+        // so every row is global. Apply visibleContestWhere() from lib/org-scope if
+        // coordinators ever gain the ability to create org-scoped contests/hackathons.
         db.contest.findMany({
             where: { category: "CONTEST", endTime: { gt: now } },
             orderBy: { startTime: "asc" },
