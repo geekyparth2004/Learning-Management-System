@@ -120,6 +120,36 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
     const [student, setStudent] = useState<StudentDetail | null>(null);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("overview");
+    const [downloading, setDownloading] = useState(false);
+
+    // Generates the detailed PDF server-side (aggregation + AI analysis + render) and
+    // downloads it. Slow by nature — the button shows a spinner throughout.
+    async function downloadReport() {
+        if (!studentId || downloading) return;
+        setDownloading(true);
+        try {
+            const res = await fetch(`/api/coordinator/students/${studentId}/report`);
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                alert(data.error || "Failed to generate the report. Please try again.");
+                return;
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            const safe = (student?.name || "student").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "");
+            a.download = `Report_${safe || "student"}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            alert("Failed to generate the report. Please try again.");
+        } finally {
+            setDownloading(false);
+        }
+    }
 
     useEffect(() => {
         if (!studentId) {
@@ -209,13 +239,29 @@ export default function StudentProfileModal({ studentId, onClose }: StudentProfi
                                         )}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={onClose}
-                                    className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={downloadReport}
+                                        disabled={downloading}
+                                        title="Download the full detailed PDF report"
+                                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
+                                    >
+                                        {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                        {downloading ? "Generating…" : "Download Report"}
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
                             </div>
+                            {downloading && (
+                                <p className="mt-2 text-xs text-gray-500">
+                                    Building the report and running the AI skill analysis — this can take up to a minute.
+                                </p>
+                            )}
 
                             {/* Tabs */}
                             <div className="mt-5 flex items-center gap-1">
