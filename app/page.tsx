@@ -38,7 +38,7 @@ export default async function Home() {
       <div className="min-h-screen bg-[#0e0e0e] p-8 text-white">
         <div className="mx-auto max-w-7xl space-y-8">
           <div className="mb-8 flex items-center justify-between">
-            <div className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+            <div className="bg-gradient-to-r from-red-400 to-orange-500 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
               KodeCraft
             </div>
 

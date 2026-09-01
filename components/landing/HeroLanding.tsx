@@ -35,23 +35,23 @@ import {
 /* ─────────────────────── Data ─────────────────────── */
 
 const TYPING_LINES = [
-  { text: 'const skill = "coding";', color: "text-cyan-400" },
+  { text: 'const skill = "coding";', color: "text-orange-400" },
   { text: "let level = 0;", color: "text-emerald-400" },
   { text: "", color: "" },
-  { text: "while (true) {", color: "text-purple-400" },
+  { text: "while (true) {", color: "text-red-400" },
   { text: "  level++;", color: "text-amber-400" },
-  { text: "  learn(new Concept());", color: "text-pink-400" },
-  { text: "  build(new Project());", color: "text-blue-400" },
-  { text: "}", color: "text-purple-400" },
+  { text: "  learn(new Concept());", color: "text-orange-300" },
+  { text: "  build(new Project());", color: "text-red-300" },
+  { text: "}", color: "text-red-400" },
 ];
 
 const FLOATING_ICONS = [
-  { icon: Braces, x: "10%", y: "20%", delay: 0, color: "text-cyan-500/20" },
-  { icon: GitBranch, x: "85%", y: "15%", delay: 0.5, color: "text-purple-500/20" },
+  { icon: Braces, x: "10%", y: "20%", delay: 0, color: "text-red-500/20" },
+  { icon: GitBranch, x: "85%", y: "15%", delay: 0.5, color: "text-orange-500/20" },
   { icon: Cpu, x: "75%", y: "70%", delay: 1, color: "text-emerald-500/20" },
-  { icon: Terminal, x: "15%", y: "75%", delay: 1.5, color: "text-pink-500/20" },
+  { icon: Terminal, x: "15%", y: "75%", delay: 1.5, color: "text-red-500/20" },
   { icon: Star, x: "90%", y: "45%", delay: 2, color: "text-amber-500/20" },
-  { icon: Zap, x: "5%", y: "50%", delay: 0.8, color: "text-indigo-500/20" },
+  { icon: Zap, x: "5%", y: "50%", delay: 0.8, color: "text-orange-500/20" },
 ];
 
 const STATS = [
@@ -265,7 +265,7 @@ function CursorGlow() {
       className="pointer-events-none fixed z-50 h-[500px] w-[500px] rounded-full"
       style={{
         background:
-          "radial-gradient(circle, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 40%, transparent 70%)",
+          "radial-gradient(circle, rgba(255,49,49,0.08) 0%, rgba(255,102,0,0.04) 40%, transparent 70%)",
         x: pos.x - 250,
         y: pos.y - 250,
       }}
@@ -288,7 +288,7 @@ function LiveTerminal() {
       className="relative w-full max-w-lg mx-auto"
     >
       {/* Terminal glow */}
-      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-cyan-500/30 blur-xl opacity-60" />
+      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-red-500/30 via-orange-500/30 to-amber-500/30 blur-xl opacity-60" />
 
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c14]/90 backdrop-blur-xl shadow-2xl">
         {/* Title bar */}
@@ -312,7 +312,7 @@ function LiveTerminal() {
                 {i < lines.length ? lines[i] : ""}
                 {i === currentLine && !done && (
                   <motion.span
-                    className="inline-block w-[2px] h-4 bg-cyan-400 ml-0.5 align-middle"
+                    className="inline-block w-[2px] h-4 bg-orange-400 ml-0.5 align-middle"
                     animate={{ opacity: [1, 0] }}
                     transition={{ duration: 0.6, repeat: Infinity }}
                   />
@@ -384,7 +384,7 @@ function StatsBar() {
             transition={{ delay: i * 0.1 }}
             className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center backdrop-blur-sm transition-all hover:border-white/10 hover:bg-white/[0.04]"
           >
-            <Icon className="mx-auto mb-2 h-5 w-5 text-indigo-400 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <Icon className="mx-auto mb-2 h-5 w-5 text-orange-400 opacity-60 group-hover:opacity-100 transition-opacity" />
             <div className="text-2xl font-extrabold bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
               {stat.value}
             </div>
@@ -421,7 +421,7 @@ function FeatureShowcase({
       transition={{ duration: 0.4, delay: index * 0.08 }}
       className={`group relative text-left w-full rounded-2xl border p-5 backdrop-blur-sm transition-all duration-300 ${
         isActive
-          ? "border-white/20 bg-white/[0.06] shadow-lg shadow-indigo-500/5"
+          ? "border-white/20 bg-white/[0.06] shadow-lg shadow-red-500/5"
           : "border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"
       }`}
     >
@@ -474,13 +474,13 @@ function FeatureGallery() {
         viewport={{ once: true }}
         className="mb-16 text-center"
       >
-        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-4 py-1.5 text-xs font-medium text-indigo-300 mb-6">
+        <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-xs font-medium text-red-300 mb-6">
           <Sparkles className="h-3.5 w-3.5" />
           Platform Features
         </div>
         <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
           Everything you need to{" "}
-          <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">
             go pro
           </span>
         </h2>
@@ -594,7 +594,7 @@ function FeatureGallery() {
                   onClick={() => setActiveIndex(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     i === activeIndex
-                      ? "w-8 bg-indigo-400"
+                      ? "w-8 bg-orange-400"
                       : "w-1.5 bg-white/20 hover:bg-white/30"
                   }`}
                 />
@@ -619,13 +619,13 @@ function PricingSection() {
         viewport={{ once: true }}
         className="mb-14 text-center"
       >
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5 text-xs font-medium text-amber-300 mb-6">
+        <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/5 px-4 py-1.5 text-xs font-medium text-orange-300 mb-6">
           <Crown className="h-3.5 w-3.5" />
           Simple Pricing
         </div>
         <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
           One plan.{" "}
-          <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">
             Everything included.
           </span>
         </h2>
@@ -644,11 +644,11 @@ function PricingSection() {
         className="relative mx-auto max-w-xl"
       >
         {/* Outer glow */}
-        <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-cyan-500/20 blur-2xl opacity-60" />
+        <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-br from-red-500/20 via-orange-500/20 to-amber-500/20 blur-2xl opacity-60" />
 
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c14]/90 backdrop-blur-xl shadow-2xl">
           {/* Top banner */}
-          <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 px-6 py-5 text-center overflow-hidden">
+          <div className="relative bg-gradient-to-r from-red-600 via-orange-600 to-red-600 px-6 py-5 text-center overflow-hidden">
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
               animate={{ x: ["-200%", "200%"] }}
@@ -658,7 +658,7 @@ function PricingSection() {
               <Crown className="h-5 w-5 text-amber-300" />
               <span className="text-lg font-bold text-white">KodeCraft Pro</span>
             </div>
-            <p className="relative text-sm text-indigo-200 mt-1">
+            <p className="relative text-sm text-orange-200 mt-1">
               Full platform access — all features unlocked
             </p>
           </div>
@@ -707,7 +707,7 @@ function PricingSection() {
           <div className="px-8 pb-8">
             <Link
               href="/register"
-              className="group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 px-8 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(99,102,241,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_60px_rgba(99,102,241,0.5)] w-full"
+              className="group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-red-500 via-orange-500 to-red-600 px-8 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(255,49,49,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_60px_rgba(255,49,49,0.5)] w-full"
             >
               <Zap className="h-5 w-5" />
               Get Started Now
@@ -742,16 +742,16 @@ function CTASection() {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
-      className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-cyan-500/10 px-6 py-16 text-center md:px-16 md:py-20"
+      className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-red-500/10 via-orange-500/5 to-amber-500/10 px-6 py-16 text-center md:px-16 md:py-20"
     >
       {/* Animated background blobs */}
       <motion.div
-        className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-indigo-600/20 blur-[100px]"
+        className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-red-600/20 blur-[100px]"
         animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-purple-600/20 blur-[100px]"
+        className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-orange-600/20 blur-[100px]"
         animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -762,14 +762,14 @@ function CTASection() {
           whileInView={{ scale: 1 }}
           viewport={{ once: true }}
           transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 shadow-[0_0_40px_rgba(255,49,49,0.4)]"
         >
           <Zap className="h-8 w-8 text-white" />
         </motion.div>
 
         <h2 className="mx-auto max-w-2xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
           Ready to level up your{" "}
-          <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-red-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">
             coding game?
           </span>
         </h2>
@@ -781,12 +781,12 @@ function CTASection() {
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/register"
-            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-8 py-4 text-base font-bold text-gray-950 shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all hover:scale-105 hover:shadow-[0_0_50px_rgba(255,255,255,0.25)]"
+            className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-8 py-4 text-base font-bold text-gray-950 shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.05] hover:shadow-[0_0_50px_rgba(255,255,255,0.25)]"
           >
             Get Started — ₹3,999/yr
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
-              <div className="relative h-full w-10 bg-gradient-to-r from-transparent via-indigo-300/30 to-transparent" />
+              <div className="relative h-full w-10 bg-gradient-to-r from-transparent via-orange-300/30 to-transparent" />
             </div>
           </Link>
           <Link
@@ -827,7 +827,7 @@ export default function HeroLanding() {
   }, []);
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#050508] font-sans selection:bg-purple-500/30">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#050508] font-sans selection:bg-red-500/30">
       <CursorGlow />
 
       {/* ─────── Ambient Background ─────── */}
@@ -835,17 +835,17 @@ export default function HeroLanding() {
         <ParticleField />
         {/* Big gradient orbs */}
         <motion.div
-          className="absolute top-[-10%] left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-indigo-600/15 blur-[150px]"
+          className="absolute top-[-10%] left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-red-600/15 blur-[150px]"
           animate={{ scale: [1, 1.1, 1], opacity: [0.15, 0.25, 0.15] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-[-5%] right-[-5%] h-[400px] w-[600px] rounded-full bg-purple-600/10 blur-[120px]"
+          className="absolute bottom-[-5%] right-[-5%] h-[400px] w-[600px] rounded-full bg-orange-600/10 blur-[120px]"
           animate={{ scale: [1, 1.15, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-[30%] left-[-5%] h-[350px] w-[450px] rounded-full bg-cyan-600/8 blur-[100px]"
+          className="absolute top-[30%] left-[-5%] h-[350px] w-[450px] rounded-full bg-amber-600/8 blur-[100px]"
           animate={{ x: [0, 30, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -885,10 +885,10 @@ export default function HeroLanding() {
         className="relative z-20 flex items-center justify-between px-6 py-5 md:px-10"
       >
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-[0_0_20px_rgba(99,102,241,0.4)]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-600 shadow-[0_0_20px_rgba(255,49,49,0.4)]">
             <Code className="h-5 w-5 text-white" />
           </div>
-          <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+          <span className="bg-gradient-to-r from-white via-red-200 to-orange-300 bg-clip-text text-xl font-bold tracking-tight text-transparent">
             KodeCraft
           </span>
         </div>
@@ -903,7 +903,7 @@ export default function HeroLanding() {
           </Link>
           <Link
             href="/register"
-            className="hidden sm:inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_25px_rgba(99,102,241,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_35px_rgba(99,102,241,0.5)]"
+            className="hidden sm:inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_25px_rgba(255,49,49,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_35px_rgba(255,49,49,0.5)]"
           >
             Get Started
             <ArrowRight className="h-4 w-4" />
@@ -922,9 +922,9 @@ export default function HeroLanding() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-8 inline-flex cursor-default items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-5 py-2 text-sm font-medium text-indigo-300 shadow-[0_0_30px_rgba(99,102,241,0.15)] backdrop-blur-sm"
+            className="mb-8 inline-flex cursor-default items-center gap-2 rounded-full border border-red-500/25 bg-red-500/10 px-5 py-2 text-sm font-medium text-red-300 shadow-[0_0_30px_rgba(255,49,49,0.15)] backdrop-blur-sm"
           >
-            <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
+            <Sparkles className="h-4 w-4 text-orange-400 animate-pulse" />
             Built for the next generation of coders
           </motion.div>
 
@@ -944,7 +944,7 @@ export default function HeroLanding() {
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
                   transition={{ duration: 0.4 }}
-                  className="inline-block bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent"
+                  className="inline-block bg-gradient-to-r from-red-400 via-orange-400 to-amber-500 bg-clip-text text-transparent"
                 >
                   {WORDS[activeWord]}
                 </motion.span>
@@ -975,7 +975,7 @@ export default function HeroLanding() {
           >
             <Link
               href="/register"
-              className="group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 px-9 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(99,102,241,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_60px_rgba(99,102,241,0.5)]"
+              className="group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-red-500 via-orange-500 to-red-600 px-9 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(255,49,49,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_60px_rgba(255,49,49,0.5)]"
             >
               <Zap className="h-5 w-5" />
               Start Learning Now
@@ -1051,13 +1051,13 @@ export default function HeroLanding() {
       <footer className="relative z-10 border-t border-white/5 bg-white/[0.01] px-6 py-8 text-center">
         <div className="flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-orange-600">
               <Code className="h-4 w-4 text-white" />
             </div>
             <span className="font-bold text-gray-400">KodeCraft</span>
           </div>
           <p className="text-xs text-gray-600">
-            © {new Date().getFullYear()} KodeCraft. Built with 💜 for the
+            © {new Date().getFullYear()} KodeCraft. Built with 🔥 for the
             next generation of developers.
           </p>
         </div>
