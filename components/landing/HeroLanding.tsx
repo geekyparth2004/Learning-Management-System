@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
   Code,
@@ -21,9 +22,16 @@ import {
   Cpu,
   Braces,
   MousePointer2,
+  Check,
+  Shield,
+  Crown,
+  Rocket,
+  Monitor,
+  Swords,
+  Brain,
 } from "lucide-react";
 
-/* ─────────────────────── helpers ─────────────────────── */
+/* ─────────────────────── Data ─────────────────────── */
 
 const TYPING_LINES = [
   { text: 'const skill = "coding";', color: "text-cyan-400" },
@@ -52,49 +60,80 @@ const STATS = [
   { value: "95%", label: "Placement Rate", icon: Star },
 ];
 
-const FEATURES = [
+const FEATURE_SHOWCASES = [
   {
+    id: "courses",
     title: "Interactive Courses",
-    desc: "Learn by doing — not just watching. Every lesson has hands-on coding challenges built right in.",
+    subtitle: "Learn by doing, not just watching",
+    description:
+      "Dive into structured courses with hands-on coding exercises, video lessons, and real-time progress tracking. Master DSA, Web Dev, Python, and more — at your own pace.",
+    image: "/landing/feature-courses.jpg",
     icon: BookOpen,
     gradient: "from-blue-500 to-cyan-400",
-    glow: "rgba(59,130,246,0.3)",
+    accentColor: "blue",
+    features: ["Video Lessons", "Hands-on Labs", "Progress Tracking", "Certificates"],
   },
   {
-    title: "Competitive Arena",
-    desc: "Battle in real-time coding contests. Climb leaderboards and flex your rank like a true grinder.",
+    id: "contests",
+    title: "Live Coding Contests",
+    subtitle: "Compete in real-time battles",
+    description:
+      "Join live coding contests with real-time leaderboards, timed challenges, and instant grading. Climb the ranks, earn badges, and prove your skills against peers.",
+    image: "/landing/feature-contest.jpg",
     icon: Trophy,
     gradient: "from-orange-500 to-amber-400",
-    glow: "rgba(249,115,22,0.3)",
+    accentColor: "orange",
+    features: ["Real-time Leaderboard", "Timed Challenges", "Auto-grading", "Rankings"],
   },
   {
-    title: "AI-Powered Hints",
-    desc: "Stuck? Our AI tutor gives you smart nudges — not answers. Level up without the spoon-feeding.",
-    icon: Sparkles,
-    gradient: "from-violet-500 to-fuchsia-400",
-    glow: "rgba(139,92,246,0.3)",
+    id: "hackathons",
+    title: "Hackathons & Events",
+    subtitle: "Build, collaborate, and ship",
+    description:
+      "Team up with peers, tackle real-world problems, and submit projects in time-bound hackathons. Collaborate through team chat, track progress, and compete for prizes.",
+    image: "/landing/feature-hackathon.jpg",
+    icon: Rocket,
+    gradient: "from-purple-500 to-fuchsia-400",
+    accentColor: "purple",
+    features: ["Team Collaboration", "Project Submissions", "Live Countdown", "Prize Pools"],
   },
   {
-    title: "Earn Certifications",
-    desc: "Complete tracks to unlock verifiable certificates. Share them on LinkedIn and your portfolio.",
-    icon: GraduationCap,
+    id: "assignments",
+    title: "Assignment IDE",
+    subtitle: "Code, test, and submit instantly",
+    description:
+      "Solve assignments in our powerful in-browser IDE with auto-grading, test case validation, and instant feedback. No setup needed — just open and code.",
+    image: "/landing/feature-assignments.jpg",
+    icon: Monitor,
     gradient: "from-emerald-500 to-green-400",
-    glow: "rgba(16,185,129,0.3)",
+    accentColor: "emerald",
+    features: ["Auto-grading", "Test Cases", "Instant Feedback", "Multiple Languages"],
   },
   {
-    title: "Real-World Hackathons",
-    desc: "Team up, build projects, and win prizes. The closest thing to shipping production code.",
-    icon: Zap,
-    gradient: "from-pink-500 to-rose-400",
-    glow: "rgba(236,72,153,0.3)",
+    id: "ide",
+    title: "AI-Powered IDE",
+    subtitle: "Your intelligent coding companion",
+    description:
+      "Write, run, and debug code in our feature-rich IDE with AI-powered suggestions, bug detection, terminal access, and smart code completion — all in your browser.",
+    image: "/landing/feature-ide.jpg",
+    icon: Brain,
+    gradient: "from-indigo-500 to-violet-400",
+    accentColor: "indigo",
+    features: ["AI Assistant", "Bug Detection", "Terminal", "Code Suggestions"],
   },
-  {
-    title: "Streak & Badges",
-    desc: "Keep your daily streak alive and collect rare badges. Gamification that actually motivates.",
-    icon: Flame,
-    gradient: "from-amber-500 to-yellow-400",
-    glow: "rgba(245,158,11,0.3)",
-  },
+];
+
+const PLAN_FEATURES = [
+  "All courses — unlimited access",
+  "Live coding contests & leaderboards",
+  "Hackathon participation",
+  "AI-powered IDE & code assistant",
+  "Auto-graded assignments",
+  "Practice arena with 500+ problems",
+  "Streak tracking & gamification",
+  "Certificates on completion",
+  "Priority doubt resolution",
+  "Job & placement board access",
 ];
 
 const LANGUAGES = [
@@ -283,7 +322,7 @@ function LiveTerminal() {
   );
 }
 
-/* ─────────────────────── Scrolling Language Ticker ─────────────────────── */
+/* ─────────────────────── Language Ticker ─────────────────────── */
 
 function LanguageTicker() {
   const doubled = [...LANGUAGES, ...LANGUAGES];
@@ -307,62 +346,6 @@ function LanguageTicker() {
         ))}
       </motion.div>
     </div>
-  );
-}
-
-/* ─────────────────────── Feature Card ─────────────────────── */
-
-function FeatureCard({
-  feat,
-  index,
-}: {
-  feat: (typeof FEATURES)[0];
-  index: number;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const Icon = feat.icon;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-7 backdrop-blur-sm transition-all duration-300 hover:border-white/15 hover:bg-white/[0.04]"
-    >
-      {/* Hover glow */}
-      <AnimatePresence>
-        {hovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute -inset-px rounded-2xl"
-            style={{
-              background: `radial-gradient(400px circle at 50% 50%, ${feat.glow}, transparent 70%)`,
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      <div className="relative z-10">
-        <div
-          className={`mb-5 inline-flex items-center justify-center rounded-xl bg-gradient-to-br ${feat.gradient} p-3 shadow-lg`}
-          style={{ boxShadow: `0 8px 30px ${feat.glow}` }}
-        >
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-        <h3 className="mb-2 text-lg font-bold text-white">{feat.title}</h3>
-        <p className="text-sm leading-relaxed text-gray-400">{feat.desc}</p>
-      </div>
-
-      {/* Corner accent */}
-      <div
-        className={`absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-gradient-to-br ${feat.gradient} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-30`}
-      />
-    </motion.div>
   );
 }
 
@@ -402,7 +385,342 @@ function StatsBar() {
   );
 }
 
-/* ─────────────────────── Interactive CTA Section ─────────────────────── */
+/* ─────────────────────── Feature Showcase Card ─────────────────────── */
+
+function FeatureShowcase({
+  feature,
+  index,
+  isActive,
+  onClick,
+}: {
+  feature: (typeof FEATURE_SHOWCASES)[0];
+  index: number;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const Icon = feature.icon;
+  return (
+    <motion.button
+      onClick={onClick}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay: index * 0.08 }}
+      className={`group relative text-left w-full rounded-2xl border p-5 backdrop-blur-sm transition-all duration-300 ${
+        isActive
+          ? "border-white/20 bg-white/[0.06] shadow-lg shadow-indigo-500/5"
+          : "border-white/[0.06] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={`shrink-0 rounded-xl bg-gradient-to-br ${feature.gradient} p-2.5 shadow-lg transition-transform duration-300 ${
+            isActive ? "scale-110" : "group-hover:scale-105"
+          }`}
+        >
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold text-white mb-0.5">{feature.title}</h3>
+          <p className="text-xs text-gray-500 leading-relaxed">{feature.subtitle}</p>
+        </div>
+      </div>
+
+      {/* Active indicator */}
+      {isActive && (
+        <motion.div
+          layoutId="active-feature-indicator"
+          className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full bg-gradient-to-b ${feature.gradient}`}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+      )}
+    </motion.button>
+  );
+}
+
+/* ─────────────────────── Feature Gallery Section ─────────────────────── */
+
+function FeatureGallery() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeFeature = FEATURE_SHOWCASES[activeIndex];
+
+  // Auto-cycle features
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % FEATURE_SHOWCASES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [activeIndex]);
+
+  return (
+    <section className="relative z-10 mx-auto w-full max-w-7xl px-4 py-20 md:px-8 md:py-28">
+      {/* Section header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mb-16 text-center"
+      >
+        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-4 py-1.5 text-xs font-medium text-indigo-300 mb-6">
+          <Sparkles className="h-3.5 w-3.5" />
+          Platform Features
+        </div>
+        <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          Everything you need to{" "}
+          <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            go pro
+          </span>
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-gray-400 leading-relaxed">
+          From interactive courses to live hackathons — explore every feature that makes KodeCraft
+          the ultimate coding platform for ambitious students.
+        </p>
+      </motion.div>
+
+      {/* Split layout: feature list + preview */}
+      <div className="grid gap-8 lg:grid-cols-[340px_1fr] xl:grid-cols-[380px_1fr]">
+        {/* Left: Feature tabs */}
+        <div className="flex flex-col gap-3">
+          {FEATURE_SHOWCASES.map((feature, i) => (
+            <FeatureShowcase
+              key={feature.id}
+              feature={feature}
+              index={i}
+              isActive={activeIndex === i}
+              onClick={() => setActiveIndex(i)}
+            />
+          ))}
+        </div>
+
+        {/* Right: Feature preview */}
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="sticky top-8">
+            {/* Glow behind image */}
+            <div
+              className={`absolute -inset-4 rounded-3xl bg-gradient-to-br ${activeFeature.gradient} opacity-10 blur-3xl transition-all duration-700`}
+            />
+
+            {/* Image container */}
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c14]/80 backdrop-blur-xl shadow-2xl">
+              {/* Browser chrome */}
+              <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3 bg-black/30">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
+                <div className="ml-3 flex-1 rounded-lg bg-white/5 px-3 py-1 text-[10px] text-gray-500 font-mono">
+                  kodecraft.in/{activeFeature.id}
+                </div>
+              </div>
+
+              {/* Screenshot */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeFeature.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4 }}
+                  className="relative aspect-[16/10] w-full"
+                >
+                  <Image
+                    src={activeFeature.image}
+                    alt={activeFeature.title}
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 768px) 100vw, 60vw"
+                    priority={activeIndex === 0}
+                  />
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050508]/80 via-transparent to-transparent" />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Feature info overlay */}
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeFeature.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <h3 className="text-xl font-bold text-white mb-1.5">
+                      {activeFeature.title}
+                    </h3>
+                    <p className="text-sm text-gray-300 leading-relaxed mb-4 max-w-lg">
+                      {activeFeature.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {activeFeature.features.map((feat) => (
+                        <span
+                          key={feat}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-gray-300"
+                        >
+                          <Check className="h-3 w-3 text-emerald-400" />
+                          {feat}
+                        </span>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Progress dots */}
+            <div className="flex justify-center gap-2 mt-6">
+              {FEATURE_SHOWCASES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === activeIndex
+                      ? "w-8 bg-indigo-400"
+                      : "w-1.5 bg-white/20 hover:bg-white/30"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────── Pricing Section ─────────────────────── */
+
+function PricingSection() {
+  return (
+    <section className="relative z-10 mx-auto w-full max-w-5xl px-4 py-20 md:px-8 md:py-28">
+      {/* Section header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="mb-14 text-center"
+      >
+        <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5 text-xs font-medium text-amber-300 mb-6">
+          <Crown className="h-3.5 w-3.5" />
+          Simple Pricing
+        </div>
+        <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          One plan.{" "}
+          <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">
+            Everything included.
+          </span>
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-gray-400 leading-relaxed">
+          No tiers, no hidden fees, no free trial. Just complete access to every single feature for
+          one year at one simple price.
+        </p>
+      </motion.div>
+
+      {/* Pricing Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="relative mx-auto max-w-xl"
+      >
+        {/* Outer glow */}
+        <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-cyan-500/20 blur-2xl opacity-60" />
+
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c14]/90 backdrop-blur-xl shadow-2xl">
+          {/* Top banner */}
+          <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 px-6 py-5 text-center overflow-hidden">
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+              animate={{ x: ["-200%", "200%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+            />
+            <div className="relative flex items-center justify-center gap-2">
+              <Crown className="h-5 w-5 text-amber-300" />
+              <span className="text-lg font-bold text-white">KodeCraft Pro</span>
+            </div>
+            <p className="relative text-sm text-indigo-200 mt-1">
+              Full platform access — all features unlocked
+            </p>
+          </div>
+
+          {/* Price */}
+          <div className="px-8 pt-10 pb-6 text-center">
+            <div className="flex items-end justify-center gap-1">
+              <span className="text-lg text-gray-500 line-through">₹9,999</span>
+            </div>
+            <div className="flex items-baseline justify-center gap-1 mt-2">
+              <span className="text-lg text-gray-400">₹</span>
+              <span className="text-6xl font-black tracking-tight bg-gradient-to-b from-white to-gray-300 bg-clip-text text-transparent">
+                3,999
+              </span>
+              <span className="text-lg text-gray-400 ml-1">/year</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-3">
+              One-time payment · 12 months access · No auto-renewal
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="mx-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          {/* Features */}
+          <div className="px-8 py-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-5">
+              Everything Included
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {PLAN_FEATURES.map((feature) => (
+                <div
+                  key={feature}
+                  className="flex items-center gap-3 text-sm text-gray-300"
+                >
+                  <div className="shrink-0 rounded-full bg-emerald-500/10 p-1">
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  </div>
+                  {feature}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="px-8 pb-8">
+            <Link
+              href="/register"
+              className="group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 px-8 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(99,102,241,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_60px_rgba(99,102,241,0.5)] w-full"
+            >
+              <Zap className="h-5 w-5" />
+              Get Started Now
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
+                <div className="relative h-full w-10 bg-white/20" />
+              </div>
+            </Link>
+            <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <Shield className="h-3.5 w-3.5" />
+                Secure payment
+              </span>
+              <span>•</span>
+              <span>Razorpay powered</span>
+              <span>•</span>
+              <span>Instant access</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+/* ─────────────────────── Final CTA Section ─────────────────────── */
 
 function CTASection() {
   return (
@@ -444,7 +762,7 @@ function CTASection() {
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-gray-400 leading-relaxed">
           Join the community of ambitious coders who are building their future
-          one commit at a time. It&apos;s free to start.
+          one commit at a time. Get full access for just ₹3,999/year.
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -452,7 +770,7 @@ function CTASection() {
             href="/register"
             className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-8 py-4 text-base font-bold text-gray-950 shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all hover:scale-105 hover:shadow-[0_0_50px_rgba(255,255,255,0.25)]"
           >
-            Get Started — It&apos;s Free
+            Get Started — ₹3,999/yr
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
               <div className="relative h-full w-10 bg-gradient-to-r from-transparent via-indigo-300/30 to-transparent" />
@@ -574,7 +892,7 @@ export default function HeroLanding() {
             href="/register"
             className="hidden sm:inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_25px_rgba(99,102,241,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_35px_rgba(99,102,241,0.5)]"
           >
-            Start Free
+            Get Started
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -618,7 +936,7 @@ export default function HeroLanding() {
                   {WORDS[activeWord]}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-gray-500">{" "}the Future.</span>
+              <span className="text-gray-500"> the Future.</span>
             </span>
           </motion.h1>
 
@@ -653,11 +971,11 @@ export default function HeroLanding() {
               </div>
             </Link>
             <Link
-              href="/login"
+              href="#features"
               className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-medium text-gray-300 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
             >
               <MousePointer2 className="h-5 w-5" />
-              Explore Curriculum
+              Explore Features
               <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
             </Link>
           </motion.div>
@@ -703,32 +1021,13 @@ export default function HeroLanding() {
         <StatsBar />
       </section>
 
-      {/* ─────── Features Grid ─────── */}
-      <section className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 md:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-12 text-center"
-        >
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Everything you need to{" "}
-            <span className="bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
-              go pro
-            </span>
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-gray-400">
-            From zero to hero. We&apos;ve got every tool a GenZ coder needs to
-            crush it.
-          </p>
-        </motion.div>
+      {/* ─────── Feature Showcase Gallery ─────── */}
+      <div id="features">
+        <FeatureGallery />
+      </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((feat, i) => (
-            <FeatureCard key={i} feat={feat} index={i} />
-          ))}
-        </div>
-      </section>
+      {/* ─────── Pricing ─────── */}
+      <PricingSection />
 
       {/* ─────── CTA ─────── */}
       <section className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-24 md:px-8">
