@@ -29,6 +29,7 @@ import {
   Monitor,
   Swords,
   Brain,
+  Briefcase,
 } from "lucide-react";
 
 /* ─────────────────────── Data ─────────────────────── */
@@ -57,7 +58,7 @@ const STATS = [
   { value: "10K+", label: "Active Learners", icon: Users },
   { value: "500+", label: "Coding Challenges", icon: Flame },
   { value: "50+", label: "Live Contests", icon: Trophy },
-  { value: "95%", label: "Placement Rate", icon: Star },
+  { value: "20+", label: "Daily Job Opportunities", icon: Briefcase },
 ];
 
 const FEATURE_SHOWCASES = [
@@ -121,6 +122,18 @@ const FEATURE_SHOWCASES = [
     accentColor: "indigo",
     features: ["AI Assistant", "Bug Detection", "Terminal", "Code Suggestions"],
   },
+  {
+    id: "placement",
+    title: "Placement Portal",
+    subtitle: "20+ opportunities updated daily",
+    description:
+      "Access a curated job and internship board with 20+ fresh opportunities posted every single day. Filter by role, company, location, and skills — and apply directly from the platform.",
+    image: "/landing/feature-placement.jpg",
+    icon: Briefcase,
+    gradient: "from-teal-500 to-cyan-400",
+    accentColor: "teal",
+    features: ["20+ Daily Listings", "Company Profiles", "Skill Matching", "Direct Apply"],
+  },
 ];
 
 const PLAN_FEATURES = [
@@ -133,7 +146,7 @@ const PLAN_FEATURES = [
   "Streak tracking & gamification",
   "Certificates on completion",
   "Priority doubt resolution",
-  "Job & placement board access",
+  "Placement portal — 20+ daily opportunities",
 ];
 
 const LANGUAGES = [
