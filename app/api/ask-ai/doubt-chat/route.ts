@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
+    apiKey: process.env.GEMINI_API_KEY || "dummy-key-for-build",
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
 });
 
 const SYSTEM_PROMPT = `You are KodeCraft AI, an academic doubt-solving assistant for students on the KodeCraft learning platform.
@@ -29,9 +30,9 @@ interface ChatMessage {
 
 export async function POST(request: Request) {
     try {
-        if (!process.env.OPENAI_API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json(
-                { error: "OpenAI API key not configured." },
+                { error: "Gemini API key not configured." },
                 { status: 500 }
             );
         }
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
         }
 
         const completion = await openai.chat.completions.create({
-            model: "gpt-4.1-nano",
+            model: "gemini-3.5-flash",
             messages: openaiMessages,
             max_tokens: 2048,
             temperature: 0.7,

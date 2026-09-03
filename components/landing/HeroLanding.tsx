@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Script from "next/script";
+import { useSession } from "next-auth/react";
+import RegisterModal from "./RegisterModal";
 import Image from "next/image";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
@@ -609,7 +612,7 @@ function FeatureGallery() {
 
 /* ─────────────────────── Pricing Section ─────────────────────── */
 
-function PricingSection() {
+function PricingSection({ onGetStarted }: { onGetStarted: () => void }) {
   return (
     <section className="relative z-10 mx-auto w-full max-w-5xl px-4 py-20 md:px-8 md:py-28">
       {/* Section header */}
@@ -705,8 +708,8 @@ function PricingSection() {
 
           {/* CTA */}
           <div className="px-8 pb-8">
-            <Link
-              href="/register"
+            <button
+              onClick={onGetStarted}
               className="group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-red-500 via-orange-500 to-red-600 px-8 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(255,49,49,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_60px_rgba(255,49,49,0.5)] w-full"
             >
               <Zap className="h-5 w-5" />
@@ -715,7 +718,7 @@ function PricingSection() {
               <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
                 <div className="relative h-full w-10 bg-white/20" />
               </div>
-            </Link>
+            </button>
             <div className="flex items-center justify-center gap-4 mt-4 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <Shield className="h-3.5 w-3.5" />
@@ -735,7 +738,7 @@ function PricingSection() {
 
 /* ─────────────────────── Final CTA Section ─────────────────────── */
 
-function CTASection() {
+function CTASection({ onGetStarted }: { onGetStarted: () => void }) {
   return (
     <motion.section
       initial={{ opacity: 0 }}
@@ -779,8 +782,8 @@ function CTASection() {
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link
-            href="/register"
+          <button
+            onClick={onGetStarted}
             className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full bg-white px-8 py-4 text-base font-bold text-gray-950 shadow-[0_0_30px_rgba(255,255,255,0.15)] transition-all hover:scale-[1.05] hover:shadow-[0_0_50px_rgba(255,255,255,0.25)]"
           >
             Get Started — ₹3,999/yr
@@ -788,7 +791,7 @@ function CTASection() {
             <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
               <div className="relative h-full w-10 bg-gradient-to-r from-transparent via-orange-300/30 to-transparent" />
             </div>
-          </Link>
+          </button>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-medium text-gray-300 transition-all hover:bg-white/10 hover:text-white"
@@ -807,11 +810,87 @@ function CTASection() {
    ═══════════════════════════════════════════════════════════ */
 
 export default function HeroLanding() {
+  const { data: session, status } = useSession();
+  const [showRegister, setShowRegister] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
   });
+
+  const handleCheckout = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      });
+
+      if (!res.ok) {
+        setIsProcessing(false);
+        return;
+      }
+
+      const data = await res.json();
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: "KodeCraft",
+        description: "KodeCraft Pro — 1 Year Access",
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          setIsProcessing(true);
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            });
+
+            if (verifyRes.ok) {
+              window.location.href = "/";
+            } else {
+              setIsProcessing(false);
+            }
+          } catch (err) {
+            setIsProcessing(false);
+          }
+        },
+        theme: { color: "#ef4444" }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", () => setIsProcessing(false));
+      rzp.open();
+    } catch (err) {
+      setIsProcessing(false);
+    }
+  };
+
+  const [registerWithPayment, setRegisterWithPayment] = useState(false);
+
+  const handleGetStarted = (withPayment: boolean) => {
+    if (status === "loading") return;
+    if (session) {
+      if (withPayment) {
+        handleCheckout();
+      } else {
+        window.location.href = "/courses";
+      }
+    } else {
+      setRegisterWithPayment(withPayment);
+      setShowRegister(true);
+    }
+  };
+
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
@@ -828,6 +907,15 @@ export default function HeroLanding() {
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#050508] font-sans selection:bg-red-500/30">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      <RegisterModal isOpen={showRegister} onClose={() => setShowRegister(false)} withPayment={registerWithPayment} onSuccess={() => {
+        setShowRegister(false);
+        if (registerWithPayment) {
+          handleCheckout();
+        } else {
+          window.location.href = "/courses";
+        }
+      }} />
       <CursorGlow />
 
       {/* ─────── Ambient Background ─────── */}
@@ -901,13 +989,13 @@ export default function HeroLanding() {
             <LogIn className="h-4 w-4" />
             Sign In
           </Link>
-          <Link
-            href="/register"
+          <button
+            onClick={() => handleGetStarted(false)}
             className="hidden sm:inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-500 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_25px_rgba(255,49,49,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_35px_rgba(255,49,49,0.5)]"
           >
             Get Started
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
       </motion.nav>
 
@@ -973,8 +1061,8 @@ export default function HeroLanding() {
             transition={{ duration: 0.6, delay: 0.7 }}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
-            <Link
-              href="/register"
+            <button
+              onClick={() => handleGetStarted(false)}
               className="group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full bg-gradient-to-r from-red-500 via-orange-500 to-red-600 px-9 py-4 text-base font-bold text-white shadow-[0_0_40px_rgba(255,49,49,0.35)] transition-all hover:scale-105 hover:shadow-[0_0_60px_rgba(255,49,49,0.5)]"
             >
               <Zap className="h-5 w-5" />
@@ -982,7 +1070,7 @@ export default function HeroLanding() {
               <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
                 <div className="relative h-full w-10 bg-white/20" />
               </div>
-            </Link>
+            </button>
             <Link
               href="#features"
               className="group inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-medium text-gray-300 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
@@ -1040,11 +1128,11 @@ export default function HeroLanding() {
       </div>
 
       {/* ─────── Pricing ─────── */}
-      <PricingSection />
+      <PricingSection onGetStarted={() => handleGetStarted(true)} />
 
       {/* ─────── CTA ─────── */}
       <section className="relative z-10 mx-auto w-full max-w-5xl px-4 pb-24 md:px-8">
-        <CTASection />
+        <CTASection onGetStarted={() => handleGetStarted(true)} />
       </section>
 
       {/* ─────── Footer ─────── */}

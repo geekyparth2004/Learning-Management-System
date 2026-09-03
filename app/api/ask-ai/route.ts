@@ -2,15 +2,16 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
+    apiKey: process.env.GEMINI_API_KEY || "dummy-key-for-build",
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/"
 });
 
 export async function POST(request: Request) {
     try {
         const { problemDescription, studentCode, mode } = await request.json();
 
-        if (!process.env.OPENAI_API_KEY) {
-            return NextResponse.json({ message: "OpenAI API key not configured." }, { status: 500 });
+        if (!process.env.GEMINI_API_KEY) {
+            return NextResponse.json({ message: "Gemini API key not configured." }, { status: 500 });
         }
 
         let systemPrompt = "";
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
                 { role: "system", content: systemPrompt },
                 { role: "user", content: `Problem Description:\n${problemDescription}\n\nStudent Code:\n${studentCode}` }
             ],
-            model: "gpt-4o",
+            model: "gemini-3.5-flash",
         });
 
         const message = completion.choices[0].message.content;
