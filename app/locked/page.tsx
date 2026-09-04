@@ -93,14 +93,12 @@ export default function LockedPage() {
                         });
 
                         if (verifyRes.ok) {
-                            setSuccess("Payment successful! Account unlocked.");
-                            setTimeout(() => {
-                                window.location.href = "/";
-                            }, 1500);
+                            window.location.href = "/payment-success";
                         } else {
                             const verifyErr = await verifyRes.text();
                             setError(verifyErr || "Payment verification failed.");
                             setLoading(false);
+                            window.location.href = "/payment-failed";
                         }
                     } catch (err) {
                         setError("Verification network error.");
@@ -115,8 +113,7 @@ export default function LockedPage() {
             const rzp = new (window as any).Razorpay(options);
 
             rzp.on("payment.failed", function (response: any) {
-                setError("Payment cancelled or failed.");
-                setLoading(false);
+                window.location.href = "/payment-failed";
             });
 
             rzp.open();

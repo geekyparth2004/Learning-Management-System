@@ -54,11 +54,9 @@ export default function MentorshipStrip() {
                         });
 
                         if (verifyRes.ok) {
-                            // Redirect to Calendly immediately upon successful payment verification
-                            window.location.href = "https://calendly.com/goelparth20049/30min";
+                            window.location.href = "/payment-success?type=mentorship";
                         } else {
-                            setError("Transaction failed, try again.");
-                            setLoading(false);
+                            window.location.href = "/payment-failed?type=mentorship";
                         }
                     } catch (err) {
                         setError("Transaction failed, try again.");
@@ -79,8 +77,7 @@ export default function MentorshipStrip() {
             const rzp = new (window as any).Razorpay(options);
 
             rzp.on("payment.failed", function (response: any) {
-                setError("Transaction failed, try again.");
-                setLoading(false);
+                window.location.href = "/payment-failed?type=mentorship";
             });
 
             rzp.open();

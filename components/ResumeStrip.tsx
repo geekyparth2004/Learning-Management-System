@@ -59,8 +59,7 @@ export default function ResumeStrip() {
                         if (verifyRes.ok) {
                             setIsPaid(true); // Show the form instead of redirecting
                         } else {
-                            setError("Transaction failed, try again.");
-                            setLoading(false);
+                            window.location.href = "/payment-failed?type=resume";
                         }
                     } catch (err) {
                         setError("Transaction failed, try again.");
@@ -81,8 +80,7 @@ export default function ResumeStrip() {
             const rzp = new (window as any).Razorpay(options);
 
             rzp.on("payment.failed", function (response: any) {
-                setError("Transaction failed, try again.");
-                setLoading(false);
+                window.location.href = "/payment-failed?type=resume";
             });
 
             rzp.open();
