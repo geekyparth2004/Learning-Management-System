@@ -212,12 +212,12 @@ export default async function Home() {
                 >
                   Hackathons
                 </Link>
-                <Link
+                {/* <Link
                   href="/assessment"
                   className="text-xs font-medium text-gray-400 hover:text-pink-400 transition-colors"
                 >
                   Assessments
-                </Link>
+                </Link> */}
                 {isOrgStudent ? (
                   <Link
                     href="/placement"
