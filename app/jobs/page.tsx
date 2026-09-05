@@ -1,15 +1,14 @@
 
 import React from "react";
-import { getRecommendedJobs } from "@/lib/jobs";
-import JobRecommendations from "@/components/dashboard/JobRecommendations";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { getAllJobs } from "@/lib/jobs";
+import { Briefcase, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import JobCard from "@/components/dashboard/JobCard";
 
 export const dynamic = "force-dynamic";
 
 export default async function JobsPage() {
-    const jobs = await getRecommendedJobs();
+    const jobs = await getAllJobs();
 
     return (
         <div className="min-h-screen bg-[#0e0e0e] text-white">
@@ -21,8 +20,8 @@ export default async function JobsPage() {
                             <ArrowLeft size={20} />
                         </Link>
                         <div className="flex items-center gap-2">
-                            <Sparkles className="h-6 w-6 text-yellow-400" />
-                            <span className="text-xl font-bold">Recommended Jobs</span>
+                            <Briefcase className="h-6 w-6 text-blue-400" />
+                            <span className="text-xl font-bold">Job Postings</span>
                         </div>
                     </div>
                 </div>
@@ -30,15 +29,27 @@ export default async function JobsPage() {
 
             <main className="mx-auto max-w-7xl p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">My Matching Jobs</h1>
-                    <p className="text-gray-400">Curated opportunities updated daily based on top tech companies.</p>
+                    <h1 className="text-3xl font-bold mb-2">Available Jobs</h1>
+                    <p className="text-gray-400">Opportunities posted by your teachers and placement coordinators.</p>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {jobs.map((job: any) => (
-                        <JobCard key={job.id} job={job} />
-                    ))}
-                </div>
+                {jobs.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-700 bg-[#161616]/50 py-20 text-center">
+                        <div className="rounded-full bg-gray-800 p-5 mb-4">
+                            <Briefcase size={40} className="text-gray-500" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-300">No jobs posted yet</h3>
+                        <p className="mt-2 text-sm text-gray-500 max-w-md">
+                            Your teachers haven&apos;t posted any job opportunities yet. Check back soon!
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {jobs.map((job: any) => (
+                            <JobCard key={job.id} job={job} />
+                        ))}
+                    </div>
+                )}
             </main>
         </div>
     );

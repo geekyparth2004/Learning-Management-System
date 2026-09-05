@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Sparkles, RefreshCcw } from "lucide-react";
+import { Briefcase, RefreshCcw } from "lucide-react";
 import JobCard from "./JobCard";
 
 interface Job {
@@ -11,6 +11,8 @@ interface Job {
     company: string;
     location: string;
     salary?: string | null;
+    type?: string;
+    description?: string | null;
     link: string;
     platform: string;
     postedAt: string;
@@ -61,12 +63,12 @@ export default function JobRecommendations() {
         <div className="flex flex-col rounded-xl border border-gray-800 bg-[#161616] p-6">
             <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Sparkles className="text-yellow-400" size={20} />
-                    <h3 className="text-lg font-bold text-white">Recommended Jobs for You</h3>
+                    <Briefcase className="text-blue-400" size={20} />
+                    <h3 className="text-lg font-bold text-white">Latest Job Postings</h3>
                 </div>
                 <div className="flex items-center gap-4">
                     <span className="text-xs text-gray-400">
-                        Updated daily • {jobs.length} new jobs
+                        {jobs.length} job{jobs.length !== 1 ? "s" : ""} available
                     </span>
                     <button
                         onClick={() => setShowAll(!showAll)}

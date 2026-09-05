@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, LogIn, LogOut, User, Trophy, Code } from "lucide-react";
+import { BookOpen, Briefcase, GraduationCap, LogIn, LogOut, User, Trophy, Code } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import GitHubConnect from "@/components/GitHubConnect";
@@ -146,6 +146,19 @@ export default async function Home() {
                   <p className="text-sm text-gray-400">Manage DSA and Coding practice problems.</p>
                 </div>
               </Link>
+
+              <Link
+                href="/teacher/jobs"
+                className="group flex flex-col items-center gap-4 rounded-xl border border-gray-800 bg-[#161616] p-8 text-center transition-all hover:border-yellow-500 hover:bg-[#1a1a1a]"
+              >
+                <div className="rounded-full bg-yellow-900/20 p-4 text-yellow-400 transition-colors group-hover:bg-yellow-500 group-hover:text-white">
+                  <Briefcase className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Post Jobs</h3>
+                  <p className="text-sm text-gray-400">Post job opportunities for students.</p>
+                </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -155,10 +168,13 @@ export default async function Home() {
 
   // STUDENT VIEW
   // Check if student belongs to an organization
-  const studentUser = await db.user.findUnique({
-    where: { id: session.user?.id },
-    select: { organizationId: true },
-  });
+  const userId = session.user?.id;
+  const studentUser = userId
+    ? await db.user.findUnique({
+        where: { id: userId },
+        select: { organizationId: true },
+      })
+    : null;
   const isOrgStudent = !!studentUser?.organizationId;
 
   return (

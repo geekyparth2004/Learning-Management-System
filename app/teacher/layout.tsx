@@ -41,8 +41,8 @@ export default async function TeacherLayout({
             bottomNav={[
                 { label: "Courses", href: "/teacher/courses", icon: "courses" },
                 { label: "Students", href: "/teacher/students", icon: "users" },
+                { label: "Jobs", href: "/teacher/jobs", icon: "briefcase" },
                 { label: "Doubts", href: "/teacher/doubts", icon: "doubts" },
-                { label: "Contest", href: "/teacher/contest", icon: "contests" },
                 { label: "More", href: "/teacher/analytics", icon: "dashboard" },
             ]}
             contentClassName="bg-[#0e0e0e]"

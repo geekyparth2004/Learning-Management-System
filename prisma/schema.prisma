@@ -554,15 +554,21 @@ model ContestSubmission {
 }
 
 model Job {
-  id        String   @id @default(cuid())
-  title     String
-  company   String
-  location  String
-  salary    String?
-  link      String
-  platform  String // "LinkedIn", "Naukri", etc.
-  postedAt  DateTime
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  company     String
+  location    String
+  salary      String?
+  type        String   @default("FULL_TIME") // "FULL_TIME" | "INTERNSHIP" | "CONTRACT" | "PART_TIME"
+  description String?
+  link        String
+  platform    String   @default("Direct") // "LinkedIn", "Naukri", "Direct", etc.
+  postedAt    DateTime @default(now())
+  postedById  String // Teacher user ID who posted this job
+  createdAt   DateTime @default(now())
+
+  @@index([postedById])
+  @@index([createdAt])
 }
 
 model UserBadge {

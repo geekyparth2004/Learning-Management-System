@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
   BookOpen,
+  Briefcase,
   Code,
   LayoutDashboard,
   LogOut,
@@ -33,6 +34,7 @@ const navItems = [
   { label: "Contests", href: "/teacher/contest", icon: Trophy },
   { label: "Hackathons", href: "/teacher/hackathon", icon: Code },
   { label: "Assessments", href: "/teacher/assessment", icon: FileText },
+  { label: "Jobs", href: "/teacher/jobs", icon: Briefcase },
 ];
 
 function isActive(pathname: string, href: string) {
