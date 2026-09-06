@@ -43,6 +43,21 @@ export default async function TeacherContestPage() {
         redirect("/teacher/contest");
     }
 
+    async function deleteAllContests() {
+        "use server";
+        const actionSession = await auth();
+        if (actionSession?.user?.role !== "TEACHER") {
+            throw new Error("Unauthorized");
+        }
+        await db.contest.deleteMany({
+            where: {
+                category: "CONTEST",
+                organizationId: null,
+            },
+        });
+        redirect("/teacher/contest");
+    }
+
     return (
         <div className="min-h-screen bg-[#0e0e0e] text-white p-8">
             <div className="max-w-6xl mx-auto">
@@ -51,13 +66,25 @@ export default async function TeacherContestPage() {
                         <Link href="/" className="text-sm text-gray-400 hover:text-white mb-2 block">← Back to Dashboard</Link>
                         <h1 className="text-3xl font-bold">Manage Contests</h1>
                     </div>
-                    <Link
-                        href="/teacher/contest/create"
-                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-bold hover:bg-blue-700"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Create Contest
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <form action={deleteAllContests}>
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 rounded-lg bg-red-600/10 px-4 py-2 font-bold text-red-500 hover:bg-red-600/20"
+                                title="Remove all contests"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Remove All
+                            </button>
+                        </form>
+                        <Link
+                            href="/teacher/contest/create"
+                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-bold hover:bg-blue-700"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Create Contest
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="space-y-4">

@@ -43,6 +43,21 @@ export default async function TeacherHackathonPage() {
         redirect("/teacher/hackathon");
     }
 
+    async function deleteAllHackathons() {
+        "use server";
+        const actionSession = await auth();
+        if (actionSession?.user?.role !== "TEACHER") {
+            throw new Error("Unauthorized");
+        }
+        await db.contest.deleteMany({
+            where: {
+                category: "HACKATHON",
+                organizationId: null,
+            },
+        });
+        redirect("/teacher/hackathon");
+    }
+
     return (
         <div className="min-h-screen bg-[#0e0e0e] text-white p-8">
             <div className="max-w-6xl mx-auto">
@@ -51,13 +66,25 @@ export default async function TeacherHackathonPage() {
                         <Link href="/" className="text-sm text-gray-400 hover:text-white mb-2 block">← Back to Dashboard</Link>
                         <h1 className="text-3xl font-bold">Manage Hackathons</h1>
                     </div>
-                    <Link
-                        href="/teacher/hackathon/create"
-                        className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 font-bold hover:bg-purple-700"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Create Hackathon
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <form action={deleteAllHackathons}>
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 rounded-lg bg-red-600/10 px-4 py-2 font-bold text-red-500 hover:bg-red-600/20"
+                                title="Remove all hackathons"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Remove All
+                            </button>
+                        </form>
+                        <Link
+                            href="/teacher/hackathon/create"
+                            className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 font-bold hover:bg-purple-700"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Create Hackathon
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
