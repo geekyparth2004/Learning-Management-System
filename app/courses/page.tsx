@@ -16,7 +16,7 @@ export default async function CoursesPage() {
             return db.course.findMany({
                 include: {
                     teacher: { select: { name: true } },
-                    _count: { select: { modules: true, enrollments: true } }
+                    modules: { select: { id: true } }
                 },
                 orderBy: { createdAt: "desc" }
             });
@@ -57,7 +57,7 @@ export default async function CoursesPage() {
                                     </div>
                                     <div className="flex flex-shrink-0 items-center gap-1">
                                         <BookOpen size={12} />
-                                        <span>{course._count.modules} Modules</span>
+                                        <span>{course.modules?.length || 0} Modules</span>
                                     </div>
                                 </div>
                             </Link>

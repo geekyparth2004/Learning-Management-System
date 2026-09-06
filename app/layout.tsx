@@ -21,7 +21,6 @@ export const metadata: Metadata = {
   description: "Coding assignments with auto-grading",
   applicationName: "KodeCraft",
   manifest: "/manifest.webmanifest",
-  themeColor: "#0e0e0e",
   formatDetection: { telephone: false },
   appleWebApp: {
     capable: true,
@@ -37,6 +36,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  themeColor: "#0e0e0e",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

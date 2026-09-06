@@ -30,7 +30,7 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
             }
 
             try {
-                const res = await fetch("/api/user/subscription");
+                const res = await fetch(`/api/user/subscription?t=${Date.now()}`, { cache: "no-store" });
                 if (!res.ok) {
                     if (isMounted) {
                         setAuthorized(true);

@@ -12,6 +12,7 @@ export default function LockedPage() {
     const [computedPrice, setComputedPrice] = useState(3999);
 
     const [loading, setLoading] = useState(false);
+    const [trialLoading, setTrialLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
@@ -124,6 +125,32 @@ export default function LockedPage() {
         }
     };
 
+    const handleStartTrial = async () => {
+        setTrialLoading(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            const res = await fetch("/api/student/start-trial", {
+                method: "POST",
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Failed to start trial.");
+            } else {
+                setSuccess("Trial started! Redirecting...");
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 1500);
+            }
+        } catch (err) {
+            setError("Network error. Please try again.");
+        } finally {
+            setTrialLoading(false);
+        }
+    };
+
     const features = [
         "All courses — unlimited access",
         "Live coding contests & leaderboards",
@@ -232,12 +259,20 @@ export default function LockedPage() {
 
                             <button
                                 onClick={handleCheckout}
-                                disabled={loading || !!success}
+                                disabled={loading || trialLoading || !!success}
                                 className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:from-indigo-600 hover:via-purple-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl py-3.5 font-bold transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(99,102,241,0.3)]"
                             >
                                 <Zap className="w-5 h-5" />
                                 {loading && !success ? "Processing..." : "Buy Now"}
                                 <ArrowRight className="w-4 h-4" />
+                            </button>
+
+                            <button
+                                onClick={handleStartTrial}
+                                disabled={loading || trialLoading || !!success}
+                                className="w-full bg-transparent border border-indigo-500/50 hover:bg-indigo-500/10 hover:border-indigo-500 text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl py-3 font-semibold transition-all flex items-center justify-center gap-2"
+                            >
+                                {trialLoading && !success ? "Starting..." : "Start 24-hour Free Trial"}
                             </button>
 
                             <div className="flex items-center justify-center gap-3 text-xs text-gray-500">

@@ -883,7 +883,7 @@ export default function HeroLanding() {
       if (withPayment) {
         handleCheckout();
       } else {
-        window.location.href = "/courses";
+        window.location.href = "/";
       }
     } else {
       setRegisterWithPayment(withPayment);
@@ -913,7 +913,7 @@ export default function HeroLanding() {
         if (registerWithPayment) {
           handleCheckout();
         } else {
-          window.location.href = "/courses";
+          window.location.href = "/";
         }
       }} />
       <CursorGlow />
