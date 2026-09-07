@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
         const { discountCode } = await req.json().catch(() => ({ discountCode: "" }));
 
-        let finalAmount = 4999; // Base price (discounted from 9999)
+        let finalAmount = 3999; // Base price (discounted from 9999)
 
         if (discountCode) {
             const code = discountCode.toUpperCase().trim();

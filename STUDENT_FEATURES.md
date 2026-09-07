@@ -390,7 +390,7 @@ On the `/locked` page, the lifetime subscription uses a base price (shown in INR
 - `KPM024` → `3499`
 - `KPM036` → `1999`
 - `IITMADRAS` → `24999`
-- default → `4999`
+- default → `3999`
 
 The checkout itself is completed via Razorpay order creation + signature verification, and after successful verification your account becomes `PAID`.
 
