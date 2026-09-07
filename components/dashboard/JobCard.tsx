@@ -75,7 +75,7 @@ export default function JobCard({ job }: JobProps) {
             )}
 
             <a
-                href={job.link}
+                href={job.link.includes('@') && !job.link.startsWith('http') ? `mailto:${job.link}` : job.link}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600/10 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-600 hover:text-white"

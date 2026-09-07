@@ -267,13 +267,13 @@ export default function TeacherJobsPage() {
                         {/* Apply Link */}
                         <div className="space-y-1.5 md:col-span-2">
                             <label className="text-xs font-medium text-gray-400 flex items-center gap-1.5">
-                                <LinkIcon size={12} /> Apply Link *
+                                <LinkIcon size={12} /> Apply Link or Email *
                             </label>
                             <input
-                                type="url"
+                                type="text"
                                 value={form.link}
                                 onChange={(e) => setForm({ ...form, link: e.target.value })}
-                                placeholder="https://careers.google.com/jobs/..."
+                                placeholder="https://careers.google.com/... or recruiter@company.com"
                                 required
                                 className="w-full rounded-lg border border-gray-700 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-colors"
                             />
@@ -388,7 +388,7 @@ export default function TeacherJobsPage() {
 
                             <div className="flex items-center gap-2 shrink-0">
                                 <a
-                                    href={job.link}
+                                    href={job.link.includes('@') && !job.link.startsWith('http') ? `mailto:${job.link}` : job.link}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="rounded-lg bg-blue-600/10 p-2 text-blue-400 hover:bg-blue-600 hover:text-white transition-colors"
